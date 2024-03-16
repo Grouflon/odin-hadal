@@ -1,0 +1,27 @@
+{
+	"folders":
+	[
+		{
+			"path": "."
+		}
+	],
+	"build_systems":
+	[
+		{
+			"name": "hadal",
+			"working_dir": "${project_path}",
+
+			"variants":
+			[
+				{
+					"name" : "build",
+					"shell_cmd" : "build.bat",
+				},
+				{
+					"name" : "build & run",
+					"shell_cmd" : "build.bat && bin\\hadal.exe",
+				},
+			]
+		}
+	]
+}
