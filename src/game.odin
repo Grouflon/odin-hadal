@@ -40,8 +40,10 @@ game_start :: proc()
     game_camera.zoom = 1.0
 
     // Game
-    agent := make_agent(Vector2{40,40})
+   	agent := make_agent(Vector2{40,40})
+    selection := selection_make()
     add_entity(&entity_manager, agent)
+    add_entity(&entity_manager, selection)
 }
 
 game_stop :: proc()
