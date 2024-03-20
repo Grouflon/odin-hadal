@@ -82,7 +82,7 @@ selection_update :: proc(using _selection: ^Selection)
 	{
 		if is_selecting && distance_squared(mouse_position, start) >= 1
 		{
-			copy_array(&hovered_agents, &_selectable_agents)
+			copy_array(&hovered_agents, _selectable_agents[:])
 		}
 		else
 		{
@@ -91,7 +91,7 @@ selection_update :: proc(using _selection: ^Selection)
 	}
 	if mouse().released[0]
 	{
-		copy_array(&selected_agents, &hovered_agents)
+		copy_array(&selected_agents, hovered_agents[:])
 		clear(&hovered_agents)
 		is_selecting=false
 	}
