@@ -7,5 +7,13 @@ rem COMPILE
 @echo on
 odin build ./src -out:bin/hadal.exe -warnings-as-errors -debug
 @echo off
+if %errorlevel% neq 0 goto error
+
+:end
 @echo:
 @echo Build done!
+exit /b 0
+
+:error
+@echo Build failed!
+exit /b 1

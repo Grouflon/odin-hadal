@@ -23,7 +23,7 @@
 				},
 				{
 					"name" : "build & run",
-					"shell_cmd" : "build.bat && bin\\hadal.exe",
+					"shell_cmd" : "build_and_run.bat",
 				},
 			]
 		}
