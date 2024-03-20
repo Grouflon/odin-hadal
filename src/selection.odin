@@ -14,7 +14,7 @@ Selection :: struct
 
 selection_update :: proc(using _selection: ^Selection)
 {
-	mouse_position : Vector2 = rl.GetMousePosition();
+	mouse_position : Vector2 = mouse().world_position;
 	aabb = {
 		mouse_position,
 		mouse_position,
@@ -58,4 +58,5 @@ selection_draw :: proc(using _selection: ^Selection)
 	draw_size : Vector2 = aabb[1] - aabb[0]
 
 	rl.DrawRectangleV(draw_start, draw_size, rl.BLUE)
+
 }

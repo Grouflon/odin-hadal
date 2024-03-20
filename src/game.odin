@@ -9,6 +9,8 @@ Game :: struct
 
     window_width, window_height : i32,
 
+    mouse : Mouse,
+
     game_render_target : rl.RenderTexture2D,
     game_camera : rl.Camera2D,
 
@@ -29,6 +31,11 @@ renderer :: proc() -> ^Renderer
     return game().renderer
 }
 
+mouse :: proc() -> ^Mouse
+{
+    return &game().mouse
+}
+
 game_start :: proc()
 {
     using rl
@@ -47,6 +54,9 @@ game_start :: proc()
     game_render_target = LoadRenderTexture(game_width, game_height);
 
     game_camera = Camera2D{}
+    // game_camera.target -= {30, -30}
+    // game_camera.offset += {-20, 20}
+    // game_camera.zoom = 4.0
     game_camera.zoom = 1.0
 
     // Game
@@ -73,6 +83,8 @@ game_update :: proc()
 {
 	using rl
     using g_game
+
+    mouse_update(&mouse, game_camera, pixel_ratio)
 
     manager_update(agent_manager)
 

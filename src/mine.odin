@@ -1,6 +1,6 @@
 package main
 import rl "vendor:raylib"
-
+/*
 Mine :: struct
 {
 	using entity : Entity,
@@ -89,3 +89,4 @@ mine_make :: proc(_position : rl.Vector2) -> ^Mine
 	return mine
 }
 
+*/
