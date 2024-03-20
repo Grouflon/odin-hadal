@@ -21,6 +21,12 @@ make_agent_manager :: proc() -> ^AgentManager
 	return manager	
 }
 
+delete_agent_manager :: proc(_manager: ^AgentManager)
+{
+	delete(_manager.entities)
+	free(_manager)
+}
+
 Agent :: struct
 {
 	position : Vector2,
@@ -32,6 +38,11 @@ make_agent :: proc(_position : Vector2) -> ^Agent
 	agent.position = _position
 
 	return agent
+}
+
+delete_agent :: proc(_agent: ^Agent)
+{
+	free(_agent)
 }
 
 agent_update :: proc(using _agent : ^Agent)

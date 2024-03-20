@@ -13,6 +13,20 @@ Selection :: struct
 	aabb: AABB
 }
 
+make_selection :: proc() -> ^Selection
+{
+	_selection: = new(Selection)
+	return _selection
+}
+
+delete_selection :: proc(_selection: ^Selection)
+{
+	assert(_selection != nil)
+
+	delete(_selection.hovered_agents)
+	delete(_selection.selected_agents)
+	free(_selection)
+}
 
 selection_update :: proc(using _selection: ^Selection)
 {
