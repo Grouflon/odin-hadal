@@ -29,30 +29,13 @@ Action :: struct
 	stop: ActionProcedure,
 }
 
-// Once created, the Action owns the payload memory
-make_action :: proc(_payload: rawptr = nil, _start: ActionProcedure = nil, _update: ActionProcedure, _stop: ActionProcedure) -> ^Action
+action_start :: proc(_payload: rawptr = nil, _start: ActionProcedure = nil, _update: ActionProcedure, _stop: ActionProcedure) -> ^Action
 {
 	_action := new(Action)
 	_action.payload = _payload
 	_action.start = _start
 	_action.update = _update
 	_action.stop = _stop
-	return _action
-}
-
-delete_action :: proc(_action: ^Action)
-{
-	assert(_action != nil)
-	assert(!action_is_running(_action))
-	free(_action.payload)
-	free(_action)
-}
-
-// Once an Action is started, its memory is owned by the ActionManager
-action_start :: proc(_action: ^Action)
-{
-	assert(_action != nil)
-	assert(!action_is_running(_action))
 
 	_manager := game().action_manager
 
@@ -63,6 +46,7 @@ action_start :: proc(_action: ^Action)
 	{
 		_action.start(_action)
 	}
+	return _action
 }
 
 action_stop :: proc(_action: ^Action)
@@ -98,7 +82,7 @@ actions_update :: proc(using _manager: ^ActionManager)
 		if (!action_is_running(_action))
 		{
 			unordered_remove(&actions, _i)
-			delete_action(_action)
+			free(_action)
 		}
 	}
 }

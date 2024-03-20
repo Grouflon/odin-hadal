@@ -53,7 +53,7 @@ sort :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E) -> int)
 	}
 }
 
-copy_array :: proc(_dst, _src: ^$T/[dynamic]$E)
+copy_array :: proc(_dst: ^$T/[dynamic]$E, _src: []E)
 {
 	resize(_dst, len(_src))
 	copy(_dst[:], _src[:])
