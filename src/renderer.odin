@@ -14,6 +14,15 @@ Renderer :: struct
 	draw_calls : [dynamic]DrawCall
 }
 
+renderer_init :: proc(using _renderer: ^Renderer) 
+{
+}
+
+renderer_shutdown :: proc(using _renderer: ^Renderer) 
+{
+	delete(draw_calls)
+}
+
 draw :: proc(_priority : int, _payload : rawptr, _draw_function : DrawFunction)
 {
 	using renderer := renderer()

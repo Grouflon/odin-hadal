@@ -59,7 +59,8 @@ selection_update :: proc(using _selection: ^Selection)
 	}
 
 	clear(&hovered_agents)
-	_selectable_agents: [dynamic]^Agent
+	_selectable_agents: [dynamic]^Agent // TODO use temp allocator
+	defer delete(_selectable_agents)
 
 	for _agent in game().agent_manager.entities
 	{
@@ -81,7 +82,7 @@ selection_update :: proc(using _selection: ^Selection)
 	{
 		if is_selecting && distance_squared(mouse_position, start) >= 1
 		{
-			hovered_agents = _selectable_agents
+			copy_array(&hovered_agents, &_selectable_agents)
 		}
 		else
 		{
@@ -90,7 +91,7 @@ selection_update :: proc(using _selection: ^Selection)
 	}
 	if mouse().released[0]
 	{
-		selected_agents = hovered_agents
+		copy_array(&selected_agents, &hovered_agents)
 		clear(&hovered_agents)
 		is_selecting=false
 	}
@@ -98,6 +99,8 @@ selection_update :: proc(using _selection: ^Selection)
 
 selection_draw :: proc(using _selection: ^Selection)
 {
+	// rl.DrawPixel(floor_to_int(mouse().world_position.x), floor_to_int(mouse().world_position.y), rl.RED)
+
 	if (!is_selecting) 
 	{
 		return

@@ -11,6 +11,7 @@ Game :: struct
     window_width, window_height : i32,
 
     mouse : Mouse,
+    renderer : Renderer,
 
     game_render_target : rl.RenderTexture2D,
     game_camera : rl.Camera2D,
@@ -19,7 +20,6 @@ Game :: struct
     action_manager : ^ActionManager,
     selection : ^Selection,
 
-    renderer : ^Renderer,
 }
 g_game : Game
 
@@ -30,7 +30,7 @@ game :: proc() -> ^Game
 
 renderer :: proc() -> ^Renderer
 {
-    return game().renderer
+    return &game().renderer
 }
 
 mouse :: proc() -> ^Mouse
@@ -51,7 +51,7 @@ game_start :: proc()
     InitWindow(window_width, window_height, "Hadal")
     SetTargetFPS(60)
 
-    renderer = new(Renderer)
+    renderer_init(&renderer)
 
     game_render_target = LoadRenderTexture(game_width, game_height);
 
@@ -95,6 +95,8 @@ game_stop :: proc()
     delete_agent_manager(agent_manager)
 
     UnloadRenderTexture(game_render_target)
+
+    renderer_shutdown(&renderer)
     CloseWindow()
 }
 
@@ -149,7 +151,7 @@ game_draw :: proc()
             )
         }
 
-        renderer_draw(renderer)
+        renderer_draw(&renderer)
         selection_draw(selection)
     }
 

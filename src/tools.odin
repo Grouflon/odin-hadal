@@ -53,6 +53,12 @@ sort :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E) -> int)
 	}
 }
 
+copy_array :: proc(_dst, _src: ^$T/[dynamic]$E)
+{
+	resize(_dst, len(_src))
+	copy(_dst[:], _src[:])
+}
+
 // Math
 floor_vec2 :: proc(_value: Vector2) -> Vector2
 {
