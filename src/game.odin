@@ -16,6 +16,7 @@ Game :: struct
     game_camera : rl.Camera2D,
 
     agent_manager : ^AgentManager,
+    action_manager : ^ActionManager,
     selection : ^Selection,
 
     renderer : ^Renderer,
@@ -62,6 +63,7 @@ game_start :: proc()
 
     // Game
     agent_manager = make_agent_manager()
+    action_manager = make_action_manager()
 
     _agents := []^Agent {
         make_agent(Vector2{40,40}),
@@ -74,13 +76,23 @@ game_start :: proc()
         manager_register_entity(agent_manager, _agent)
     }
 
-    selection = new(Selection)
+    selection = make_selection()
 }
 
 game_stop :: proc()
 {
     using rl
     using g_game
+
+    delete_selection(selection)
+    _agents: = agent_manager.entities
+    for _agent in _agents
+    {
+        manager_unregister_entity(agent_manager, _agent)
+        delete_agent(_agent)
+    }
+    delete_action_manager(action_manager)
+    delete_agent_manager(agent_manager)
 
     UnloadRenderTexture(game_render_target)
     CloseWindow()

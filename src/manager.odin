@@ -23,9 +23,9 @@ manager_unregister_entity :: proc(_manager : ^$M, _entity : ^$E)
 
 	unordered_remove(&_manager.entities, index)
 
-	if (_manager.removed != nil)
+	if (_manager.unregistered != nil)
 	{
-		_manager.removed(_entity)
+		_manager.unregistered(_entity)
 	}
 }
 
