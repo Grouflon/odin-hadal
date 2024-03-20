@@ -1,11 +1,28 @@
 package main
 
 import "core:fmt"
+import "core:mem"
 
 main :: proc()
 {
-    game_start()
-    defer game_stop()
+    track: mem.Tracking_Allocator
+    mem.tracking_allocator_init(&track, context.allocator)
+    defer mem.tracking_allocator_destroy(&track)
+    context.allocator = mem.tracking_allocator(&track)
 
-    game_loop()
+    {
+        game_start()
+        defer game_stop()
+
+        game_loop()    
+    }
+
+    for _, leak in track.allocation_map
+    {
+        fmt.printf("%v leaked %m\n", leak.location, leak.size)
+    }
+    for bad_free in track.bad_free_array
+    {
+        fmt.printf("%v allocation %p was freed badly\n", bad_free.location, bad_free.memory)
+    }
 }
