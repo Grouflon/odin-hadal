@@ -1,14 +1,16 @@
 package main
-import rl "vendor:raylib"
+
 import "core:fmt"
+import "core:math"
+import rl "vendor:raylib"
 
 Selection :: struct
 {
 	hovered_agents: [dynamic]^Agent,
 	selected_agents: [dynamic]^Agent,
-	is_started: bool,
+	is_selecting: bool,
 	start: Vector2,
-	aabb: [2]Vector2
+	aabb: AABB
 }
 
 
@@ -20,43 +22,74 @@ selection_update :: proc(using _selection: ^Selection)
 		mouse_position,
 	}
 
-	if (rl.IsMouseButtonPressed(rl.MouseButton.LEFT))
+	if (mouse().pressed[0])
 	{
-		is_started = true
+		is_selecting = true
 		start = mouse_position
 	}
-	else if (!rl.IsMouseButtonDown(rl.MouseButton.LEFT) && !rl.IsMouseButtonReleased(rl.MouseButton.LEFT))
-	{
-		is_started=false
-	}
 
-	if (is_started)
+	if (is_selecting)
 	{
-		aabb[0] = start
+		aabb.min = start
 	}
 	
 	aabb = {
 		{
-			min(aabb[0].x ,aabb[1].x),
-			min(aabb[0].y ,aabb[1].y),	
+			math.floor(min(aabb.min.x ,aabb.max.x)),
+			math.floor(min(aabb.min.y ,aabb.max.y)),	
 		},
 		{
-			max(aabb[0].x ,aabb[1].x),
-			max(aabb[0].y, aabb[1].y),
+			math.ceil(max(aabb.min.x ,aabb.max.x)),
+			math.ceil(max(aabb.min.y, aabb.max.y)),
 		}
+	}
+
+	clear(&hovered_agents)
+	_selectable_agents: [dynamic]^Agent
+
+	for _agent in game().agent_manager.entities
+	{
+		if collision_aabb_aabb(aabb, agent_aabb(_agent))
+		{
+			append(&_selectable_agents, _agent)
+		}
+	}
+
+	sort(&_selectable_agents, proc(_a: ^Agent, _b: ^Agent) -> int
+	{
+		_mouse_position: = mouse().world_position
+		_a_dist: f32 = distance_squared(_mouse_position, _a.position)
+		_b_dist: f32 = distance_squared(_mouse_position, _b.position)
+		return compare(_a_dist, _b_dist)
+	})
+
+	if len(_selectable_agents) > 0
+	{
+		if is_selecting && distance_squared(mouse_position, start) >= 1
+		{
+			hovered_agents = _selectable_agents
+		}
+		else
+		{
+			append(&hovered_agents, _selectable_agents[0])
+		}
+	}
+	if mouse().released[0]
+	{
+		selected_agents = hovered_agents
+		clear(&hovered_agents)
+		is_selecting=false
 	}
 }
 
 selection_draw :: proc(using _selection: ^Selection)
 {
-	if (!is_started) 
+	if (!is_selecting) 
 	{
 		return
 	}
 
-	draw_start : Vector2 = aabb[0]
-	draw_size : Vector2 = aabb[1] - aabb[0]
-
-	rl.DrawRectangleV(draw_start, draw_size, rl.BLUE)
-
+	_draw_start: Vector2 = aabb.min
+	_draw_size: Vector2 = aabb.max - _draw_start
+	rl.DrawRectangleLines(i32(_draw_start.x), i32(_draw_start.y), i32(_draw_size.x), i32(_draw_size.y), rl.WHITE)
 }

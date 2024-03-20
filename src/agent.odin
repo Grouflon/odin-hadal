@@ -1,5 +1,7 @@
 package main
 
+import "core:fmt"
+import "core:math"
 import rl "vendor:raylib"
 
 AgentManager :: struct
@@ -38,9 +40,19 @@ agent_update :: proc(using _agent : ^Agent)
 	{
 		using agent := cast(^Agent)_payload
 	
-		x, y : i32 = i32(position.x), i32(position.y)
+		x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
 		rl.DrawPixel(x, y, rl.GREEN)
 		rl.DrawPixel(x, y-1, rl.PINK)
 		rl.DrawPixel(x+1, y, rl.DARKGRAY)	
 	})
+}
+
+agent_aabb :: proc(using _agent: ^Agent) -> AABB
+{
+	x, y : f32 = math.floor(position.x), math.floor(position.y)
+	return AABB {
+		{ x, y-1 },
+		{ x+1, y+1 },
+	}
+
 }

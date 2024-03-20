@@ -1,6 +1,7 @@
 package main
 
 import rl "vendor:raylib"
+import "core:fmt"
 
 Game :: struct
 {
@@ -62,12 +63,18 @@ game_start :: proc()
     // Game
     agent_manager = make_agent_manager()
 
-   	agent := make_agent(Vector2{40,40})
-    manager_register_entity(agent_manager, agent)
+    _agents := []^Agent {
+        make_agent(Vector2{40,40}),
+        make_agent(Vector2{50,40}),
+        make_agent(Vector2{40,50}),
+        make_agent(Vector2{50,50}),
+    }
+    for _agent in _agents
+    {
+        manager_register_entity(agent_manager, _agent)
+    }
 
     selection = new(Selection)
-    // add_entity(&entity_manager, agent)
-    // add_entity(&entity_manager, selection)
 }
 
 game_stop :: proc()
@@ -106,10 +113,32 @@ game_draw :: proc()
 
         ClearBackground(GRAY)
 
+        for _agent in selection.hovered_agents
+        {
+            _x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
+            DrawEllipseLines(
+                _x,
+                _y,
+                5,
+                3,
+                rl.RAYWHITE
+            )
+        }
+
+        for _agent in selection.selected_agents
+        {
+            _x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
+            DrawEllipseLines(
+                _x,
+                _y,
+                5,
+                3,
+                rl.WHITE
+            )
+        }
+
         renderer_draw(renderer)
         selection_draw(selection)
-
-        // DrawLine(20,20,230,150,RED)
     }
 
     // Scaled up final rendering
