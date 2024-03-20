@@ -16,6 +16,7 @@ Game :: struct
     game_camera : rl.Camera2D,
 
     agent_manager : ^AgentManager,
+    mine_manager : ^MineManager,
     action_manager : ^ActionManager,
     selection : ^Selection,
 
@@ -63,6 +64,7 @@ game_start :: proc()
 
     // Game
     agent_manager = make_agent_manager()
+	mine_manager= make_mine_manager();
     action_manager = make_action_manager()
 
     _agents := []^Agent {
@@ -75,6 +77,17 @@ game_start :: proc()
     {
         manager_register_entity(agent_manager, _agent)
     }
+
+
+	_mines := []^Mine {
+        make_mine(Vector2{50,52}),
+        make_mine(Vector2{50,50}),
+    }
+    for _mine in _mines
+    {
+        manager_register_entity(mine_manager, _mine)
+    }
+
 
     selection = make_selection()
 }
@@ -91,8 +104,15 @@ game_stop :: proc()
         manager_unregister_entity(agent_manager, _agent)
         delete_agent(_agent)
     }
+	_mines: = mine_manager.entities
+    for _mine in _mines
+    {
+        manager_unregister_entity(mine_manager, _mine)
+        delete_mine(_mine)
+    }
     delete_action_manager(action_manager)
     delete_agent_manager(agent_manager)
+    delete_mine_manager(mine_manager)
 
     UnloadRenderTexture(game_render_target)
     CloseWindow()
@@ -106,6 +126,7 @@ game_update :: proc()
     mouse_update(&mouse, game_camera, pixel_ratio)
 
     manager_update(agent_manager)
+    manager_update(mine_manager)
 
     selection_update(selection)
 }
