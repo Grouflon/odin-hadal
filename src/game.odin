@@ -12,13 +12,21 @@ Game :: struct
     game_render_target : rl.RenderTexture2D,
     game_camera : rl.Camera2D,
 
-    entity_manager : EntityManager,
+    agent_manager : ^AgentManager,
+    selection : ^Selection,
+
+    renderer : ^Renderer,
 }
 g_game : Game
 
 game :: proc() -> ^Game
 {
     return &g_game
+}
+
+renderer :: proc() -> ^Renderer
+{
+    return game().renderer
 }
 
 game_start :: proc()
@@ -34,16 +42,22 @@ game_start :: proc()
     InitWindow(window_width, window_height, "Hadal")
     SetTargetFPS(60)
 
+    renderer = new(Renderer)
+
     game_render_target = LoadRenderTexture(game_width, game_height);
 
     game_camera = Camera2D{}
     game_camera.zoom = 1.0
 
     // Game
+    agent_manager = make_agent_manager()
+
    	agent := make_agent(Vector2{40,40})
-    selection := selection_make()
-    add_entity(&entity_manager, agent)
-    add_entity(&entity_manager, selection)
+    manager_register_entity(agent_manager, agent)
+
+    selection = new(Selection)
+    // add_entity(&entity_manager, agent)
+    // add_entity(&entity_manager, selection)
 }
 
 game_stop :: proc()
@@ -60,7 +74,9 @@ game_update :: proc()
 	using rl
     using g_game
 
-    update_entities(&entity_manager)
+    manager_update(agent_manager)
+
+    selection_update(selection)
 }
 
 game_draw :: proc()
@@ -77,10 +93,11 @@ game_draw :: proc()
         defer EndMode2D()
 
         ClearBackground(GRAY)
-        
-        draw_entities(&entity_manager)
 
-        DrawLine(20,20,230,150,RED)
+        renderer_draw(renderer)
+        selection_draw(selection)
+
+        // DrawLine(20,20,230,150,RED)
     }
 
     // Scaled up final rendering

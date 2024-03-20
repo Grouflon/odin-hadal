@@ -2,35 +2,45 @@ package main
 
 import rl "vendor:raylib"
 
-Agent :: struct
+AgentManager :: struct
 {
-	using entity : Entity
+	entities : [dynamic]^Agent,
 
+	registered : proc(e : ^Agent),
+	unregistered : proc(e : ^Agent),
+	update : proc(e : ^Agent),
 }
 
-make_agent :: proc(_position : rl.Vector2) -> ^Agent
+make_agent_manager :: proc() -> ^AgentManager
+{
+	manager := new(AgentManager)
+	manager.update = agent_update
+
+	return manager	
+}
+
+Agent :: struct
+{
+	position : Vector2,
+}
+
+make_agent :: proc(_position : Vector2) -> ^Agent
 {
 	agent := new(Agent)
 	agent.position = _position
 
-	agent.update = agent_update
-	agent.draw = agent_draw
-
 	return agent
 }
 
-agent_update :: proc(_entity : ^Entity)
+agent_update :: proc(using _agent : ^Agent)
 {
-	using agent := cast(^Agent)_entity
-}
-
-agent_draw :: proc(_entity : ^Entity)
-{
-	using agent := cast(^Agent)_entity
+	draw(int(position.y), _agent, proc(_payload : rawptr)
+	{
+		using agent := cast(^Agent)_payload
 	
-	x, y : i32 = i32(position.x), i32(position.y)
-	rl.DrawPixel(x, y, rl.GREEN)
-	rl.DrawPixel(x, y-1, rl.PINK)
-	rl.DrawPixel(x+1, y, rl.DARKGRAY)
+		x, y : i32 = i32(position.x), i32(position.y)
+		rl.DrawPixel(x, y, rl.GREEN)
+		rl.DrawPixel(x, y-1, rl.PINK)
+		rl.DrawPixel(x+1, y, rl.DARKGRAY)	
+	})
 }
-

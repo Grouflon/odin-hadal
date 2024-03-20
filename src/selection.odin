@@ -1,72 +1,61 @@
 package main
 import rl "vendor:raylib"
 import "core:fmt"
+
 Selection :: struct
 {
-	using entity : Entity,
-
 	hovered_agents: [dynamic]^Agent,
 	selected_agents: [dynamic]^Agent,
-	isStarted: bool,
-	start: [2]f32,
-	aabb: [4]f32
+	is_started: bool,
+	start: Vector2,
+	aabb: [2]Vector2
 }
 
 
-selection_update :: proc(_entity: ^Entity)
+selection_update :: proc(using _selection: ^Selection)
 {
-	using selection := cast(^Selection)_entity
-	sposition : rl.Vector2 = rl.GetMousePosition();
+	mouse_position : Vector2 = rl.GetMousePosition();
 	aabb = {
-		sposition[0],
-		sposition[1],
-		sposition[0],
-		sposition[1],
+		mouse_position,
+		mouse_position,
 	}
 
 	if (rl.IsMouseButtonPressed(rl.MouseButton.LEFT))
 	{
-		isStarted = true
-		start = {sposition[0],
-			sposition[1],}
+		is_started = true
+		start = mouse_position
 	}
 	else if (!rl.IsMouseButtonDown(rl.MouseButton.LEFT) && !rl.IsMouseButtonReleased(rl.MouseButton.LEFT))
 	{
-		isStarted=false
+		is_started=false
 	}
 
-	if (isStarted)
+	if (is_started)
 	{
-		aabb[0] = start[0]
-		aabb[1]= start[1]
+		aabb[0] = start
 	}
 	
 	aabb = {
-		min(aabb[0],aabb[2]),
-		min(aabb[1],aabb[3]),
-		max(aabb[0],aabb[2]),
-		max(aabb[1],aabb[3]),
+		{
+			min(aabb[0].x ,aabb[1].x),
+			min(aabb[0].y ,aabb[1].y),	
+		},
+		{
+			max(aabb[0].x ,aabb[1].x),
+			max(aabb[0].y, aabb[1].y),
+		}
 	}
 }
 
-selection_draw :: proc(_entity: ^Entity)
+selection_draw :: proc(using _selection: ^Selection)
 {
-	using selection := cast(^Selection)_entity
-	ballPosition : rl.Vector2 = rl.GetMousePosition();
-	rl.DrawCircleV(ballPosition, 40, rl.MAROON);
-
-	if (!isStarted) 
+	if (!is_started) 
 	{
 		return
 	}
 
-	rl.DrawRectangle(cast(i32)aabb[0],cast(i32)aabb[1],cast(i32)aabb[2],cast(i32)aabb[3], rl.BLUE)
-}
+	draw_start : Vector2 = aabb[0]
+	draw_size : Vector2 = aabb[1] - aabb[0]
 
-selection_make :: proc() -> ^Selection
-{
-	using selection := new(Selection)
-	update = selection_update
-	draw = selection_draw
-	return selection
+	rl.DrawRectangleV(draw_start, draw_size, rl.BLUE)
 }
