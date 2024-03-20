@@ -61,7 +61,6 @@ mine_update :: proc(using _mine: ^Mine) {
 	if (isstart) {
 		for _agent in game().agent_manager.entities {
 			if (distance_squared(position, _agent.position) < radius) {
-				fmt.printf("%f", distance_squared(position, _agent.position))
 				mine_activate(_mine)
 			}
 		}
