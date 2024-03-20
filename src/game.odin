@@ -49,8 +49,8 @@ game_start :: proc()
 
     InitWindow(window_width, window_height, "Hadal")
     SetTargetFPS(60)
-
     renderer = new(Renderer)
+	HideCursor();
 
     game_render_target = LoadRenderTexture(game_width, game_height);
 
@@ -117,12 +117,11 @@ game_draw :: proc()
         {
             _x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
             DrawEllipseLines(
-                _x,
+				_x,
                 _y,
                 5,
                 3,
-                rl.RAYWHITE
-            )
+                rl.RAYWHITE)
         }
 
         for _agent in selection.selected_agents
@@ -133,12 +132,12 @@ game_draw :: proc()
                 _y,
                 5,
                 3,
-                rl.WHITE
-            )
+                rl.WHITE)
         }
 
         renderer_draw(renderer)
         selection_draw(selection)
+		mouse_draw(&mouse)
     }
 
     // Scaled up final rendering

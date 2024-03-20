@@ -1,9 +1,24 @@
 package main
 import rl "vendor:raylib"
-/*
+
+MineManager :: struct {
+	entities : [dynamic]^Mine,
+
+	registered : proc(e : ^Mine),
+	unregistered : proc(e : ^Mine),
+	update : proc(e : ^Mine),
+}
+
+make_mine_manager :: proc() -> ^MineManager
+{
+	manager := new(MineManager)
+	manager.update = mine_update
+
+	return manager
+}
+
 Mine :: struct
 {
-	using entity : Entity,
 	radius: f32,
 	timer:f32,
 	time:f32,
@@ -12,9 +27,11 @@ Mine :: struct
 	isboom:bool,
 	hasboom:bool,
 	explosion_radius:f32,
+
+
 }
 
-mine_expode :: proc(mine : ^Mine)
+mine_expode :: proc(use mine : ^Mine)
 {
 	using mine
 	

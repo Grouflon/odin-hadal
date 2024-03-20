@@ -1,6 +1,7 @@
 package main
 
 import rl "vendor:raylib"
+import "core:math"
 
 Mouse :: struct
 {
@@ -30,4 +31,9 @@ mouse_update :: proc(using _mouse:^Mouse, _camera:rl.Camera2D, _pixel_ratio:i32)
 		rl.IsMouseButtonDown(rl.MouseButton.LEFT),
 		rl.IsMouseButtonDown(rl.MouseButton.RIGHT),
 	}
+}
+
+mouse_draw :: proc(using _mouse:^Mouse)
+{
+	rl.DrawPixel(i32(math.floor(world_position.x)), i32(math.floor(world_position.y)), rl.GREEN)
 }

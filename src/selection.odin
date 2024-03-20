@@ -39,14 +39,13 @@ selection_update :: proc(using _selection: ^Selection)
 			math.floor(min(aabb.min.y ,aabb.max.y)),	
 		},
 		{
-			math.ceil(max(aabb.min.x ,aabb.max.x)),
-			math.ceil(max(aabb.min.y, aabb.max.y)),
-		}
-	}
+			math.floor(max(aabb.min.x ,aabb.max.x)),
+			math.floor(max(aabb.min.y, aabb.max.y)),
+		}}
 
 	clear(&hovered_agents)
 	_selectable_agents: [dynamic]^Agent
-
+	
 	for _agent in game().agent_manager.entities
 	{
 		if collision_aabb_aabb(aabb, agent_aabb(_agent))
