@@ -6,7 +6,7 @@ MineManager :: struct {
 	entities:     [dynamic]^Mine,
 	registered:   proc(e: ^Mine),
 	unregistered: proc(e: ^Mine),
-	update:       proc(e: ^Mine),
+	update:       proc(e: ^Mine, dt: f32),
 }
 
 make_mine_manager :: proc() -> ^MineManager {
@@ -17,6 +17,13 @@ make_mine_manager :: proc() -> ^MineManager {
 }
 
 delete_mine_manager :: proc(_manager: ^MineManager) {
+	_mines: = _manager.entities
+    for _mine in _mines
+    {
+        manager_unregister_entity(_manager, _mine)
+        delete_mine(_mine)
+    }
+
 	delete(_manager.entities)
 	free(_manager)
 }
@@ -49,7 +56,7 @@ delete_mine :: proc(_mine: ^Mine) {
 	free(_mine)
 }
 
-mine_update :: proc(using _mine: ^Mine) {
+mine_update :: proc(using _mine: ^Mine, dt: f32) {
 	if (isboom) {
 		time += rl.GetFrameTime()
 		if (time > 1) {

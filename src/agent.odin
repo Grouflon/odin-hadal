@@ -10,7 +10,7 @@ AgentManager :: struct
 
 	registered : proc(e : ^Agent),
 	unregistered : proc(e : ^Agent),
-	update : proc(e : ^Agent),
+	update : proc(e : ^Agent, dt: f32),
 }
 
 make_agent_manager :: proc() -> ^AgentManager
@@ -23,6 +23,13 @@ make_agent_manager :: proc() -> ^AgentManager
 
 delete_agent_manager :: proc(_manager: ^AgentManager)
 {
+	_agents: = _manager.entities
+    for _agent in _agents
+    {
+        manager_unregister_entity(_manager, _agent)
+        delete_agent(_agent)
+    }
+
 	delete(_manager.entities)
 	free(_manager)
 }
@@ -45,7 +52,7 @@ delete_agent :: proc(_agent: ^Agent)
 	free(_agent)
 }
 
-agent_update :: proc(using _agent : ^Agent)
+agent_update :: proc(using _agent : ^Agent, dt: f32)
 {
 	draw(int(position.y), _agent, proc(_payload : rawptr)
 	{

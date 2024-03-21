@@ -1,4 +1,5 @@
 package main
+import rl "vendor:raylib"
 
 manager_register_entity :: proc(_manager : ^$M, _entity : ^$E)
 {
@@ -32,11 +33,13 @@ manager_unregister_entity :: proc(_manager : ^$M, _entity : ^$E)
 manager_update :: proc(_manager : ^$M)
 {
 	assert(_manager != nil)
+	dt:=rl.GetFrameTime()
+	
 	if (_manager.update != nil)
 	{
 		for entity in _manager.entities
 		{
-			_manager.update(entity)
+			_manager.update(entity, dt)
 		}
 	}
 }
