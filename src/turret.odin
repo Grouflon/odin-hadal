@@ -54,10 +54,12 @@ delete_turret :: proc(_turret: ^Turret) {
 
 turret_update :: proc(using _turret: ^Turret, dt: f32) {
 	cooldown_timer+= dt;
+	target = game().agent_manager.entities[0]
 
 	if (cooldown_timer >= cooldown)
 	{
-		bullet := make_bullet(position, Vector2{5,5}, _turret)
+		dir := rl.Vector2Normalize((cast(^Agent)target).position - position)
+		bullet := make_bullet(position, dir, _turret)
 		manager_register_entity(game().bullet_manager, bullet)
 		cooldown_timer = 0
 	}
@@ -68,7 +70,14 @@ turret_update :: proc(using _turret: ^Turret, dt: f32) {
 turret_draw :: proc(_payload: rawptr) {
 	using turret := cast(^Turret)_payload
 	
+	dir := rl.Vector2Normalize((cast(^Agent)turret.target).position - turret.position)
+
 	pos:=floor_vec2(position)
 	rl.DrawPixelV(pos, rl.PINK)
-	rl.DrawCircleV(pos, 1, rl.PINK)
+	rl.DrawCircleV(pos, 2, rl.PINK)
+
+	for i:=0; i<2; i+=1
+	{
+		rl.DrawPixelV(pos+dir*f32(i), rl.BLACK)
+	}
 }
