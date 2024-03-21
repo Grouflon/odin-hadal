@@ -54,6 +54,14 @@ delete_agent :: proc(_agent: ^Agent)
 
 agent_update :: proc(using _agent : ^Agent, dt: f32)
 {
+	if (game().mouse.down[1])
+	{
+		wp:= game().mouse.world_position
+		direction := rl.Vector2Normalize(wp - position)
+		speed: f32= 10.0
+		position +=  direction * dt  * speed
+	}
+
 	draw(int(position.y), _agent, proc(_payload : rawptr)
 	{
 		using agent := cast(^Agent)_payload

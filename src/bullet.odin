@@ -51,12 +51,16 @@ delete_bullet :: proc(_bullet: ^Bullet) {
 }
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {
-	position += velocity*dt
+	agent := game().agent_manager.entities[0]
+	dir := rl.Vector2Normalize(agent.position - position)
+	velocity = rl.Vector2Normalize(velocity + dir)
+	position += velocity * dt * 10
 	time+=dt
 
 	if (time >= 5)
 	{
 		manager_unregister_entity(game().bullet_manager, _bullet)
+		delete_bullet(_bullet)
 		return
 	}
 	draw(int(position.y), _bullet, bullet_draw)
