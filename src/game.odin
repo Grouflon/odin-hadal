@@ -23,6 +23,7 @@ Game :: struct
     action_manager : ^ActionManager,
     selection : ^Selection,
 
+	ldtk:ldtk
 }
 g_game : Game
 
@@ -72,33 +73,42 @@ game_start :: proc()
 game_load:: proc()
 {
     using g_game
-
 	agent_manager = make_agent_manager()
 	mine_manager= make_mine_manager();
 	bullet_manager= make_bullet_manager();
 	turret_manager= make_turret_manager();
     action_manager = make_action_manager()
 
-    _agents := []^Agent {
-        make_agent(Vector2{40,40}),
-        make_agent(Vector2{50,40}),
-        make_agent(Vector2{40,50}),
-        make_agent(Vector2{50,50}),
-    }
-    for _agent in _agents
-    {
-        manager_register_entity(agent_manager, _agent)
-    }
-	manager_register_entity(turret_manager, make_turret(Vector2{100,52}))
+	ldtk = load_ldtk( "map_ldtk.json")
 
-	_mines := []^Mine {
-        make_mine(Vector2{50,102}),
-        make_mine(Vector2{50,100}),
-    }
-    for _mine in _mines
-    {
-        manager_register_entity(mine_manager, _mine)
-    }
+	for entity in ldtk.entities
+	{
+		position := entity.position*10 // ldtk grid not good scale
+		if (entity.id == 3)// agent
+		{
+			_agents := []^Agent {
+				make_agent(position),
+				make_agent(position+ Vector2{10,0}),
+				make_agent(position+ Vector2{0,10}),
+				make_agent(position+ Vector2{10,10}),
+			}
+			for _agent in _agents
+			{
+				manager_register_entity(agent_manager, _agent)
+			}
+		}
+		else if (entity.id == 5) // mine
+		{
+			manager_register_entity(mine_manager, make_mine(position))
+
+		} 
+		else if (entity.id == 6) // turret
+		{
+			manager_register_entity(turret_manager, make_turret(position))
+		}
+	}
+
+
 
 
     selection = make_selection()
@@ -107,6 +117,8 @@ game_load:: proc()
 game_unload :: proc()
 {
 	using g_game
+
+	delete(ldtk.entities)
 
     delete_selection(selection)
     delete_action_manager(action_manager)

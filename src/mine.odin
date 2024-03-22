@@ -90,7 +90,7 @@ mine_activate :: proc(using _mine: ^Mine) {
 
 mine_explode :: proc(using _mine: ^Mine) {
 	for _agent in game().agent_manager.entities {
-		if (distance_squared(position, _agent.position) < explosion_radius) {
+		if (distance_squared(position, _agent.position) <= explosion_radius) {
 			agent_kill(_agent);
 		}
 	}
