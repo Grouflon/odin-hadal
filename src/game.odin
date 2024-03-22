@@ -66,7 +66,14 @@ game_start :: proc()
     game_camera.zoom = 1.0
 
     // Game
-    agent_manager = make_agent_manager()
+    game_load()
+}
+
+game_load:: proc()
+{
+    using g_game
+
+	agent_manager = make_agent_manager()
 	mine_manager= make_mine_manager();
 	bullet_manager= make_bullet_manager();
 	turret_manager= make_turret_manager();
@@ -84,7 +91,6 @@ game_start :: proc()
     }
 	manager_register_entity(turret_manager, make_turret(Vector2{100,52}))
 
-
 	_mines := []^Mine {
         make_mine(Vector2{50,52}),
         make_mine(Vector2{50,50}),
@@ -98,18 +104,24 @@ game_start :: proc()
     selection = make_selection()
 }
 
-game_stop :: proc()
+game_unload :: proc()
 {
-    using rl
-    using g_game
+	using g_game
 
     delete_selection(selection)
-    
     delete_action_manager(action_manager)
     delete_agent_manager(agent_manager)
     delete_mine_manager(mine_manager)
     delete_bullet_manager(bullet_manager)
     delete_turret_manager(turret_manager)
+}
+
+game_stop :: proc()
+{
+    using rl
+    using g_game
+
+    game_unload();
 
     UnloadRenderTexture(game_render_target)
 
@@ -121,6 +133,12 @@ game_update :: proc()
 {
 	using rl
     using g_game
+
+	if (IsKeyPressed(KeyboardKey.R))
+	{
+		game_unload();
+		game_load()
+	}
 
     mouse_update(&mouse, game_camera, pixel_ratio)
 
