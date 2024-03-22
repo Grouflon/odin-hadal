@@ -92,8 +92,8 @@ game_load:: proc()
 	manager_register_entity(turret_manager, make_turret(Vector2{100,52}))
 
 	_mines := []^Mine {
-        make_mine(Vector2{50,52}),
-        make_mine(Vector2{50,50}),
+        make_mine(Vector2{50,102}),
+        make_mine(Vector2{50,100}),
     }
     for _mine in _mines
     {
