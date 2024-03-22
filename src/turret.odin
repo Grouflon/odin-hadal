@@ -36,16 +36,18 @@ Turret :: struct {
 	range:f32,
 	cooldown:f32,
 	cooldown_timer:f32,
-	target:^Agent
+	target:^Agent,
+	bullet_func: bullet_func
 }
 
-make_turret :: proc(_position: Vector2) -> ^Turret {
+make_turret :: proc(_position: Vector2, ) -> ^Turret {
 	using turret := new(Turret)
 	position = _position
 	range=1000
   	cooldown=0.5
   	cooldown_timer=0
 	target = nil
+	bullet_func = make_triple_bullet_registor
 	return turret
 }
 
@@ -72,8 +74,7 @@ turret_update :: proc(using _turret: ^Turret, dt: f32) {
 		if (cooldown_timer >= cooldown)
 		{
 			dir := rl.Vector2Normalize((cast(^Agent)target).position - position)
-			bullet := make_bullet(position + dir, dir, _turret)
-			manager_register_entity(game().bullet_manager, bullet)
+			bullet_func(position + dir, dir, _turret)
 			cooldown_timer = 0
 		}
 	}
