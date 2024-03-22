@@ -37,12 +37,14 @@ delete_agent_manager :: proc(_manager: ^AgentManager)
 Agent :: struct
 {
 	position : Vector2,
+	is_alive : bool
 }
 
 make_agent :: proc(_position : Vector2) -> ^Agent
 {
-	agent := new(Agent)
-	agent.position = _position
+	using agent := new(Agent)
+	position = _position
+	is_alive = true
 
 	return agent
 }
@@ -54,7 +56,7 @@ delete_agent :: proc(_agent: ^Agent)
 
 agent_update :: proc(using _agent : ^Agent, dt: f32)
 {
-	if (game().mouse.down[1])
+	if (is_alive && game().mouse.down[1])
 	{
 		wp:= game().mouse.world_position
 		direction := rl.Vector2Normalize(wp - position)
@@ -62,15 +64,50 @@ agent_update :: proc(using _agent : ^Agent, dt: f32)
 		position +=  direction * dt  * speed
 	}
 
-	draw(int(position.y), _agent, proc(_payload : rawptr)
+	draw(int(position.y), _agent, agent_draw)
+}
+
+agent_kill :: proc(using _agent: ^ Agent)
+{
+	hover := game().selection.hovered_agents
+	index := find(&hover, _agent)
+	if (index >= 0)
 	{
-		using agent := cast(^Agent)_payload
+		unordered_remove(&hover, index)
+	}
 	
-		x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
-		rl.DrawPixel(x, y, rl.GREEN)
+	selected := game().selection.selected_agents
+	index_select := find(&selected, _agent)
+	if (index_select >= 0)
+	{
+		unordered_remove(&selected, index_select)
+	}
+
+	is_alive = false
+}
+
+agent_draw :: proc(_payload: rawptr)
+{
+	using agent := cast(^Agent)_payload
+	
+	x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
+	
+	if (is_alive)
+	{
 		rl.DrawPixel(x, y-1, rl.PINK)
 		rl.DrawPixel(x+1, y, rl.DARKGRAY)	
-	})
+	} 
+	else
+	{
+		rl.DrawEllipse(
+			x,
+			y,
+			3,
+			2,
+			rl.RED)
+			rl.DrawPixel(x-1, y, rl.PINK)
+		}
+	rl.DrawPixel(x, y, rl.GREEN)
 }
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB
@@ -80,5 +117,25 @@ agent_aabb :: proc(using _agent: ^Agent) -> AABB
 		{ x, y-1 },
 		{ x+1, y+1 },
 	}
+}
 
+find_closest_agent :: proc(_position: Vector2, _range:f32) -> ^Agent
+{
+	_agents := game().agent_manager.entities
+	_closest_agent : ^Agent = nil
+	_range_temp := _range
+	for _agent in _agents
+	{
+		if (!_agent.is_alive ){ continue }
+
+		_dist := distance_squared(_position, _agent.position)
+
+		if (_dist < _range)
+		{
+			_closest_agent = _agent
+			_range_temp = _dist
+		}
+	}
+
+	return _closest_agent
 }

@@ -33,19 +33,20 @@ delete_turret_manager :: proc(_manager: ^TurretManager)
 
 Turret :: struct {
 	position: Vector2,
-	range:i32,
+	range:f32,
 	cooldown:f32,
 	cooldown_timer:f32,
-	target:rawptr
+	target:^Agent
 }
 
 make_turret :: proc(_position: Vector2) -> ^Turret {
-	using Turret := new(Turret)
+	using turret := new(Turret)
 	position = _position
-	range=30
+	range=1000
   	cooldown=0.5
   	cooldown_timer=0
-	return Turret
+	target = nil
+	return turret
 }
 
 delete_turret :: proc(_turret: ^Turret) {
@@ -53,28 +54,47 @@ delete_turret :: proc(_turret: ^Turret) {
 }
 
 turret_update :: proc(using _turret: ^Turret, dt: f32) {
-	cooldown_timer+= dt;
-	target = game().agent_manager.entities[0]
 
-	if (cooldown_timer >= cooldown)
+	if (cast(^Agent)target != nil)
 	{
-		dir := rl.Vector2Normalize((cast(^Agent)target).position - position)
-		bullet := make_bullet(position, dir, _turret)
-		manager_register_entity(game().bullet_manager, bullet)
-		cooldown_timer = 0
+		target = nil
+	}
+
+	if (cast(^Agent)target == nil)
+	{
+		target = find_closest_agent(position, range)
+	}
+
+	if (cast(^Agent)target != nil)
+	{
+		cooldown_timer+= dt;
+
+		if (cooldown_timer >= cooldown)
+		{
+			dir := rl.Vector2Normalize((cast(^Agent)target).position - position)
+			bullet := make_bullet(position + dir, dir, _turret)
+			manager_register_entity(game().bullet_manager, bullet)
+			cooldown_timer = 0
+		}
 	}
 	
 	draw(int(position.y), _turret, turret_draw)
 }
 
 turret_draw :: proc(_payload: rawptr) {
-	using turret := cast(^Turret)_payload
+	using _turret := cast(^Turret)_payload
 	
-	dir := rl.Vector2Normalize((cast(^Agent)turret.target).position - turret.position)
-
+	dir := Vector2{0,0}
+	if (cast(^Agent)target != nil)
+	{ 
+		dir = rl.Vector2Normalize((cast(^Agent)target).position - position)
+	}
 	pos:=floor_vec2(position)
 	rl.DrawPixelV(pos, rl.PINK)
-	rl.DrawCircleV(pos, 2, rl.PINK)
+	rl.DrawPixelV(pos + Vector2{0,1}, rl.PINK)
+	rl.DrawPixelV(pos + Vector2{0,-1}, rl.PINK)
+	rl.DrawPixelV(pos + Vector2{1,0}, rl.PINK)
+	rl.DrawPixelV(pos + Vector2{-1,0}, rl.PINK)
 
 	for i:=0; i<2; i+=1
 	{

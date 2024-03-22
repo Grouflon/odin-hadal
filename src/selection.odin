@@ -64,7 +64,7 @@ selection_update :: proc(using _selection: ^Selection)
 
 	for _agent in game().agent_manager.entities
 	{
-		if collision_aabb_aabb(aabb, agent_aabb(_agent))
+		if _agent.is_alive && collision_aabb_aabb(aabb, agent_aabb(_agent))
 		{
 			append(&_selectable_agents, _agent)
 		}

@@ -33,17 +33,17 @@ Mine :: struct {
 	radius:           f32,
 	timer:            f32,
 	time:             f32,
-	isstart:          bool,
-	isactived:        bool,
-	isboom:           bool,
-	hasboom:          bool,
+	is_started:          bool,
+	is_actived:        bool,
+	is_boom:           bool,
+	has_boom:          bool,
 	explosion_radius: f32,
 }
 
 make_mine :: proc(_position: Vector2) -> ^Mine {
 	using mine := new(Mine)
 	position = _position
-	isstart = true
+	is_started = true
 	radius = 1
 	timer = 0.5
 	time = 0
@@ -57,15 +57,15 @@ delete_mine :: proc(_mine: ^Mine) {
 }
 
 mine_update :: proc(using _mine: ^Mine, dt: f32) {
-	if (isboom) {
+	if (is_boom) {
 		time += rl.GetFrameTime()
 		if (time > 1) {
-			isboom = false
-			hasboom = true
+			is_boom = false
+			has_boom = true
 		}
 	}
 
-	if (isstart) {
+	if (is_started) {
 		for _agent in game().agent_manager.entities {
 			if (distance_squared(position, _agent.position) < radius) {
 				mine_activate(_mine)
@@ -73,7 +73,7 @@ mine_update :: proc(using _mine: ^Mine, dt: f32) {
 		}
 	}
 
-	if (isactived) {
+	if (is_actived) {
 		time += rl.GetFrameTime()
 		if (time > timer) {
 			mine_explode(_mine)
@@ -84,8 +84,8 @@ mine_update :: proc(using _mine: ^Mine, dt: f32) {
 }
 
 mine_activate :: proc(using _mine: ^Mine) {
-	isactived = true
-	isstart = false
+	is_actived = true
+	is_started = false
 }
 
 mine_explode :: proc(using _mine: ^Mine) {
@@ -96,12 +96,12 @@ mine_explode :: proc(using _mine: ^Mine) {
 	}
 
 	for mine in game().mine_manager.entities {
-		if (mine.isstart && distance_squared(position, mine.position) < explosion_radius) {
+		if (mine.is_started && distance_squared(position, mine.position) < explosion_radius) {
 			mine_activate(mine)
 		}
 	}
-	isboom=true
-	isactived=false
+	is_boom=true
+	is_actived=false
 	time=0
 }
 
@@ -110,12 +110,12 @@ mine_draw :: proc(_payload: rawptr) {
 
 	x, y: i32 = floor_to_int(position.x), floor_to_int(position.y)
 
-	if (hasboom) {
+	if (has_boom) {
 
-	} else if (isboom) {
+	} else if (is_boom) {
 		rl.DrawPixel(x, y, rl.GREEN)
 		rl.DrawCircle(x, y, explosion_radius, rl.RED)
-	} else if (isactived) {
+	} else if (is_actived) {
 		rl.DrawPixel(x, y, rl.RED)
 	} else {
 		rl.DrawPixel(x, y, rl.BLACK)

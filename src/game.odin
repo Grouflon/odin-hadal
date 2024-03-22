@@ -124,9 +124,9 @@ game_update :: proc()
 
     mouse_update(&mouse, game_camera, pixel_ratio)
 
+    manager_update(bullet_manager)
     manager_update(agent_manager)
     manager_update(mine_manager)
-    manager_update(bullet_manager)
     manager_update(turret_manager)
 
     selection_update(selection)
