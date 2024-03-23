@@ -24,7 +24,7 @@ Game :: struct
 	
 	selection : ^Selection,
 
-	ldtk:ldtk
+	level_data: ^LdtkData
 }
 g_game : Game
 
@@ -80,9 +80,9 @@ game_start:: proc()
 	turret_manager_initialize(&turret_manager)
 	action_manager_initialize(&action_manager)
 
-	ldtk = load_ldtk("map_ldtk.json")
+	level_data = load_level("map_ldtk.json")
 
-	for entity in ldtk.entities
+	for entity in level_data.entities
 	{
 		position := entity.position*10 // ldtk grid not good scale
 		if (entity.id == 3)// agent
@@ -109,7 +109,7 @@ game_stop :: proc()
 {
 	using g_game
 
-	delete(ldtk.entities)
+	free_level(level_data)
 
 	delete_selection(selection)
 
