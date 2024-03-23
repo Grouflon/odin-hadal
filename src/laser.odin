@@ -26,7 +26,7 @@ Laser :: struct {
 	time: f32
 }
 
-create_laserd:: proc(_position: Vector2, _target: Vector2, _owner: rawptr)
+create_laser_target:: proc(_position: Vector2, _target: Vector2, _owner: rawptr)
 {
 	 create_laser(_position, _position+_target, _owner)
 }
@@ -57,7 +57,7 @@ laser_update :: proc(using _laser: ^Laser, dt: f32) {
 
 	for _agent in _agents
 	{
-		collide := rl.CheckCollisionPointLine(_agent.position, position, target, 1)
+		collide := collisionLinePoint(_agent.position, position, target)
 		if (_agent.is_alive && collide)
 		{
 			agent_kill(_agent)

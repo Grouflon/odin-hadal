@@ -37,11 +37,11 @@ Turret :: struct {
 create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	using _turret := new(Turret)
 	position = _position
-	range=1000
+	range=100
 	cooldown=_cooldown
 	cooldown_timer=0
 	speed=100
-	bullet_func = create_laserd
+	bullet_func = create_laser_target
 
 	manager_register_entity(Turret, &game().turret_manager, _turret)
 	return _turret
@@ -57,6 +57,7 @@ turret_update :: proc(using _turret: ^Turret, dt: f32)
 	if (target != nil && !target.is_alive)
 	{
 		target = nil
+		reset_turret(_turret)
 	}
 
 	if (target == nil)
@@ -79,9 +80,14 @@ turret_update :: proc(using _turret: ^Turret, dt: f32)
 	{
 		dir := normalize(target_lock - position)
 		bullet_func(position + dir, dir * speed, _turret)
-		cooldown_timer = 0
-		has_target_lock = false
+		reset_turret(_turret)
 	}
+}
+
+reset_turret:: proc(using _turret: ^Turret)
+{
+	cooldown_timer = 0
+	has_target_lock = false
 }
 
 turret_draw :: proc(using _turret: ^Turret) {

@@ -21,6 +21,7 @@ Game :: struct
 	bullet_manager : BulletManager,
 	laser_manager : LaserManager,
 	turret_manager : TurretManager,
+	acid_manager : AcidManager,
 	action_manager : ActionManager,
 	
 	selection : ^Selection,
@@ -80,6 +81,7 @@ game_start:: proc()
 	bullet_manager_initialize(&bullet_manager)
 	laser_manager_initialize(&laser_manager)
 	turret_manager_initialize(&turret_manager)
+	acid_manager_initialize(&acid_manager)
 	action_manager_initialize(&action_manager)
 
 	level_data = load_level("map_ldtk.json")
@@ -101,6 +103,8 @@ game_start:: proc()
 		}
 	}
 
+	create_acid(Vector2{60, 60}, 10)
+
 	selection = make_selection()
 }
 
@@ -117,6 +121,7 @@ game_stop :: proc()
 	bullet_manager_shutdown(&bullet_manager)
 	laser_manager_shutdown(&laser_manager)
 	turret_manager_shutdown(&turret_manager)
+	acid_manager_shutdown(&acid_manager)
 	agent_manager_shutdown(&agent_manager)
 }
 
@@ -157,6 +162,7 @@ game_update :: proc()
 	{
 		manager_update(Bullet, &bullet_manager, _dt)
 		manager_update(Agent, &agent_manager, _dt)
+		manager_update(Acid, &acid_manager, _dt)
 		manager_update(Mine, &mine_manager, _dt)
 		manager_update(Laser, &laser_manager, _dt)
 		manager_update(Turret, &turret_manager, _dt)
@@ -186,6 +192,7 @@ game_draw :: proc()
 		manager_draw(Agent, &agent_manager)
 		manager_draw(Mine, &mine_manager)
 		manager_draw(Laser, &laser_manager)
+		manager_draw(Acid, &acid_manager)
 		manager_draw(Turret, &turret_manager)
 
 		renderer_ordered_draw(&renderer)
