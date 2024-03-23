@@ -3,13 +3,14 @@ import "core:encoding/json"
 import "core:fmt"
 import "core:os"
 import "core:strings"
+import "core:log"
 
-ldtk::struct
+LdtkData :: struct
 {
-	entities: [dynamic]ldtk_entity
+	entities: [dynamic]LdtkEntity
 }
 
-ldtk_entity::struct
+LdtkEntity::struct
 {
 	identifier: string,
 	position:Vector2,
@@ -20,7 +21,7 @@ load_json::proc(path:string) -> json.Value
 {
 	data, ok := os.read_entire_file_from_filename(path)
 	if !ok {
-		fmt.eprintln("Failed to load the file!")
+		log.errorf("Faile to load file \"%s\"", path)
 		return nil
 	}
 	defer delete(data) // Free the memory at the end
@@ -28,8 +29,8 @@ load_json::proc(path:string) -> json.Value
 	// Parse the json file.
 	json_data, err := json.parse(data)
 	if err != .None {
-		fmt.eprintln("Failed to parse the json file.")
-		fmt.eprintln("Error:", err)
+		log.errorf("Faile to parse json file \"%s\"", path)
+		log.errorf("Error:", err)
 		return nil
 	}
 
@@ -37,11 +38,13 @@ load_json::proc(path:string) -> json.Value
 }
 
 
-load_ldtk::proc(path:string) -> ldtk
+load_level::proc(path:string) -> ^LdtkData
 {
-	data := load_json(path)
+	data: json.Value = load_json(path)
+	defer json.destroy_value(data)
+
 	assert(data != nil, "error")
-	ldtk:ldtk
+	ldtk:= new(LdtkData)
 	
 	root := data.(json.Object)
 	levels := root["levels"].(json.Array)
@@ -55,7 +58,7 @@ load_ldtk::proc(path:string) -> ldtk
 			for entityInstance in entityInstances
 			{
 				entityInstanceObj := entityInstance.(json.Object)
-				ldtk_entity:ldtk_entity
+				ldtk_entity:LdtkEntity
 				assert(entityInstanceObj != nil, "hooho")
 				ldtk_entity.identifier = entityInstanceObj["__identifier"].(json.String)
 				ldtk_entity.id = i32(entityInstanceObj["defUid"].(json.Float))
@@ -66,6 +69,11 @@ load_ldtk::proc(path:string) -> ldtk
 			}
 		}
 	}
-	defer json.destroy_value(data)
 	return ldtk
+}
+
+free_level :: proc(_level_data : ^LdtkData)
+{
+	delete(_level_data.entities)
+	free(_level_data)
 }
