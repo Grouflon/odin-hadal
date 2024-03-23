@@ -79,7 +79,7 @@ game_start:: proc()
 	turret_manager_initialize(&turret_manager)
 	action_manager = make_action_manager()
 
-	ldtk = load_ldtk( "map_ldtk.json")
+	ldtk = load_ldtk("map_ldtk.json")
 
 	for entity in ldtk.entities
 	{
@@ -146,10 +146,10 @@ game_update :: proc()
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
 
-	// manager_update(bullet_manager, _dt)
+	manager_update(Bullet, &bullet_manager, _dt)
 	manager_update(Agent, &agent_manager, _dt)
-	// manager_update(mine_manager, _dt)
-	// manager_update(turret_manager, _dt)
+	manager_update(Mine, &mine_manager, _dt)
+	manager_update(Turret, &turret_manager, _dt)
 
 	selection_update(selection)
 }
@@ -171,10 +171,10 @@ game_draw :: proc()
 
 		selection_draw_agents(selection)
 
-		// manager_draw(bullet_manager)
+		manager_draw(Bullet, &bullet_manager)
 		manager_draw(Agent, &agent_manager)
-		// manager_draw(mine_manager)
-		// manager_draw(turret_manager)
+		manager_draw(Mine, &mine_manager)
+		manager_draw(Turret, &turret_manager)
 
 		renderer_ordered_draw(&renderer)
 
