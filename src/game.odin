@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "core:log"
 
 Game :: struct
 {
@@ -21,7 +22,7 @@ Game :: struct
 	bullet_manager : BulletManager,
 	turret_manager : TurretManager,
 	action_manager : ActionManager,
-	
+
 	selection : ^Selection,
 
 	level_data: ^LdtkData
@@ -74,13 +75,15 @@ game_initialize :: proc()
 game_start:: proc()
 {
 	using g_game
+	using rl
+
+	level_data = load_level("map_ldtk.json")
+
 	agent_manager_initialize(&agent_manager)
 	mine_manager_initialize(&mine_manager)
 	bullet_manager_initialize(&bullet_manager)
 	turret_manager_initialize(&turret_manager)
 	action_manager_initialize(&action_manager)
-
-	level_data = load_level("map_ldtk.json")
 
 	for entity in level_data.entities
 	{
@@ -88,9 +91,9 @@ game_start:: proc()
 		if (entity.id == 3)// agent
 		{
 			create_agent(position + Vector2{0, 0})
-			create_agent(position + Vector2{10, 0})
-			create_agent(position + Vector2{0, 10})
-			create_agent(position + Vector2{10, 10})
+			// create_agent(position + Vector2{10, 0})
+			// create_agent(position + Vector2{0, 10})
+			// create_agent(position + Vector2{10, 10})
 		}
 		else if (entity.id == 5) // mine
 		{
@@ -108,8 +111,7 @@ game_start:: proc()
 game_stop :: proc()
 {
 	using g_game
-
-	free_level(level_data)
+	using rl
 
 	delete_selection(selection)
 
@@ -118,6 +120,9 @@ game_stop :: proc()
 	bullet_manager_shutdown(&bullet_manager)
 	turret_manager_shutdown(&turret_manager)
 	agent_manager_shutdown(&agent_manager)
+
+	free_level(level_data)
+
 }
 
 game_shutdown :: proc()

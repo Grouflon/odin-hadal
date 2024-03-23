@@ -2,11 +2,22 @@ package main
 
 import "core:fmt"
 import "core:math"
+import "core:log"
 import rl "vendor:raylib"
 
 AgentManager :: struct
 {
-	using Manager(Agent),
+	using manager: Manager(Agent),
+
+	agent_texture: rl.Texture2D,
+	agent_spritesheet: Spritesheet,
+	agent_idle_animation : ^Animation,
+	agent_run_animation : ^Animation,
+}
+
+agent_manager :: proc() -> ^AgentManager
+{
+	return &game().agent_manager
 }
 
 agent_manager_initialize :: proc(using _manager: ^AgentManager)
@@ -15,17 +26,46 @@ agent_manager_initialize :: proc(using _manager: ^AgentManager)
 	draw = agent_draw
 	destroy_entity = destroy_agent
 	manager_initialize(Agent, _manager)
+
+	agent_texture = rl.LoadTexture("data/sprites/agent.png");
+	if agent_texture.id <= 0
+	{
+		log.error("Failed to load agent texture");
+	}
+
+	agent_spritesheet = build_spritesheet(agent_texture, 3, 1)
+	agent_idle_animation = make_animation(
+		&agent_spritesheet,
+		true,
+		{
+			{0, 1},
+		}
+	)
+	agent_run_animation = make_animation(
+		&agent_spritesheet,
+		true,
+		{
+			{1, 5},
+			{2, 5},
+		}
+	)
 }
 
 agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 {
+	delete_animation(agent_idle_animation)
+	delete_animation(agent_run_animation)
+	rl.UnloadTexture(agent_texture)
+
 	manager_shutdown(Agent, _manager)
 }
 
 Agent :: struct
 {
-	position : Vector2,
-	is_alive : bool
+	position: Vector2,
+	is_alive: bool,
+
+	animation_player: AnimationPlayer,
 }
 
 create_agent :: proc(_position : Vector2) -> ^Agent
@@ -34,28 +74,44 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 
 	position = _position
 	is_alive = true
+	animation_player.fps = 60
 
-	manager_register_entity(Agent, &game().agent_manager, _agent)
+	manager_register_entity(Agent, agent_manager(), _agent)
 	return _agent
 }
 
 destroy_agent :: proc(using _agent: ^Agent)
 {
-	manager_unregister_entity(Agent, &game().agent_manager, _agent)
+	manager_unregister_entity(Agent, agent_manager(), _agent)
 	free(_agent)
 }
 
-
-agent_update :: proc(using _agent : ^Agent, dt: f32)
+agent_update :: proc(using _agent : ^Agent, _dt: f32)
 {
+	is_moving: = false
 	if (is_alive && game().mouse.down[1])
 	{
 		wp:= game().mouse.world_position
 		direction := normalize(wp - position)
 		speed: f32= 10.0
-		position +=  direction * dt  * speed
+		position +=  direction * _dt * speed
+		is_moving = true
 	}
 
+	if !is_alive
+	{
+		animation_player_play(&animation_player, agent_manager().agent_idle_animation)
+	}
+	else if is_moving
+	{
+		animation_player_play(&animation_player, agent_manager().agent_run_animation)
+	}
+	else
+	{
+		animation_player_play(&animation_player, agent_manager().agent_idle_animation)
+	}
+
+	animation_player_update(&animation_player, _dt)
 }
 
 agent_draw :: proc(using _agent: ^Agent)
@@ -64,12 +120,13 @@ agent_draw :: proc(using _agent: ^Agent)
 	{
 		using agent := cast(^Agent)_payload
 		
-		x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
-		
+		x, y : = floor_to_int(position.x), floor_to_int(position.y)
+
 		if (is_alive)
 		{
-			rl.DrawPixel(x, y-1, rl.PINK)
-			rl.DrawPixel(x+1, y, rl.DARKGRAY)	
+			animation_player_draw(&animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
+			// rl.DrawPixel(x, y-1, rl.PINK)
+			// rl.DrawPixel(x+1, y, rl.DARKGRAY)	
 		} 
 		else
 		{
@@ -81,7 +138,7 @@ agent_draw :: proc(using _agent: ^Agent)
 				rl.RED)
 				rl.DrawPixel(x-1, y, rl.PINK)
 			}
-		rl.DrawPixel(x, y, rl.GREEN)
+		//rl.DrawPixel(x, y, rl.GREEN)
 	})
 }
 
