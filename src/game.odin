@@ -86,16 +86,10 @@ game_start:: proc()
 		position := entity.position*10 // ldtk grid not good scale
 		if (entity.id == 3)// agent
 		{
-			_agents: [4]^Agent 
-			for _i: = 0; _i < len(_agents); _i += 1 
-			{
-                _agents[_i] = make_agent()
-                _step: int : 10
-                _x: = (_i%2) * _step
-                _y: = ((_i/2)%2) * _step
-                agent_initialize(_agents[_i], position + Vector2{ f32(_x), f32(_y) })
-                manager_register_entity(&agent_manager, _agents[_i])
-			}
+            create_agent(position + Vector2{0, 0})
+            create_agent(position + Vector2{10, 0})
+            create_agent(position + Vector2{0, 10})
+            create_agent(position + Vector2{10, 10})
 		}
 		else if (entity.id == 5) // mine
 		{
@@ -143,6 +137,8 @@ game_update :: proc()
 	using rl
     using g_game
 
+    _dt: = rl.GetFrameTime()
+
 	if (IsKeyPressed(KeyboardKey.R))
 	{
 		game_stop();
@@ -151,10 +147,10 @@ game_update :: proc()
 
     mouse_update(&mouse, game_camera, pixel_ratio)
 
-    manager_update(bullet_manager)
-    manager_update(&agent_manager)
-    manager_update(mine_manager)
-    manager_update(turret_manager)
+    // manager_update(bullet_manager, _dt)
+    manager_update(Agent, &agent_manager, _dt)
+    // manager_update(mine_manager, _dt)
+    // manager_update(turret_manager, _dt)
 
     selection_update(selection)
 }
@@ -174,29 +170,15 @@ game_draw :: proc()
 
         ClearBackground(GRAY)
 
-        for _agent in selection.hovered_agents
-        {
-            _x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
-            DrawEllipseLines(
-				_x,
-                _y,
-                5,
-                3,
-                rl.RAYWHITE)
-        }
+        selection_draw_agents(selection)
 
-        for _agent in selection.selected_agents
-        {
-            _x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
-            DrawEllipseLines(
-                _x,
-                _y,
-                5,
-                3,
-                rl.WHITE)
-        }
+        // manager_draw(bullet_manager)
+        manager_draw(Agent, agent_manager)
+        // manager_draw(mine_manager)
+        // manager_draw(turret_manager)
 
-        renderer_draw(&renderer)
+        renderer_ordered_draw(&renderer)
+
         selection_draw(selection)
 		mouse_draw(&mouse)
     }

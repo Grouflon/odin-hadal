@@ -1,45 +1,89 @@
 package main
 import rl "vendor:raylib"
 
-manager_register_entity :: proc(_manager : ^$M, _entity : ^$E)
+Manager :: struct($EntityType: typeid)
+{
+	entities: [dynamic]^EntityType,
+
+	registered: proc(e: ^EntityType),
+	unregistered: proc(e: ^EntityType),
+	update: proc(e: ^EntityType, dt: f32),
+	draw: proc(e: ^EntityType),
+	destroy_entity: proc(e: ^EntityType)
+}
+
+manager_initialize :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
+{
+	entities = make([dynamic]^Agent)
+}
+
+manager_shutdown :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
+{
+	// Delete all entities that are left in the manager
+	if (destroy_entity != nil)
+	{
+		for _i := len(entities) - 1; _i >= 0; _i-=1 
+	    {
+	    	_entity: = entities[_i]
+
+	    	destroy_entity(_entity)
+	    }
+	}
+
+	delete(entities)
+}
+
+manager_register_entity :: proc($EntityType: typeid, using _manager : ^Manager(EntityType), _entity : ^EntityType)
 {
 	assert(_manager != nil)
 	assert(_entity != nil)
-	assert(find(&_manager.entities, _entity) < 0, "Entity already present in the entities list")
+	assert(find(&entities, _entity) < 0, "Entity already present in the entities list")
 
-	append(&_manager.entities, _entity)
+	append(&entities, _entity)
 
-	if (_manager.registered != nil)
+	if (registered != nil)
 	{
-		_manager.registered(_entity)
+		registered(_entity)
 	}
 }
 
-manager_unregister_entity :: proc(_manager : ^$M, _entity : ^$E)
+manager_unregister_entity :: proc($EntityType: typeid, using _manager : ^Manager(EntityType), _entity : ^EntityType)
 {
 	assert(_manager != nil)
 	assert(_entity != nil)
-	index := find(&_manager.entities, _entity)
+	index := find(&entities, _entity)
 	assert(index >= 0, "Entity not present in the array")
 
-	unordered_remove(&_manager.entities, index)
+	unordered_remove(&entities, index)
 
-	if (_manager.unregistered != nil)
+	if (unregistered != nil)
 	{
-		_manager.unregistered(_entity)
+		unregistered(_entity)
 	}
 }
 
-manager_update :: proc(_manager : ^$M)
+manager_update :: proc($EntityType: typeid, using _manager : ^Manager(EntityType), _dt: f32)
 {
 	assert(_manager != nil)
-	dt:=rl.GetFrameTime()
 	
-	if (_manager.update != nil)
+	if (update != nil)
 	{
-		for entity in _manager.entities
+		for entity in entities
 		{
-			_manager.update(entity, dt)
+			update(entity, _dt)
+		}
+	}
+}
+
+manager_draw :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
+{
+	assert(_manager != nil)
+	
+	if (update != nil)
+	{
+		for entity in entities
+		{
+			update(entity, dt)
 		}
 	}
 }

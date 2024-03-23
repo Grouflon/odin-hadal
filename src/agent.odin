@@ -6,32 +6,21 @@ import rl "vendor:raylib"
 
 AgentManager :: struct
 {
-	entities : [dynamic]^Agent,
-
-	registered : proc(e : ^Agent),
-	unregistered : proc(e : ^Agent),
-	update : proc(e : ^Agent, dt: f32),
+	using Manager(Agent),
 }
 
 agent_manager_initialize :: proc(using _manager: ^AgentManager)
 {
 	update = agent_update
-	entities = make([dynamic]^Agent)
+	draw = agent_draw
+	destroy_entity = destroy_agent
+
+	manager_initialize(Agent, _manager)
 }
 
 agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 {
-	// Delete all entities that are left in the manager
-	_agents: = _manager.entities
-    for _i := len(_agents) - 1; _i >= 0; _i-=1 
-    {
-    	_agent: = _agents[_i]
-    	agent_shutdown(_agent)
-		manager_unregister_entity(_manager, _agent)
-        delete_agent(_agent)
-    }
-
-	delete(_agents)
+	manager_shutdown(Agent, _manager)
 }
 
 Agent :: struct
@@ -40,24 +29,20 @@ Agent :: struct
 	is_alive : bool
 }
 
-make_agent :: proc() -> ^Agent
+create_agent :: proc(_position : Vector2) -> ^Agent
 {
-	return new(Agent)
-}
+	using _agent: = new(Agent)
 
-delete_agent :: proc(_agent: ^Agent)
-{
-	free(_agent)
-}
-
-agent_initialize :: proc(using _agent: ^Agent, _position : Vector2)
-{
 	position = _position
 	is_alive = true
+
+	manager_register_entity(Agent, &game().agent_manager, _agent)
+	return _agent
 }
 
-agent_shutdown :: proc(using _agent: ^Agent)
+destroy_agent :: proc(using _agent: ^Agent)
 {
+	free(_agent)
 }
 
 agent_update :: proc(using _agent : ^Agent, dt: f32)
@@ -70,7 +55,33 @@ agent_update :: proc(using _agent : ^Agent, dt: f32)
 		position +=  direction * dt  * speed
 	}
 
-	draw(int(position.y), _agent, agent_draw)
+}
+
+agent_draw :: proc(using _agent: ^Agent)
+{
+	ordered_draw(int(position.y), _agent, proc(_payload: rawptr)
+	{
+		using agent := cast(^Agent)_payload
+		
+		x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
+		
+		if (is_alive)
+		{
+			rl.DrawPixel(x, y-1, rl.PINK)
+			rl.DrawPixel(x+1, y, rl.DARKGRAY)	
+		} 
+		else
+		{
+			rl.DrawEllipse(
+				x,
+				y,
+				3,
+				2,
+				rl.RED)
+				rl.DrawPixel(x-1, y, rl.PINK)
+			}
+		rl.DrawPixel(x, y, rl.GREEN)
+	})
 }
 
 agent_kill :: proc(using _agent: ^ Agent)
@@ -90,30 +101,6 @@ agent_kill :: proc(using _agent: ^ Agent)
 	}
 
 	is_alive = false
-}
-
-agent_draw :: proc(_payload: rawptr)
-{
-	using agent := cast(^Agent)_payload
-	
-	x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
-	
-	if (is_alive)
-	{
-		rl.DrawPixel(x, y-1, rl.PINK)
-		rl.DrawPixel(x+1, y, rl.DARKGRAY)	
-	} 
-	else
-	{
-		rl.DrawEllipse(
-			x,
-			y,
-			3,
-			2,
-			rl.RED)
-			rl.DrawPixel(x-1, y, rl.PINK)
-		}
-	rl.DrawPixel(x, y, rl.GREEN)
 }
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB

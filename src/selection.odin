@@ -97,6 +97,33 @@ selection_update :: proc(using _selection: ^Selection)
 	}
 }
 
+selection_draw_agents :: proc(using _selection: ^Selection)
+{
+	using rl
+
+	for _agent in hovered_agents
+	{
+		_x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
+		DrawEllipseLines(
+			_x,
+			_y,
+			5,
+			3,
+			rl.RAYWHITE)
+	}
+
+	for _agent in selected_agents
+	{
+		_x, _y := floor_to_int(_agent.position.x), floor_to_int(_agent.position.y)
+		DrawEllipseLines(
+			_x,
+			_y,
+			5,
+			3,
+			rl.WHITE)
+	}
+}
+
 selection_draw :: proc(using _selection: ^Selection)
 {
 	// rl.DrawPixel(floor_to_int(mouse().world_position.x), floor_to_int(mouse().world_position.y), rl.RED)
