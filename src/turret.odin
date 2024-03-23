@@ -26,18 +26,22 @@ Turret :: struct {
 	range:f32,
 	cooldown:f32,
 	cooldown_timer:f32,
-	target:^Agent,
+	target: ^Agent,
+	has_target: bool,
+	target_lock: Vector2,
+	has_target_lock: bool,
+	speed: f32,
 	bullet_func: bullet_func
 }
 
-create_turret :: proc(_position: Vector2 ) -> ^Turret {
+create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	using _turret := new(Turret)
 	position = _position
-	range=1000
-	cooldown=0.5
+	range=100
+	cooldown=_cooldown
 	cooldown_timer=0
-	target = nil
-	bullet_func = make_and_register_triple_bullet
+	speed=100
+	bullet_func = create_laser_target
 
 	manager_register_entity(Turret, &game().turret_manager, _turret)
 	return _turret
@@ -48,40 +52,56 @@ destroy_turret :: proc(_turret: ^Turret) {
 	free(_turret)
 }
 
-turret_update :: proc(using _turret: ^Turret, dt: f32) {
-
-	if (cast(^Agent)target != nil)
+turret_update :: proc(using _turret: ^Turret, dt: f32) 
+{
+	if (target != nil && !target.is_alive)
 	{
 		target = nil
+		reset_turret(_turret)
 	}
 
-	if (cast(^Agent)target == nil)
+	if (target == nil)
 	{
 		target = find_closest_agent(position, range)
 	}
 
-	if (cast(^Agent)target != nil)
-	{
-		cooldown_timer+= dt;
+	has_target = target != nil
+	if (!has_target){ return }
 
-		if (cooldown_timer >= cooldown)
-		{
-			dir := normalize((cast(^Agent)target).position - position)
-			bullet_func(position + dir, dir, _turret)
-			cooldown_timer = 0
-		}
+	if (cooldown_timer == 0)
+	{
+		target_lock = target.position
+		has_target_lock = true
+	}
+
+	cooldown_timer+= dt;
+
+	if (cooldown_timer >= cooldown)
+	{
+		dir := normalize(target_lock - position)
+		bullet_func(position + dir, dir * speed, _turret)
+		reset_turret(_turret)
 	}
 }
 
-turret_draw :: proc(using _mine: ^Turret) {
-	ordered_draw(int(position.y), _mine, proc(_payload: rawptr)
+reset_turret:: proc(using _turret: ^Turret)
+{
+	cooldown_timer = 0
+	has_target_lock = false
+}
+
+turret_draw :: proc(using _turret: ^Turret) {
+	ordered_draw(int(position.y), _turret, proc(_payload: rawptr)
 	{
 		using _turret := cast(^Turret)_payload
 		
 		dir := Vector2{0,0}
-		if (cast(^Agent)target != nil)
+		if (has_target_lock)
 		{ 
-			dir = normalize((cast(^Agent)target).position - position)
+			dir = normalize(target_lock - position)
+		} else if (has_target)
+		{
+			dir = normalize(target.position - position)
 		}
 		pos:=floor_vec2(position)
 		rl.DrawPixelV(pos, rl.PINK)

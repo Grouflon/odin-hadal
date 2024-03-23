@@ -20,11 +20,14 @@ Game :: struct
 	agent_manager : AgentManager,
 	mine_manager : MineManager,
 	bullet_manager : BulletManager,
+	laser_manager : LaserManager,
 	turret_manager : TurretManager,
+	acid_manager : AcidManager,
+	ice_manager : IceManager,
 	action_manager : ActionManager,
 
 	selection : ^Selection,
-
+	is_game_paused: bool,
 	level_data: ^LdtkData
 }
 g_game : Game
@@ -82,26 +85,34 @@ game_start:: proc()
 	agent_manager_initialize(&agent_manager)
 	mine_manager_initialize(&mine_manager)
 	bullet_manager_initialize(&bullet_manager)
+	laser_manager_initialize(&laser_manager)
 	turret_manager_initialize(&turret_manager)
+	acid_manager_initialize(&acid_manager)
+	ice_manager_initialize(&ice_manager)
 	action_manager_initialize(&action_manager)
 
 	for entity in level_data.entities
 	{
-		position := entity.position*10 // ldtk grid not good scale
-		if (entity.id == 3)// agent
+		position := entity.position // ldtk grid not good scale
+		if (entity.identifier == "Agent")
 		{
 			create_agent(position + Vector2{0, 0})
-			// create_agent(position + Vector2{10, 0})
-			// create_agent(position + Vector2{0, 10})
-			// create_agent(position + Vector2{10, 10})
 		}
-		else if (entity.id == 5) // mine
+		else if (entity.identifier == "Mine")
 		{
 			create_mine(position)
 		} 
-		else if (entity.id == 6) // turret
+		else if (entity.identifier == "Turret")
 		{
-			create_turret(position)
+			create_turret(position, 4)
+		}
+		else if (entity.identifier == "Acid")
+		{
+			create_acid(position, Vector2{entity.width, entity.height})
+		}
+		else if (entity.identifier == "Ice")
+		{
+			create_ice(position, Vector2{entity.width, entity.height}, 0.3)
 		}
 	}
 
@@ -118,7 +129,10 @@ game_stop :: proc()
 	action_manager_shutdown(&action_manager)
 	mine_manager_shutdown(&mine_manager)
 	bullet_manager_shutdown(&bullet_manager)
+	laser_manager_shutdown(&laser_manager)
 	turret_manager_shutdown(&turret_manager)
+	acid_manager_shutdown(&acid_manager)
+	ice_manager_shutdown(&ice_manager)
 	agent_manager_shutdown(&agent_manager)
 
 	free_level(level_data)
@@ -152,11 +166,22 @@ game_update :: proc()
 	}
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
+	
+	if (IsKeyPressed(KeyboardKey.SPACE))
+	{
+		is_game_paused = !is_game_paused
+	}
 
-	manager_update(Bullet, &bullet_manager, _dt)
-	manager_update(Agent, &agent_manager, _dt)
-	manager_update(Mine, &mine_manager, _dt)
-	manager_update(Turret, &turret_manager, _dt)
+	if (!is_game_paused)
+	{
+		manager_update(Bullet, &bullet_manager, _dt)
+		manager_update(Agent, &agent_manager, _dt)
+		manager_update(Acid, &acid_manager, _dt)
+		manager_update(Ice, &ice_manager, _dt)
+		manager_update(Mine, &mine_manager, _dt)
+		manager_update(Laser, &laser_manager, _dt)
+		manager_update(Turret, &turret_manager, _dt)
+	}
 
 	selection_update(selection)
 }
@@ -175,13 +200,15 @@ game_draw :: proc()
 		defer EndMode2D()
 
 		ClearBackground(GRAY)
-
 		selection_draw_agents(selection)
 
 		manager_draw(Bullet, &bullet_manager)
 		manager_draw(Agent, &agent_manager)
 		manager_draw(Mine, &mine_manager)
 		manager_draw(Turret, &turret_manager)
+		manager_draw(Laser, &laser_manager)
+		manager_draw(Acid, &acid_manager)
+		manager_draw(Ice, &ice_manager)
 
 		renderer_ordered_draw(&renderer)
 

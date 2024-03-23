@@ -63,6 +63,8 @@ agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 Agent :: struct
 {
 	position: Vector2,
+	velocity : Vector2,
+	friction : f32,
 	is_alive: bool,
 
 	animation_player: AnimationPlayer,
@@ -75,6 +77,7 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	position = _position
 	is_alive = true
 	animation_player.fps = 60
+	friction = 1
 
 	manager_register_entity(Agent, agent_manager(), _agent)
 	return _agent
@@ -92,10 +95,19 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 	if (is_alive && game().mouse.down[1])
 	{
 		wp:= game().mouse.world_position
-		direction := normalize(wp - position)
 		speed: f32= 10.0
-		position +=  direction * _dt * speed
-		is_moving = true
+		velocity = normalize(wp - position) * speed
+		position += velocity * _dt
+		is_moving = true 
+	}
+	else if (friction != 1)
+	{
+		if (length(velocity) > 0)
+		{
+			velocity = velocity * TimeIndependentLerp2(1, 0, 0.2, _dt)
+			position += velocity
+			is_moving = true
+		}
 	}
 
 	if !is_alive
@@ -112,6 +124,12 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 	}
 
 	animation_player_update(&animation_player, _dt)
+}
+
+TimeIndependentLerp2 :: proc(_base:f32,_target:f32, _timeTo90:f32, _dt:f32) -> f32
+{
+	lambda := -math.log10_f32(1 - 0.9) / _timeTo90;
+	return math.lerp(_base, _target, 1 - math.exp_f32(-lambda * _dt));
 }
 
 agent_draw :: proc(using _agent: ^Agent)
