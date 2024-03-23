@@ -28,7 +28,7 @@ Laser :: struct {
 
 create_laserd:: proc(_position: Vector2, _target: Vector2, _owner: rawptr)
 {
-	create_laser(_position,  _position+_target, _owner)
+	 create_laser(_position, _position+_target, _owner)
 }
 
 create_laser :: proc(_position: Vector2, _target: Vector2, _owner: rawptr) -> ^Laser 

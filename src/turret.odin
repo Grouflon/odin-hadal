@@ -26,7 +26,7 @@ Turret :: struct {
 	range:f32,
 	cooldown:f32,
 	cooldown_timer:f32,
-	target: Vector2,
+	target: ^Agent,
 	has_target: bool,
 	target_lock: Vector2,
 	has_target_lock: bool,
@@ -54,15 +54,22 @@ destroy_turret :: proc(_turret: ^Turret) {
 
 turret_update :: proc(using _turret: ^Turret, dt: f32) 
 {
-	_target := find_closest_agent(position, range)
-	has_target = _target != nil
-	if (!has_target){ return }
+	if (target != nil && !target.is_alive)
+	{
+		target = nil
+	}
 
-	target = _target.position
+	if (target == nil)
+	{
+		target = find_closest_agent(position, range)
+	}
+
+	has_target = target != nil
+	if (!has_target){ return }
 
 	if (cooldown_timer == 0)
 	{
-		target_lock = _target.position
+		target_lock = target.position
 		has_target_lock = true
 	}
 
@@ -88,7 +95,7 @@ turret_draw :: proc(using _turret: ^Turret) {
 			dir = normalize(target_lock - position)
 		} else if (has_target)
 		{
-			dir = normalize(target - position)
+			dir = normalize(target.position - position)
 		}
 		pos:=floor_vec2(position)
 		rl.DrawPixelV(pos, rl.PINK)
