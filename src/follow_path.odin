@@ -50,19 +50,19 @@ agent_follow_path :: proc(_agent: ^Agent, _path: []Vector2, _speed: f32)
 	)
 
 	// local _dist=0
-    //   for _i=1,#_path-1 do
-    //     local _start, _end = _path[_i], _path[_i+1]
-    //     assert(_start ~= nil)
-    //     assert(_end ~= nil)
-    //     local _traj=_end-_start
-    //     local _len=vec2_len(_traj)
-    //     local _dir=vec2_normalized(_traj)
-    //     while _dist < _len do
-    //       _agent.pos=_start+_dir*_dist
-    //       yield()
-    //       _dist+=_speed
-    //     end
-    //     _dist-=_len
-    //   end
-    //   _agent.pos=_path[#_path]
+	//   for _i=1,#_path-1 do
+	//     local _start, _end = _path[_i], _path[_i+1]
+	//     assert(_start ~= nil)
+	//     assert(_end ~= nil)
+	//     local _traj=_end-_start
+	//     local _len=vec2_len(_traj)
+	//     local _dir=vec2_normalized(_traj)
+	//     while _dist < _len do
+	//       _agent.pos=_start+_dir*_dist
+	//       yield()
+	//       _dist+=_speed
+	//     end
+	//     _dist-=_len
+	//   end
+	//   _agent.pos=_path[#_path]
 }

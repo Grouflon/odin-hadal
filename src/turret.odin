@@ -1,32 +1,24 @@
 package main
-import rl "vendor:raylib"
 import "core:fmt"
+import rl "vendor:raylib"
 
 
 TurretManager :: struct {
-	entities:     [dynamic]^Turret,
-	registered:   proc(e: ^Turret),
-	unregistered: proc(e: ^Turret),
-	update:       proc(e: ^Turret, dt: f32),
+	using Manager(Turret),
 }
 
-make_turret_manager :: proc() -> ^TurretManager 
+turret_manager_initialize :: proc(using _manager: ^TurretManager)
 {
-	manager := new(TurretManager)
-	manager.update = turret_update
+	update = turret_update
+	draw = turret_draw
+	destroy_entity = destroy_turret
 
-	return manager
+	manager_initialize(Turret, _manager)
 }
 
-delete_turret_manager :: proc(using _manager: ^TurretManager) 
+turret_manager_shutdown :: proc(using _manager: ^TurretManager) 
 {
-	_turrets: = _manager.entities
-    for _turret in entities
-    {
-        destroy_turret(_turret)
-    }
-
-	delete(_manager.entities)
+	manager_shutdown(Turret, _manager)
 }
 
 Turret :: struct {
@@ -47,13 +39,12 @@ create_turret :: proc(_position: Vector2 ) -> ^Turret {
 	target = nil
 	bullet_func = make_and_register_triple_bullet
 
-	manager_register_entity(&game().turret_manager, _turret)
-
+	manager_register_entity(Turret, &game().turret_manager, _turret)
 	return _turret
 }
 
 destroy_turret :: proc(_turret: ^Turret) {
-	manager_unregister_entity(&game().turret_manager, _turret)
+	manager_unregister_entity(Turret, &game().turret_manager, _turret)
 	free(_turret)
 }
 
@@ -80,27 +71,28 @@ turret_update :: proc(using _turret: ^Turret, dt: f32) {
 			cooldown_timer = 0
 		}
 	}
-	
-	draw(int(position.y), _turret, turret_draw)
 }
 
-turret_draw :: proc(_payload: rawptr) {
-	using _turret := cast(^Turret)_payload
-	
-	dir := Vector2{0,0}
-	if (cast(^Agent)target != nil)
-	{ 
-		dir = normalize((cast(^Agent)target).position - position)
-	}
-	pos:=floor_vec2(position)
-	rl.DrawPixelV(pos, rl.PINK)
-	rl.DrawPixelV(pos + Vector2{0,1}, rl.PINK)
-	rl.DrawPixelV(pos + Vector2{0,-1}, rl.PINK)
-	rl.DrawPixelV(pos + Vector2{1,0}, rl.PINK)
-	rl.DrawPixelV(pos + Vector2{-1,0}, rl.PINK)
-
-	for i:=0; i<2; i+=1
+turret_draw :: proc(using _mine: ^Turret) {
+	ordered_draw(int(position.y), _mine, proc(_payload: rawptr)
 	{
-		rl.DrawPixelV(pos+dir*f32(i), rl.BLACK)
-	}
+		using _turret := cast(^Turret)_payload
+		
+		dir := Vector2{0,0}
+		if (cast(^Agent)target != nil)
+		{ 
+			dir = normalize((cast(^Agent)target).position - position)
+		}
+		pos:=floor_vec2(position)
+		rl.DrawPixelV(pos, rl.PINK)
+		rl.DrawPixelV(pos + Vector2{0,1}, rl.PINK)
+		rl.DrawPixelV(pos + Vector2{0,-1}, rl.PINK)
+		rl.DrawPixelV(pos + Vector2{1,0}, rl.PINK)
+		rl.DrawPixelV(pos + Vector2{-1,0}, rl.PINK)
+
+		for i:=0; i<2; i+=1
+		{
+			rl.DrawPixelV(pos+dir*f32(i), rl.BLACK)
+		}
+	})
 }

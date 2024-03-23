@@ -5,26 +5,20 @@ import "core:fmt"
 bullet_func :: proc(position: Vector2, _velocity:Vector2, _owner:rawptr)
 
 BulletManager :: struct {
-	entities:     [dynamic]^Bullet,
-	registered:   proc(e: ^Bullet),
-	unregistered: proc(e: ^Bullet),
-	update:       proc(e: ^Bullet, dt: f32),
+	using Manager(Bullet),
 }
 
 bullet_manager_initialize :: proc(using _manager: ^BulletManager)
 {
 	update = bullet_update
-	entities = make([dynamic]^Bullet)
+	draw = bullet_draw
+	destroy_entity = destroy_bullet
+	manager_initialize(Bullet, _manager)
 }
 
-bullet_manager_shutdown :: proc(using _manager: ^BulletManager) {
-
-	for _i := len(entities) - 1; _i >= 0; _i-=1 
-    {
-    	destroy_bullet(entities[_i])
-    }
-
-	delete(entities)
+bullet_manager_shutdown :: proc(using _manager: ^BulletManager) 
+{
+	manager_shutdown(Bullet, _manager)
 }
 
 Bullet :: struct {
@@ -42,14 +36,14 @@ create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> 
 	owner = _owner
 	time = 0
 
-	manager_register_entity(&game().bullet_manager, bullet)
+	manager_register_entity(Bullet, &game().bullet_manager, bullet)
 
 	return bullet
 }
 
 destroy_bullet:: proc(_bullet: ^Bullet)
 {
-	manager_unregister_entity(&game().bullet_manager, _bullet)
+	manager_unregister_entity(Bullet, &game().bullet_manager, _bullet)
 	free(_bullet)
 }
 
@@ -76,13 +70,14 @@ bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {
 		destroy_bullet(_bullet)
 		return
 	}
-
-	draw(int(position.y), _bullet, bullet_draw)
 }
 
-bullet_draw :: proc(_payload: rawptr) {
-	using bullet := cast(^Bullet)_payload
-	rl.DrawPixelV(floor_vec2(position), rl.BLACK)
+bullet_draw :: proc(using _bullet: ^Bullet) {
+	ordered_draw(int(position.y), _bullet, proc(_payload: rawptr)
+	{
+		using bullet := cast(^Bullet)_payload
+		rl.DrawPixelV(floor_vec2(position), rl.BLACK)
+	})
 }
 
 make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)

@@ -23,7 +23,7 @@ renderer_shutdown :: proc(using _renderer: ^Renderer)
 	delete(draw_calls)
 }
 
-draw :: proc(_priority : int, _payload : rawptr, _draw_function : DrawFunction)
+ordered_draw :: proc(_priority : int, _payload : rawptr, _draw_function : DrawFunction)
 {
 	using renderer := renderer()
 	new_draw_call := DrawCall {
@@ -43,7 +43,7 @@ draw :: proc(_priority : int, _payload : rawptr, _draw_function : DrawFunction)
 	inject_at(&draw_calls, len(draw_calls), new_draw_call)
 }
 
-renderer_draw :: proc(using _renderer : ^Renderer)
+renderer_ordered_draw :: proc(using _renderer : ^Renderer)
 {
 	for draw_call in draw_calls
 	{

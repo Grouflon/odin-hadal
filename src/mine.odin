@@ -3,26 +3,21 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 MineManager :: struct {
-	entities:     [dynamic]^Mine,
-	registered:   proc(e: ^Mine),
-	unregistered: proc(e: ^Mine),
-	update:       proc(e: ^Mine, dt: f32),
+	using Manager(Mine),
 }
 
 mine_manager_initialize:: proc(using _manager: ^MineManager)
 {
 	update = mine_update
-	entities = make([dynamic]^Mine)
+	draw = mine_draw
+	destroy_entity = destroy_mine
+
+	manager_initialize(Mine, _manager)
 }
 
 mine_manager_shutdown::proc(using _manager: ^MineManager)
 {
-	for _i := len(entities)-1; _i > 0; _i-=1
-	{
-		destroy_mine(entities[_i])
-	}
-
-	delete(entities)
+	manager_shutdown(Mine, _manager)
 }
 
 Mine :: struct {
@@ -46,13 +41,13 @@ create_mine :: proc(_position: Vector2) -> ^Mine {
 	time = 0
 	explosion_radius = 5
 
-	manager_register_entity(&game().mine_manager, _mine)
+	manager_register_entity(Mine, &game().mine_manager, _mine)
 
 	return _mine
 }
 
 destroy_mine :: proc(_mine: ^Mine) {
-	manager_unregister_entity(&game().mine_manager, _mine)
+	manager_unregister_entity(Mine, &game().mine_manager, _mine)
 	free(_mine)
 }
 
@@ -79,8 +74,6 @@ mine_update :: proc(using _mine: ^Mine, dt: f32) {
 			mine_explode(_mine)
 		}
 	}
-
-	draw(int(position.y), _mine, mine_draw)
 }
 
 mine_activate :: proc(using _mine: ^Mine) {
@@ -105,19 +98,22 @@ mine_explode :: proc(using _mine: ^Mine) {
 	time=0
 }
 
-mine_draw :: proc(_payload: rawptr) {
-	using mine := cast(^Mine)_payload
+mine_draw :: proc(using _mine: ^Mine) {
+	ordered_draw(int(position.y), _mine, proc(_payload: rawptr)
+	{
+		using mine := cast(^Mine)_payload
 
-	x, y: i32 = floor_to_int(position.x), floor_to_int(position.y)
+		x, y: i32 = floor_to_int(position.x), floor_to_int(position.y)
 
-	if (has_boom) {
+		if (has_boom) {
 
-	} else if (is_boom) {
-		DrawPixel(x, y, rl.GREEN)
-		rl.DrawCircle(x, y, explosion_radius, rl.RED)
-	} else if (is_actived) {
-		rl.DrawPixel(x, y, rl.RED)
-	} else {
-		rl.DrawPixel(x, y, rl.BLACK)
-	}
+		} else if (is_boom) {
+			rl.DrawPixel(x, y, rl.GREEN)
+			rl.DrawCircle(x, y, explosion_radius, rl.RED)
+		} else if (is_actived) {
+			rl.DrawPixel(x, y, rl.RED)
+		} else {
+			rl.DrawPixel(x, y, rl.BLACK)
+		}
+	})
 }

@@ -1,4 +1,4 @@
-package tools
+package main
 
 import "core:math"
 import "core:math/linalg"
