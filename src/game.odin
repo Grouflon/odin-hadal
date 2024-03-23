@@ -22,6 +22,7 @@ Game :: struct
 	laser_manager : LaserManager,
 	turret_manager : TurretManager,
 	acid_manager : AcidManager,
+	ice_manager : IceManager,
 	action_manager : ActionManager,
 	
 	selection : ^Selection,
@@ -82,6 +83,7 @@ game_start:: proc()
 	laser_manager_initialize(&laser_manager)
 	turret_manager_initialize(&turret_manager)
 	acid_manager_initialize(&acid_manager)
+	ice_manager_initialize(&ice_manager)
 	action_manager_initialize(&action_manager)
 
 	level_data = load_level("map_ldtk.json")
@@ -89,21 +91,25 @@ game_start:: proc()
 	for entity in level_data.entities
 	{
 		position := entity.position // ldtk grid not good scale
-		if (entity.identifier == "Agent")// agent
+		if (entity.identifier == "Agent")
 		{
 			create_agent(position + Vector2{0, 0})
 		}
-		else if (entity.identifier == "Mine") // mine
+		else if (entity.identifier == "Mine")
 		{
 			create_mine(position)
 		} 
-		else if (entity.identifier == "Turret") // turret
+		else if (entity.identifier == "Turret")
 		{
 			create_turret(position, 4)
 		}
-		else if (entity.identifier == "Acid") // turret
+		else if (entity.identifier == "Acid")
 		{
 			create_acid(position, Vector2{entity.width, entity.height})
+		}
+		else if (entity.identifier == "Ice")
+		{
+			create_ice(position, Vector2{entity.width, entity.height}, 0.3)
 		}
 	}
 
@@ -124,6 +130,7 @@ game_stop :: proc()
 	laser_manager_shutdown(&laser_manager)
 	turret_manager_shutdown(&turret_manager)
 	acid_manager_shutdown(&acid_manager)
+	ice_manager_shutdown(&ice_manager)
 	agent_manager_shutdown(&agent_manager)
 }
 
@@ -165,6 +172,7 @@ game_update :: proc()
 		manager_update(Bullet, &bullet_manager, _dt)
 		manager_update(Agent, &agent_manager, _dt)
 		manager_update(Acid, &acid_manager, _dt)
+		manager_update(Ice, &ice_manager, _dt)
 		manager_update(Mine, &mine_manager, _dt)
 		manager_update(Laser, &laser_manager, _dt)
 		manager_update(Turret, &turret_manager, _dt)
@@ -195,6 +203,7 @@ game_draw :: proc()
 		manager_draw(Turret, &turret_manager)
 		manager_draw(Laser, &laser_manager)
 		manager_draw(Acid, &acid_manager)
+		manager_draw(Ice, &ice_manager)
 
 		renderer_ordered_draw(&renderer)
 
