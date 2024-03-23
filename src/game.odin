@@ -16,7 +16,7 @@ Game :: struct
     game_render_target : rl.RenderTexture2D,
     game_camera : rl.Camera2D,
 
-    agent_manager : ^AgentManager,
+    agent_manager : AgentManager,
     mine_manager : ^MineManager,
     bullet_manager : ^BulletManager,
     turret_manager : ^TurretManager,
@@ -42,7 +42,7 @@ mouse :: proc() -> ^Mouse
     return &game().mouse
 }
 
-game_start :: proc()
+game_initialize :: proc()
 {
     using rl
     using g_game
@@ -67,13 +67,13 @@ game_start :: proc()
     game_camera.zoom = 1.0
 
     // Game
-    game_load()
+    game_start()
 }
 
-game_load:: proc()
+game_start:: proc()
 {
     using g_game
-	agent_manager = make_agent_manager()
+	agent_manager_initialize(&agent_manager)
 	mine_manager= make_mine_manager();
 	bullet_manager= make_bullet_manager();
 	turret_manager= make_turret_manager();
@@ -86,15 +86,15 @@ game_load:: proc()
 		position := entity.position*10 // ldtk grid not good scale
 		if (entity.id == 3)// agent
 		{
-			_agents := []^Agent {
-				make_agent(position),
-				make_agent(position+ Vector2{10,0}),
-				make_agent(position+ Vector2{0,10}),
-				make_agent(position+ Vector2{10,10}),
-			}
-			for _agent in _agents
+			_agents: [4]^Agent 
+			for _i: = 0; _i < len(_agents); _i += 1 
 			{
-				manager_register_entity(agent_manager, _agent)
+                _agents[_i] = make_agent()
+                _step: int : 10
+                _x: = (_i%2) * _step
+                _y: = ((_i/2)%2) * _step
+                agent_initialize(_agents[_i], position + Vector2{ f32(_x), f32(_y) })
+                manager_register_entity(&agent_manager, _agents[_i])
 			}
 		}
 		else if (entity.id == 5) // mine
@@ -111,7 +111,7 @@ game_load:: proc()
     selection = make_selection()
 }
 
-game_unload :: proc()
+game_stop :: proc()
 {
 	using g_game
 
@@ -119,18 +119,18 @@ game_unload :: proc()
 
     delete_selection(selection)
     delete_action_manager(action_manager)
-    delete_agent_manager(agent_manager)
     delete_mine_manager(mine_manager)
     delete_bullet_manager(bullet_manager)
     delete_turret_manager(turret_manager)
+    agent_manager_shutdown(&agent_manager)
 }
 
-game_stop :: proc()
+game_shutdown :: proc()
 {
     using rl
     using g_game
 
-    game_unload();
+    game_stop();
 
     UnloadRenderTexture(game_render_target)
 
@@ -145,14 +145,14 @@ game_update :: proc()
 
 	if (IsKeyPressed(KeyboardKey.R))
 	{
-		game_unload();
-		game_load()
+		game_stop();
+		game_start()
 	}
 
     mouse_update(&mouse, game_camera, pixel_ratio)
 
     manager_update(bullet_manager)
-    manager_update(agent_manager)
+    manager_update(&agent_manager)
     manager_update(mine_manager)
     manager_update(turret_manager)
 
