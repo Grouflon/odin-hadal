@@ -42,6 +42,7 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 
 destroy_agent :: proc(using _agent: ^Agent)
 {
+	manager_unregister_entity(Agent, &game().agent_manager, _agent)
 	free(_agent)
 }
 
