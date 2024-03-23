@@ -1,8 +1,10 @@
-package main
+package qwe
 
 import "core:fmt"
 import "core:math"
 import rl "vendor:raylib"
+
+import "src"
 
 AgentManager :: struct
 {
@@ -22,16 +24,12 @@ agent_manager_initialize :: proc(using _manager: ^AgentManager)
 agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 {
 	// Delete all entities that are left in the manager
-	_agents: = _manager.entities
-    for _i := len(_agents) - 1; _i >= 0; _i-=1 
+    for _i := len(entities) - 1; _i >= 0; _i-=1 
     {
-    	_agent: = _agents[_i]
-    	agent_shutdown(_agent)
-		manager_unregister_entity(_manager, _agent)
-        delete_agent(_agent)
+        destroy_agent(entities[_i])
     }
 
-	delete(_agents)
+	delete(entities)
 }
 
 Agent :: struct
@@ -40,25 +38,23 @@ Agent :: struct
 	is_alive : bool
 }
 
-make_agent :: proc() -> ^Agent
+create_agent :: proc(_position : Vector2) -> ^Agent
 {
-	return new(Agent)
+	using _agent := new(Agent)
+	position = _position
+	is_alive = true
+
+	manager_register_entity(&game().agent_manager, _agent)
+
+	return _agent
 }
 
-delete_agent :: proc(_agent: ^Agent)
+destroy_agent :: proc(_agent: ^Agent)
 {
+	manager_unregister_entity(&game().agent_manager, _agent)
 	free(_agent)
 }
 
-agent_initialize :: proc(using _agent: ^Agent, _position : Vector2)
-{
-	position = _position
-	is_alive = true
-}
-
-agent_shutdown :: proc(using _agent: ^Agent)
-{
-}
 
 agent_update :: proc(using _agent : ^Agent, dt: f32)
 {
@@ -114,6 +110,7 @@ agent_draw :: proc(_payload: rawptr)
 			rl.DrawPixel(x-1, y, rl.PINK)
 		}
 	rl.DrawPixel(x, y, rl.GREEN)
+	DrawPixel(x, y, rl.GREEN)
 }
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB

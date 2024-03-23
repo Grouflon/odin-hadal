@@ -11,24 +11,20 @@ BulletManager :: struct {
 	update:       proc(e: ^Bullet, dt: f32),
 }
 
-make_bullet_manager :: proc() -> ^BulletManager {
-	manager := new(BulletManager)
-	manager.update = bullet_update
-
-	return manager
+bullet_manager_initialize :: proc(using _manager: ^BulletManager)
+{
+	update = bullet_update
+	entities = make([dynamic]^Bullet)
 }
 
-delete_bullet_manager :: proc(_manager: ^BulletManager) {
+bullet_manager_shutdown :: proc(using _manager: ^BulletManager) {
 
-	_bullets: = _manager.entities
-	for _bullet in _bullets
+	for _i := len(entities) - 1; _i >= 0; _i-=1 
     {
-        manager_unregister_entity(_manager, _bullet)
-        delete_bullet(_bullet)
+    	destroy_bullet(entities[_i])
     }
 
-	delete(_manager.entities)
-	free(_manager)
+	delete(entities)
 }
 
 Bullet :: struct {
@@ -38,18 +34,25 @@ Bullet :: struct {
 	time: f32
 }
 
-make_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet {
+create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet 
+{
 	using bullet := new(Bullet)
 	position = _position
 	velocity = _velocity
 	owner = _owner
 	time = 0
+
+	manager_register_entity(&game().bullet_manager, bullet)
+
 	return bullet
 }
 
-delete_bullet :: proc(_bullet: ^Bullet) {
+destroy_bullet:: proc(_bullet: ^Bullet)
+{
+	manager_unregister_entity(&game().bullet_manager, _bullet)
 	free(_bullet)
 }
+
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
 	_agents := game().agent_manager.entities
@@ -77,22 +80,9 @@ bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {
 	draw(int(position.y), _bullet, bullet_draw)
 }
 
-destroy_bullet:: proc(_bullet: ^Bullet)
-{
-	manager_unregister_entity(game().bullet_manager, _bullet)
-	delete_bullet(_bullet)
-}
-
 bullet_draw :: proc(_payload: rawptr) {
 	using bullet := cast(^Bullet)_payload
 	rl.DrawPixelV(floor_vec2(position), rl.BLACK)
-}
-
-
-make_and_register_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
-{
-	bullet := make_bullet(_position, _velocity, _owner)
-	manager_register_entity(game().bullet_manager, bullet)
 }
 
 make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
@@ -100,7 +90,7 @@ make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, 
 	dir := normalize( _velocity)
 	length := length( _velocity)
 
-	make_and_register_bullet(_position, _velocity, _owner)
-	make_and_register_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
-	make_and_register_bullet(_position,Vector2{-_velocity.y, _velocity.x}, _owner)
+	create_bullet(_position, _velocity, _owner)
+	create_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
+	create_bullet(_position,Vector2{-_velocity.y, _velocity.x}, _owner)
 }

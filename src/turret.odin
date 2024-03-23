@@ -18,17 +18,15 @@ make_turret_manager :: proc() -> ^TurretManager
 	return manager
 }
 
-delete_turret_manager :: proc(_manager: ^TurretManager) 
+delete_turret_manager :: proc(using _manager: ^TurretManager) 
 {
 	_turrets: = _manager.entities
-    for _turret in _turrets
+    for _turret in entities
     {
-        manager_unregister_entity(_manager, _turret)
-        delete_turret(_turret)
+        destroy_turret(_turret)
     }
 
 	delete(_manager.entities)
-	free(_manager)
 }
 
 Turret :: struct {
@@ -40,18 +38,22 @@ Turret :: struct {
 	bullet_func: bullet_func
 }
 
-make_turret :: proc(_position: Vector2 ) -> ^Turret {
-	using turret := new(Turret)
+create_turret :: proc(_position: Vector2 ) -> ^Turret {
+	using _turret := new(Turret)
 	position = _position
 	range=1000
-  	cooldown=0.5
-  	cooldown_timer=0
+	cooldown=0.5
+	cooldown_timer=0
 	target = nil
 	bullet_func = make_and_register_triple_bullet
-	return turret
+
+	manager_register_entity(&game().turret_manager, _turret)
+
+	return _turret
 }
 
-delete_turret :: proc(_turret: ^Turret) {
+destroy_turret :: proc(_turret: ^Turret) {
+	manager_unregister_entity(&game().turret_manager, _turret)
 	free(_turret)
 }
 

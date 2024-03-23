@@ -19,9 +19,7 @@ mine_manager_shutdown::proc(using _manager: ^MineManager)
 {
 	for _i := len(entities)-1; _i > 0; _i-=1
 	{
-		_mine:=entities[_i]
-		manager_unregister_entity(_manager, _mine)
-		delete_mine(_mine)
+		destroy_mine(entities[_i])
 	}
 
 	delete(entities)
@@ -39,27 +37,23 @@ Mine :: struct {
 	explosion_radius: f32,
 }
 
-make_mine :: proc() -> ^Mine {
-	return new(Mine)
-}
-
-delete_mine :: proc(_mine: ^Mine) {
-	free(_mine)
-}
-
-mine_initialize::proc(using _mine: ^Mine, _position: Vector2)
-{
+create_mine :: proc(_position: Vector2) -> ^Mine {
+	using _mine := new(Mine)
 	position = _position
 	is_started = true
 	radius = 1
 	timer = 0.5
 	time = 0
 	explosion_radius = 5
+
+	manager_register_entity(&game().mine_manager, _mine)
+
+	return _mine
 }
 
-mine_shutdown::proc(using _mine: ^Mine)
-{
-	//manager_unregister_entity()
+destroy_mine :: proc(_mine: ^Mine) {
+	manager_unregister_entity(&game().mine_manager, _mine)
+	free(_mine)
 }
 
 mine_update :: proc(using _mine: ^Mine, dt: f32) {
@@ -119,7 +113,7 @@ mine_draw :: proc(_payload: rawptr) {
 	if (has_boom) {
 
 	} else if (is_boom) {
-		rl.DrawPixel(x, y, rl.GREEN)
+		DrawPixel(x, y, rl.GREEN)
 		rl.DrawCircle(x, y, explosion_radius, rl.RED)
 	} else if (is_actived) {
 		rl.DrawPixel(x, y, rl.RED)

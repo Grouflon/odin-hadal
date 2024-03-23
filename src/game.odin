@@ -2,6 +2,7 @@ package main
 
 import rl "vendor:raylib"
 import "core:fmt"
+import "tools"
 
 Game :: struct
 {
@@ -18,8 +19,8 @@ Game :: struct
 
     agent_manager : AgentManager,
     mine_manager : MineManager,
-    bullet_manager : ^BulletManager,
-    turret_manager : ^TurretManager,
+    bullet_manager : BulletManager,
+    turret_manager : TurretManager,
     action_manager : ^ActionManager,
     selection : ^Selection,
 
@@ -75,7 +76,7 @@ game_start:: proc()
     using g_game
 	agent_manager_initialize(&agent_manager)
 	mine_manager_initialize(&mine_manager)
-	bullet_manager= make_bullet_manager();
+	bullet_manager_initialize(&bullet_manager)
 	turret_manager= make_turret_manager();
     action_manager = make_action_manager()
 
@@ -86,26 +87,21 @@ game_start:: proc()
 		position := entity.position*10 // ldtk grid not good scale
 		if (entity.id == 3)// agent
 		{
-			_agents: [4]^Agent 
-			for _i: = 0; _i < len(_agents); _i += 1 
+			for _i: = 0; _i < 4; _i += 1 
 			{
-                _agents[_i] = make_agent()
                 _step: int : 10
                 _x: = (_i%2) * _step
                 _y: = ((_i/2)%2) * _step
-                agent_initialize(_agents[_i], position + Vector2{ f32(_x), f32(_y) })
-                manager_register_entity(&agent_manager, _agents[_i])
+				create_agent(position + Vector2{ f32(_x), f32(_y) })
 			}
 		}
 		else if (entity.id == 5) // mine
 		{
-			_mine := make_mine()
-			mine_initialize(_mine, position)
-			manager_register_entity(&mine_manager, _mine)
+			create_mine(position)
 		} 
 		else if (entity.id == 6) // turret
 		{
-			manager_register_entity(turret_manager, make_turret(position))
+			create_turret(position)
 		}
 	}
 
@@ -120,8 +116,9 @@ game_stop :: proc()
 
     delete_selection(selection)
     delete_action_manager(action_manager)
-    delete_bullet_manager(bullet_manager)
-    delete_turret_manager(turret_manager)
+
+    delete_bullet_manager(&bullet_manager)
+    delete_turret_manager(&turret_manager)
     mine_manager_shutdown(&mine_manager)
     agent_manager_shutdown(&agent_manager)
 }
@@ -152,10 +149,10 @@ game_update :: proc()
 
     mouse_update(&mouse, game_camera, pixel_ratio)
 
-    manager_update(bullet_manager)
+    manager_update(&bullet_manager)
     manager_update(&agent_manager)
     manager_update(&mine_manager)
-    manager_update(turret_manager)
+    manager_update(&turret_manager)
 
     selection_update(selection)
 }
