@@ -67,7 +67,7 @@ mine_update :: proc(using _mine: ^Mine, dt: f32) {
 
 	if (is_started) {
 		for _agent in game().agent_manager.entities {
-			if (distance_squared(position, _agent.position) < radius) {
+			if (distance(position, _agent.position) < radius) {
 				mine_activate(_mine)
 			}
 		}
@@ -90,13 +90,13 @@ mine_activate :: proc(using _mine: ^Mine) {
 
 mine_explode :: proc(using _mine: ^Mine) {
 	for _agent in game().agent_manager.entities {
-		if (distance_squared(position, _agent.position) <= explosion_radius) {
+		if (distance(position, _agent.position) <= explosion_radius) {
 			agent_kill(_agent);
 		}
 	}
 
 	for mine in game().mine_manager.entities {
-		if (mine.is_started && distance_squared(position, mine.position) < explosion_radius) {
+		if (mine.is_started && distance(position, mine.position) < explosion_radius) {
 			mine_activate(mine)
 		}
 	}

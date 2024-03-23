@@ -128,7 +128,7 @@ find_closest_agent :: proc(_position: Vector2, _range:f32) -> ^Agent
 	{
 		if (!_agent.is_alive ){ continue }
 
-		_dist := distance_squared(_position, _agent.position)
+		_dist := distance(_position, _agent.position)
 
 		if (_dist < _range)
 		{

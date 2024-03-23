@@ -108,9 +108,6 @@ game_load:: proc()
 		}
 	}
 
-
-
-
     selection = make_selection()
 }
 
