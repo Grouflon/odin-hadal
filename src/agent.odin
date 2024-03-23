@@ -59,7 +59,7 @@ agent_update :: proc(using _agent : ^Agent, dt: f32)
 	if (is_alive && game().mouse.down[1])
 	{
 		wp:= game().mouse.world_position
-		direction := rl.Vector2Normalize(wp - position)
+		direction := normalize(wp - position)
 		speed: f32= 10.0
 		position +=  direction * dt  * speed
 	}

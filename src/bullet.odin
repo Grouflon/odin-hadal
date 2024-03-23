@@ -97,8 +97,8 @@ make_bullet_registor :: proc(_position: Vector2,_velocity: Vector2, _owner: rawp
 
 make_triple_bullet_registor :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
 {
-	dir := rl.Vector2Normalize( _velocity)
-	length := rl.Vector2Length( _velocity)
+	dir := normalize( _velocity)
+	length := length( _velocity)
 
 	make_bullet_registor(_position, _velocity, _owner)
 	make_bullet_registor(_position, Vector2{_velocity.y, -_velocity.x}, _owner)

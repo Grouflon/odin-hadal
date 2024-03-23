@@ -60,9 +60,33 @@ copy_array :: proc(_dst: ^$T/[dynamic]$E, _src: []E)
 }
 
 // Math
+floor_f32 :: proc(_value: f32) -> f32
+{
+	return math.floor(_value)
+}
+
 floor_vec2 :: proc(_value: Vector2) -> Vector2
 {
-	return {math.floor(_value.x), math.floor(_value.y)}
+	return {math.floor(_value.x), math.floor(_value.y) }
+}
+
+floor :: proc { floor_vec2, floor_f32 }
+
+normalize_vec2 :: proc(_value: Vector2) -> Vector2
+{
+	return linalg.normalize0(_value)
+}
+
+normalize_vec3 :: proc(_value: Vector3) -> Vector3
+{
+	return linalg.normalize0(_value)
+}
+
+normalize :: proc { normalize_vec2, normalize_vec3 }
+
+ceil_f32 :: proc(_value: f32) -> f32
+{
+	return math.ceil(_value)
 }
 
 ceil_vec2 :: proc(_value: Vector2) -> Vector2
@@ -70,9 +94,16 @@ ceil_vec2 :: proc(_value: Vector2) -> Vector2
 	return {math.ceil(_value.x), math.ceil(_value.y)}
 }
 
+ceil :: proc { ceil_vec2, ceil_f32 }
+
 floor_to_int :: proc(_value: f32) -> i32
 {
 	return i32(math.floor(_value))
+}
+
+length :: proc(_value: Vector2) -> f32
+{
+	return linalg.length(_value)
 }
 
 length_squared :: proc(_value: Vector2) -> f32
