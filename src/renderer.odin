@@ -34,7 +34,7 @@ ordered_draw :: proc(_priority : int, _payload : rawptr, _draw_function : DrawFu
 
 	for draw_call, index in draw_calls
 	{
-		if draw_call.priority <= new_draw_call.priority
+		if new_draw_call.priority <= draw_call.priority
 		{
 			inject_at(&draw_calls, index, new_draw_call)
 			return
