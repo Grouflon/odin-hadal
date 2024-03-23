@@ -3,4 +3,5 @@ bin
 *.pdb
 *.wasm
 *.sublime-workspace
+*.rdbg
 .vscode
