@@ -14,7 +14,9 @@ LdtkEntity::struct
 {
 	identifier: string,
 	position:Vector2,
-	id: i32
+	id: i32,
+	width: f32,
+	height: f32,
 }
 
 load_json::proc(path:string) -> json.Value
@@ -62,8 +64,10 @@ load_level::proc(path:string) -> ^LdtkData
 				assert(entityInstanceObj != nil, "hooho")
 				ldtk_entity.identifier = entityInstanceObj["__identifier"].(json.String)
 				ldtk_entity.id = i32(entityInstanceObj["defUid"].(json.Float))
-				position := entityInstanceObj["__grid"].(json.Array)
+				position := entityInstanceObj["px"].(json.Array)
 				ldtk_entity.position = Vector2{f32(position[0].(json.Float)), f32(position[1].(json.Float))}
+				ldtk_entity.width = f32(entityInstanceObj["width"].(json.Float))
+				ldtk_entity.height = f32(entityInstanceObj["height"].(json.Float))
 
 				append(&ldtk.entities, ldtk_entity)
 			}

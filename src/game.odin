@@ -88,22 +88,24 @@ game_start:: proc()
 
 	for entity in level_data.entities
 	{
-		position := entity.position*10 // ldtk grid not good scale
-		if (entity.id == 3)// agent
+		position := entity.position // ldtk grid not good scale
+		if (entity.identifier == "Agent")// agent
 		{
 			create_agent(position + Vector2{0, 0})
 		}
-		else if (entity.id == 5) // mine
+		else if (entity.identifier == "Mine") // mine
 		{
 			create_mine(position)
 		} 
-		else if (entity.id == 6) // turret
+		else if (entity.identifier == "Turret") // turret
 		{
 			create_turret(position, 4)
 		}
+		else if (entity.identifier == "Acid") // turret
+		{
+			create_acid(position, Vector2{entity.width, entity.height})
+		}
 	}
-
-	create_acid(Vector2{60, 60}, 10)
 
 	selection = make_selection()
 }
@@ -185,15 +187,14 @@ game_draw :: proc()
 		defer EndMode2D()
 
 		ClearBackground(GRAY)
-
 		selection_draw_agents(selection)
 
 		manager_draw(Bullet, &bullet_manager)
 		manager_draw(Agent, &agent_manager)
 		manager_draw(Mine, &mine_manager)
+		manager_draw(Turret, &turret_manager)
 		manager_draw(Laser, &laser_manager)
 		manager_draw(Acid, &acid_manager)
-		manager_draw(Turret, &turret_manager)
 
 		renderer_ordered_draw(&renderer)
 
