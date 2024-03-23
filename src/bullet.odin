@@ -50,8 +50,7 @@ destroy_bullet:: proc(_bullet: ^Bullet)
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
 	_agents := game().agent_manager.entities
-	speed:f32= 10
-	position += velocity * dt * speed
+	position += velocity * dt
 	time+=dt
 	aabb := AABB{position,position}
 	

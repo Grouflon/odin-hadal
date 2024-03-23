@@ -19,9 +19,12 @@ Game :: struct
 	agent_manager : AgentManager,
 	mine_manager : MineManager,
 	bullet_manager : BulletManager,
+	laser_manager : LaserManager,
 	turret_manager : TurretManager,
 	action_manager : ^ActionManager,
 	selection : ^Selection,
+
+	is_game_paused: bool,
 
 	ldtk:ldtk
 }
@@ -76,6 +79,7 @@ game_start:: proc()
 	agent_manager_initialize(&agent_manager)
 	mine_manager_initialize(&mine_manager)
 	bullet_manager_initialize(&bullet_manager)
+	laser_manager_initialize(&laser_manager)
 	turret_manager_initialize(&turret_manager)
 	action_manager = make_action_manager()
 
@@ -87,9 +91,6 @@ game_start:: proc()
 		if (entity.id == 3)// agent
 		{
 			create_agent(position + Vector2{0, 0})
-			create_agent(position + Vector2{10, 0})
-			create_agent(position + Vector2{0, 10})
-			create_agent(position + Vector2{10, 10})
 		}
 		else if (entity.id == 5) // mine
 		{
@@ -97,7 +98,7 @@ game_start:: proc()
 		} 
 		else if (entity.id == 6) // turret
 		{
-			create_turret(position)
+			create_turret(position, 4)
 		}
 	}
 
@@ -114,6 +115,7 @@ game_stop :: proc()
 	delete_action_manager(action_manager)
 	mine_manager_shutdown(&mine_manager)
 	bullet_manager_shutdown(&bullet_manager)
+	laser_manager_shutdown(&laser_manager)
 	turret_manager_shutdown(&turret_manager)
 	agent_manager_shutdown(&agent_manager)
 }
@@ -145,11 +147,20 @@ game_update :: proc()
 	}
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
+	
+	if (IsKeyPressed(KeyboardKey.SPACE))
+	{
+		is_game_paused = !is_game_paused
+	}
 
-	manager_update(Bullet, &bullet_manager, _dt)
-	manager_update(Agent, &agent_manager, _dt)
-	manager_update(Mine, &mine_manager, _dt)
-	manager_update(Turret, &turret_manager, _dt)
+	if (!is_game_paused)
+	{
+		manager_update(Bullet, &bullet_manager, _dt)
+		manager_update(Agent, &agent_manager, _dt)
+		manager_update(Mine, &mine_manager, _dt)
+		manager_update(Laser, &laser_manager, _dt)
+		manager_update(Turret, &turret_manager, _dt)
+	}
 
 	selection_update(selection)
 }
@@ -174,6 +185,7 @@ game_draw :: proc()
 		manager_draw(Bullet, &bullet_manager)
 		manager_draw(Agent, &agent_manager)
 		manager_draw(Mine, &mine_manager)
+		manager_draw(Laser, &laser_manager)
 		manager_draw(Turret, &turret_manager)
 
 		renderer_ordered_draw(&renderer)
