@@ -13,25 +13,25 @@ AgentManager :: struct
 	update : proc(e : ^Agent, dt: f32),
 }
 
-make_agent_manager :: proc() -> ^AgentManager
+agent_manager_initialize :: proc(using _manager: ^AgentManager)
 {
-	manager := new(AgentManager)
-	manager.update = agent_update
-
-	return manager	
+	update = agent_update
+	entities = make([dynamic]^Agent)
 }
 
-delete_agent_manager :: proc(_manager: ^AgentManager)
+agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 {
+	// Delete all entities that are left in the manager
 	_agents: = _manager.entities
-    for _agent in _agents
+    for _i := len(_agents) - 1; _i >= 0; _i-=1 
     {
-        manager_unregister_entity(_manager, _agent)
+    	_agent: = _agents[_i]
+    	agent_shutdown(_agent)
+		manager_unregister_entity(_manager, _agent)
         delete_agent(_agent)
     }
 
-	delete(_manager.entities)
-	free(_manager)
+	delete(_agents)
 }
 
 Agent :: struct
@@ -40,18 +40,24 @@ Agent :: struct
 	is_alive : bool
 }
 
-make_agent :: proc(_position : Vector2) -> ^Agent
+make_agent :: proc() -> ^Agent
 {
-	using agent := new(Agent)
-	position = _position
-	is_alive = true
-
-	return agent
+	return new(Agent)
 }
 
 delete_agent :: proc(_agent: ^Agent)
 {
 	free(_agent)
+}
+
+agent_initialize :: proc(using _agent: ^Agent, _position : Vector2)
+{
+	position = _position
+	is_alive = true
+}
+
+agent_shutdown :: proc(using _agent: ^Agent)
+{
 }
 
 agent_update :: proc(using _agent : ^Agent, dt: f32)

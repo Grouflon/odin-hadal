@@ -40,14 +40,14 @@ Turret :: struct {
 	bullet_func: bullet_func
 }
 
-make_turret :: proc(_position: Vector2, ) -> ^Turret {
+make_turret :: proc(_position: Vector2 ) -> ^Turret {
 	using turret := new(Turret)
 	position = _position
 	range=1000
   	cooldown=0.5
   	cooldown_timer=0
 	target = nil
-	bullet_func = make_triple_bullet_registor
+	bullet_func = make_and_register_triple_bullet
 	return turret
 }
 

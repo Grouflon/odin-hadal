@@ -89,18 +89,18 @@ bullet_draw :: proc(_payload: rawptr) {
 }
 
 
-make_bullet_registor :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
+make_and_register_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
 {
 	bullet := make_bullet(_position, _velocity, _owner)
 	manager_register_entity(game().bullet_manager, bullet)
 }
 
-make_triple_bullet_registor :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
+make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
 {
 	dir := normalize( _velocity)
 	length := length( _velocity)
 
-	make_bullet_registor(_position, _velocity, _owner)
-	make_bullet_registor(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
-	make_bullet_registor(_position,Vector2{-_velocity.y, _velocity.x}, _owner)
+	make_and_register_bullet(_position, _velocity, _owner)
+	make_and_register_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
+	make_and_register_bullet(_position,Vector2{-_velocity.y, _velocity.x}, _owner)
 }

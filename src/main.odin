@@ -11,8 +11,8 @@ main :: proc()
     context.allocator = mem.tracking_allocator(&track)
 
     {
-        game_start()
-        defer game_stop()
+        game_initialize()
+        defer game_shutdown()
 
         game_loop()    
     }
