@@ -3,6 +3,8 @@ import rl "vendor:raylib"
 
 Manager :: struct($EntityType: typeid)
 {
+	type: typeid,
+
 	entities: [dynamic]^EntityType,
 
 	registered: proc(e: ^EntityType),
@@ -15,6 +17,7 @@ Manager :: struct($EntityType: typeid)
 manager_initialize :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
 {
 	entities = make([dynamic]^EntityType)
+	type = EntityType
 }
 
 manager_shutdown :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))

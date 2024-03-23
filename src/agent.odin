@@ -14,7 +14,6 @@ agent_manager_initialize :: proc(using _manager: ^AgentManager)
 	update = agent_update
 	draw = agent_draw
 	destroy_entity = destroy_agent
-
 	manager_initialize(Agent, _manager)
 }
 

@@ -7,16 +7,14 @@ ActionManager :: struct
 	actions: [dynamic]^Action,
 }
 
-make_action_manager :: proc() -> ^ActionManager
+action_manager_initialize :: proc(using _manager: ^ActionManager)
 {
-	_manager: = new(ActionManager)
-	return _manager
+	_manager.actions = make([dynamic]^Action)
 }
 
-delete_action_manager :: proc(_manager: ^ActionManager)
+action_manager_shutdown :: proc(using _manager: ^ActionManager)
 {
 	delete(_manager.actions)
-	free(_manager)
 }
 
 Action :: struct
@@ -37,7 +35,7 @@ action_start :: proc(_payload: rawptr = nil, _start: ActionProcedure = nil, _upd
 	_action.update = _update
 	_action.stop = _stop
 
-	_manager := game().action_manager
+	_manager := &game().action_manager
 
 	append(&_manager.actions, _action)
 	_action.manager = _manager

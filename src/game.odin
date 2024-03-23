@@ -20,7 +20,8 @@ Game :: struct
 	mine_manager : MineManager,
 	bullet_manager : BulletManager,
 	turret_manager : TurretManager,
-	action_manager : ^ActionManager,
+	action_manager : ActionManager,
+	
 	selection : ^Selection,
 
 	ldtk:ldtk
@@ -77,7 +78,7 @@ game_start:: proc()
 	mine_manager_initialize(&mine_manager)
 	bullet_manager_initialize(&bullet_manager)
 	turret_manager_initialize(&turret_manager)
-	action_manager = make_action_manager()
+	action_manager_initialize(&action_manager)
 
 	ldtk = load_ldtk("map_ldtk.json")
 
@@ -111,7 +112,8 @@ game_stop :: proc()
 	delete(ldtk.entities)
 
 	delete_selection(selection)
-	delete_action_manager(action_manager)
+
+	action_manager_shutdown(&action_manager)
 	mine_manager_shutdown(&mine_manager)
 	bullet_manager_shutdown(&bullet_manager)
 	turret_manager_shutdown(&turret_manager)
