@@ -22,10 +22,10 @@ delete_bullet_manager :: proc(_manager: ^BulletManager) {
 
 	_bullets: = _manager.entities
 	for _bullet in _bullets
-    {
-        manager_unregister_entity(_manager, _bullet)
-        delete_bullet(_bullet)
-    }
+	{
+		manager_unregister_entity(_manager, _bullet)
+		delete_bullet(_bullet)
+	}
 
 	delete(_manager.entities)
 	free(_manager)

@@ -18,11 +18,11 @@ make_mine_manager :: proc() -> ^MineManager {
 
 delete_mine_manager :: proc(_manager: ^MineManager) {
 	_mines: = _manager.entities
-    for _mine in _mines
-    {
-        manager_unregister_entity(_manager, _mine)
-        delete_mine(_mine)
-    }
+	for _mine in _mines
+	{
+		manager_unregister_entity(_manager, _mine)
+		delete_mine(_mine)
+	}
 
 	delete(_manager.entities)
 	free(_manager)

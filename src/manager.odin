@@ -23,11 +23,11 @@ manager_shutdown :: proc($EntityType: typeid, using _manager : ^Manager(EntityTy
 	if (destroy_entity != nil)
 	{
 		for _i := len(entities) - 1; _i >= 0; _i-=1 
-	    {
-	    	_entity: = entities[_i]
+		{
+			_entity: = entities[_i]
 
-	    	destroy_entity(_entity)
-	    }
+			destroy_entity(_entity)
+		}
 	}
 
 	delete(entities)

@@ -21,11 +21,11 @@ make_turret_manager :: proc() -> ^TurretManager
 delete_turret_manager :: proc(_manager: ^TurretManager) 
 {
 	_turrets: = _manager.entities
-    for _turret in _turrets
-    {
-        manager_unregister_entity(_manager, _turret)
-        delete_turret(_turret)
-    }
+	for _turret in _turrets
+	{
+		manager_unregister_entity(_manager, _turret)
+		delete_turret(_turret)
+	}
 
 	delete(_manager.entities)
 	free(_manager)
@@ -44,8 +44,8 @@ make_turret :: proc(_position: Vector2 ) -> ^Turret {
 	using turret := new(Turret)
 	position = _position
 	range=1000
-  	cooldown=0.5
-  	cooldown_timer=0
+	cooldown=0.5
+	cooldown_timer=0
 	target = nil
 	bullet_func = make_and_register_triple_bullet
 	return turret
