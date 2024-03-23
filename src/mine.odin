@@ -9,23 +9,22 @@ MineManager :: struct {
 	update:       proc(e: ^Mine, dt: f32),
 }
 
-make_mine_manager :: proc() -> ^MineManager {
-	manager := new(MineManager)
-	manager.update = mine_update
-
-	return manager
+mine_manager_initialize:: proc(using _manager: ^MineManager)
+{
+	update = mine_update
+	entities = make([dynamic]^Mine)
 }
 
-delete_mine_manager :: proc(_manager: ^MineManager) {
-	_mines: = _manager.entities
-    for _mine in _mines
-    {
-        manager_unregister_entity(_manager, _mine)
-        delete_mine(_mine)
-    }
+mine_manager_shutdown::proc(using _manager: ^MineManager)
+{
+	for _i := len(entities)-1; _i > 0; _i-=1
+	{
+		_mine:=entities[_i]
+		manager_unregister_entity(_manager, _mine)
+		delete_mine(_mine)
+	}
 
-	delete(_manager.entities)
-	free(_manager)
+	delete(entities)
 }
 
 Mine :: struct {
@@ -40,20 +39,27 @@ Mine :: struct {
 	explosion_radius: f32,
 }
 
-make_mine :: proc(_position: Vector2) -> ^Mine {
-	using mine := new(Mine)
+make_mine :: proc() -> ^Mine {
+	return new(Mine)
+}
+
+delete_mine :: proc(_mine: ^Mine) {
+	free(_mine)
+}
+
+mine_initialize::proc(using _mine: ^Mine, _position: Vector2)
+{
 	position = _position
 	is_started = true
 	radius = 1
 	timer = 0.5
 	time = 0
 	explosion_radius = 5
-
-	return mine
 }
 
-delete_mine :: proc(_mine: ^Mine) {
-	free(_mine)
+mine_shutdown::proc(using _mine: ^Mine)
+{
+	//manager_unregister_entity()
 }
 
 mine_update :: proc(using _mine: ^Mine, dt: f32) {

@@ -17,7 +17,7 @@ Game :: struct
     game_camera : rl.Camera2D,
 
     agent_manager : ^AgentManager,
-    mine_manager : ^MineManager,
+    mine_manager : MineManager,
     bullet_manager : ^BulletManager,
     turret_manager : ^TurretManager,
     action_manager : ^ActionManager,
@@ -74,7 +74,7 @@ game_load:: proc()
 {
     using g_game
 	agent_manager = make_agent_manager()
-	mine_manager= make_mine_manager();
+	mine_manager_initialize(&mine_manager)
 	bullet_manager= make_bullet_manager();
 	turret_manager= make_turret_manager();
     action_manager = make_action_manager()
@@ -99,8 +99,9 @@ game_load:: proc()
 		}
 		else if (entity.id == 5) // mine
 		{
-			manager_register_entity(mine_manager, make_mine(position))
-
+			_mine := make_mine()
+			manager_register_entity(&mine_manager, _mine)
+			mine_initialize(_mine, position)
 		} 
 		else if (entity.id == 6) // turret
 		{
@@ -120,7 +121,7 @@ game_unload :: proc()
     delete_selection(selection)
     delete_action_manager(action_manager)
     delete_agent_manager(agent_manager)
-    delete_mine_manager(mine_manager)
+	mine_manager_shutdown(&mine_manager)
     delete_bullet_manager(bullet_manager)
     delete_turret_manager(turret_manager)
 }
@@ -153,7 +154,7 @@ game_update :: proc()
 
     manager_update(bullet_manager)
     manager_update(agent_manager)
-    manager_update(mine_manager)
+    manager_update(&mine_manager)
     manager_update(turret_manager)
 
     selection_update(selection)
