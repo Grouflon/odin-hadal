@@ -73,7 +73,7 @@ turret_update :: proc(using _turret: ^Turret, dt: f32) {
 
 		if (cooldown_timer >= cooldown)
 		{
-			dir := rl.Vector2Normalize((cast(^Agent)target).position - position)
+			dir := normalize((cast(^Agent)target).position - position)
 			bullet_func(position + dir, dir, _turret)
 			cooldown_timer = 0
 		}
@@ -88,7 +88,7 @@ turret_draw :: proc(_payload: rawptr) {
 	dir := Vector2{0,0}
 	if (cast(^Agent)target != nil)
 	{ 
-		dir = rl.Vector2Normalize((cast(^Agent)target).position - position)
+		dir = normalize((cast(^Agent)target).position - position)
 	}
 	pos:=floor_vec2(position)
 	rl.DrawPixelV(pos, rl.PINK)
