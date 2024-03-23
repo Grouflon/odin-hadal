@@ -14,7 +14,7 @@ Manager :: struct($EntityType: typeid)
 
 manager_initialize :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
 {
-	entities = make([dynamic]^Agent)
+	entities = make([dynamic]^EntityType)
 }
 
 manager_shutdown :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
@@ -79,11 +79,11 @@ manager_draw :: proc($EntityType: typeid, using _manager : ^Manager(EntityType))
 {
 	assert(_manager != nil)
 	
-	if (update != nil)
+	if (draw != nil)
 	{
 		for entity in entities
 		{
-			update(entity, dt)
+			draw(entity)
 		}
 	}
 }

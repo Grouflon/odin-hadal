@@ -172,7 +172,7 @@ game_draw :: proc()
 		selection_draw_agents(selection)
 
 		// manager_draw(bullet_manager)
-		manager_draw(Agent, agent_manager)
+		manager_draw(Agent, &agent_manager)
 		// manager_draw(mine_manager)
 		// manager_draw(turret_manager)
 
