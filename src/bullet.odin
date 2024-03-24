@@ -28,6 +28,11 @@ Bullet :: struct {
 	time: f32
 }
 
+create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
+{
+	create_bullet(_position, _velocity,_owner)
+}
+
 create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet 
 {
 	using bullet := new(Bullet)
@@ -49,16 +54,26 @@ destroy_bullet:: proc(_bullet: ^Bullet)
 
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
-	_agents := game().agent_manager.entities
 	position += velocity * dt
 	time+=dt
 	aabb := AABB{position,position}
 	
+	_agents := game().agent_manager.entities
 	for _agent in _agents
 	{
 		if (_agent.is_alive && collision_aabb_aabb( aabb,agent_aabb(_agent)))
 		{
 			agent_kill(_agent)
+			destroy_bullet(_bullet)
+			return
+		}
+	}
+
+	_walls := game().wall_manager.entities
+	for _wall in _walls
+	{
+		if (collision_aabb_aabb(aabb,wall_aabb(_wall)))
+		{
 			destroy_bullet(_bullet)
 			return
 		}

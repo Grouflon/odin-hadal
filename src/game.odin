@@ -24,6 +24,7 @@ Game :: struct
 	turret_manager : TurretManager,
 	acid_manager : AcidManager,
 	ice_manager : IceManager,
+	wall_manager : WallManager,
 	action_manager : ActionManager,
 
 	selection : ^Selection,
@@ -89,6 +90,7 @@ game_start:: proc()
 	turret_manager_initialize(&turret_manager)
 	acid_manager_initialize(&acid_manager)
 	ice_manager_initialize(&ice_manager)
+	wall_manager_initialize(&wall_manager)
 	action_manager_initialize(&action_manager)
 
 	for entity in level_data.entities
@@ -114,6 +116,10 @@ game_start:: proc()
 		{
 			create_ice(position, Vector2{entity.width, entity.height}, 0.3)
 		}
+		else if (entity.identifier == "Wall")
+		{
+			create_wall(position, Vector2{entity.width, entity.height})
+		}
 	}
 
 	selection = make_selection()
@@ -133,6 +139,7 @@ game_stop :: proc()
 	turret_manager_shutdown(&turret_manager)
 	acid_manager_shutdown(&acid_manager)
 	ice_manager_shutdown(&ice_manager)
+	wall_manager_shutdown(&wall_manager)
 	agent_manager_shutdown(&agent_manager)
 
 	free_level(level_data)
@@ -178,6 +185,7 @@ game_update :: proc()
 		manager_update(Agent, &agent_manager, _dt)
 		manager_update(Acid, &acid_manager, _dt)
 		manager_update(Ice, &ice_manager, _dt)
+		manager_update(Wall, &wall_manager, _dt)
 		manager_update(Mine, &mine_manager, _dt)
 		manager_update(Laser, &laser_manager, _dt)
 		manager_update(Turret, &turret_manager, _dt)
@@ -209,6 +217,7 @@ game_draw :: proc()
 		manager_draw(Laser, &laser_manager)
 		manager_draw(Acid, &acid_manager)
 		manager_draw(Ice, &ice_manager)
+		manager_draw(Wall, &wall_manager)
 
 		renderer_ordered_draw(&renderer)
 

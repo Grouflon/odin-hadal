@@ -39,16 +39,14 @@ agent_manager_initialize :: proc(using _manager: ^AgentManager)
 		true,
 		{
 			{0, 1},
-		}
-	)
+		})
 	agent_run_animation = make_animation(
 		&agent_spritesheet,
 		true,
 		{
 			{1, 5},
 			{2, 5},
-		}
-	)
+		})
 }
 
 agent_manager_shutdown :: proc(using _manager: ^AgentManager)

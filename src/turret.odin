@@ -41,7 +41,7 @@ create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	cooldown=_cooldown
 	cooldown_timer=0
 	speed=100
-	bullet_func = create_laser_target
+	bullet_func = create_bullet_fire
 
 	manager_register_entity(Turret, &game().turret_manager, _turret)
 	return _turret
