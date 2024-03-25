@@ -67,9 +67,6 @@ game_initialize :: proc()
 	game_render_target = LoadRenderTexture(game_width, game_height);
 
 	game_camera = Camera2D{}
-	// game_camera.target -= {30, -30}
-	// game_camera.offset += {-20, 20}
-	// game_camera.zoom = 4.0
 	game_camera.zoom = 1.0
 
 	// Game
@@ -106,7 +103,7 @@ game_start:: proc()
 		} 
 		else if (entity.identifier == "Turret")
 		{
-			create_turret(position, 4)
+			create_turret(position, game_settings.turret_cooldown)
 		}
 		else if (entity.identifier == "Acid")
 		{
@@ -191,7 +188,8 @@ game_update :: proc()
 		manager_update(Turret, &turret_manager, _dt)
 	}
 
-	selection_update(selection)
+	// We dont need selection for now
+	// selection_update(selection)
 }
 
 game_draw :: proc()

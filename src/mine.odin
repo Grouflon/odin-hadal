@@ -36,10 +36,10 @@ create_mine :: proc(_position: Vector2) -> ^Mine {
 	using _mine := new(Mine)
 	position = _position
 	is_started = true
-	radius = 1
-	timer = 0.5
+	radius = game_settings.mine_detection_radius
+	timer = game_settings.mine_explosion_timer
 	time = 0
-	explosion_radius = 5
+	explosion_radius = game_settings.mine_explosion_radius
 
 	manager_register_entity(Mine, &game().mine_manager, _mine)
 
