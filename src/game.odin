@@ -17,14 +17,9 @@ Game :: struct
 	game_render_target : rl.RenderTexture2D,
 	game_camera : rl.Camera2D,
 
+	entity_manager: EntityManager,
+
 	agent_manager : AgentManager,
-	mine_manager : MineManager,
-	bullet_manager : BulletManager,
-	laser_manager : LaserManager,
-	turret_manager : TurretManager,
-	acid_manager : AcidManager,
-	ice_manager : IceManager,
-	wall_manager : WallManager,
 	action_manager : ActionManager,
 
 	selection : ^Selection,
@@ -70,6 +65,19 @@ game_initialize :: proc()
 	game_camera.zoom = 1.0
 
 	// Game
+	entity_manager_initialize(&entity_manager)
+
+	entity_manager_register_type(&entity_manager, Agent, agent_definition)
+	entity_manager_register_type(&entity_manager, Mine, mine_definition)
+	entity_manager_register_type(&entity_manager, Wall, wall_definition)
+	entity_manager_register_type(&entity_manager, Acid, acid_definition)
+	entity_manager_register_type(&entity_manager, Ice, ice_definition)
+
+	// Uncommenting any of those 3 lines makes the compilation fail for mysterious reasons
+	// entity_manager_register_type(&entity_manager, Turret, turret_definition)
+	// entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
+	// entity_manager_register_type(&entity_manager, Laser, laser_definition)
+
 	game_start()
 }
 
@@ -78,16 +86,9 @@ game_start:: proc()
 	using g_game
 	using rl
 
-	level_data = load_level("map_ldtk.json")
+	level_data = load_level("data/levels/map_ldtk.json")
 
 	agent_manager_initialize(&agent_manager)
-	mine_manager_initialize(&mine_manager)
-	bullet_manager_initialize(&bullet_manager)
-	laser_manager_initialize(&laser_manager)
-	turret_manager_initialize(&turret_manager)
-	acid_manager_initialize(&acid_manager)
-	ice_manager_initialize(&ice_manager)
-	wall_manager_initialize(&wall_manager)
 	action_manager_initialize(&action_manager)
 
 	for entity in level_data.entities
@@ -101,10 +102,6 @@ game_start:: proc()
 		{
 			create_mine(position)
 		} 
-		else if (entity.identifier == "Turret")
-		{
-			create_turret(position, game_settings.turret_cooldown)
-		}
 		else if (entity.identifier == "Acid")
 		{
 			create_acid(position, Vector2{entity.width, entity.height})
@@ -117,6 +114,10 @@ game_start:: proc()
 		{
 			create_wall(position, Vector2{entity.width, entity.height})
 		}
+		// else if (entity.identifier == "Turret")
+		// {
+		// 	create_turret(position, game_settings.turret_cooldown)
+		// }
 	}
 
 	selection = make_selection()
@@ -129,14 +130,9 @@ game_stop :: proc()
 
 	delete_selection(selection)
 
+	entity_manager_clear_entities(&entity_manager)
+
 	action_manager_shutdown(&action_manager)
-	mine_manager_shutdown(&mine_manager)
-	bullet_manager_shutdown(&bullet_manager)
-	laser_manager_shutdown(&laser_manager)
-	turret_manager_shutdown(&turret_manager)
-	acid_manager_shutdown(&acid_manager)
-	ice_manager_shutdown(&ice_manager)
-	wall_manager_shutdown(&wall_manager)
 	agent_manager_shutdown(&agent_manager)
 
 	free_level(level_data)
@@ -149,6 +145,8 @@ game_shutdown :: proc()
 	using g_game
 
 	game_stop();
+
+	entity_manager_shutdown(&entity_manager)
 
 	UnloadRenderTexture(game_render_target)
 
@@ -178,14 +176,7 @@ game_update :: proc()
 
 	if (!is_game_paused)
 	{
-		manager_update(Bullet, &bullet_manager, _dt)
-		manager_update(Agent, &agent_manager, _dt)
-		manager_update(Acid, &acid_manager, _dt)
-		manager_update(Ice, &ice_manager, _dt)
-		manager_update(Wall, &wall_manager, _dt)
-		manager_update(Mine, &mine_manager, _dt)
-		manager_update(Laser, &laser_manager, _dt)
-		manager_update(Turret, &turret_manager, _dt)
+		entity_manager_update(&entity_manager, _dt)
 	}
 
 	// We dont need selection for now
@@ -208,14 +199,7 @@ game_draw :: proc()
 		ClearBackground(GRAY)
 		selection_draw_agents(selection)
 
-		manager_draw(Bullet, &bullet_manager)
-		manager_draw(Agent, &agent_manager)
-		manager_draw(Mine, &mine_manager)
-		manager_draw(Turret, &turret_manager)
-		manager_draw(Laser, &laser_manager)
-		manager_draw(Acid, &acid_manager)
-		manager_draw(Ice, &ice_manager)
-		manager_draw(Wall, &wall_manager)
+		entity_manager_draw(&entity_manager)
 
 		renderer_ordered_draw(&renderer)
 

@@ -2,25 +2,6 @@ package main
 import "core:fmt"
 import rl "vendor:raylib"
 
-
-TurretManager :: struct {
-	using Manager(Turret),
-}
-
-turret_manager_initialize :: proc(using _manager: ^TurretManager)
-{
-	update = turret_update
-	draw = turret_draw
-	destroy_entity = destroy_turret
-
-	manager_initialize(Turret, _manager)
-}
-
-turret_manager_shutdown :: proc(using _manager: ^TurretManager) 
-{
-	manager_shutdown(Turret, _manager)
-}
-
 Turret :: struct {
 	position: Vector2,
 	range:f32,
@@ -34,6 +15,12 @@ Turret :: struct {
 	bullet_func: bullet_func
 }
 
+turret_definition :: EntityDefinition(Turret) {
+
+	update = turret_update,
+	draw = turret_draw,
+}
+
 create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	using _turret := new(Turret)
 	position = _position
@@ -43,13 +30,8 @@ create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	bullet_speed = game_settings.turret_bullet_speed
 	bullet_func = create_bullet_fire
 
-	manager_register_entity(Turret, &game().turret_manager, _turret)
+	register_entity(_turret)
 	return _turret
-}
-
-destroy_turret :: proc(_turret: ^Turret) {
-	manager_unregister_entity(Turret, &game().turret_manager, _turret)
-	free(_turret)
 }
 
 turret_update :: proc(using _turret: ^Turret, dt: f32) 

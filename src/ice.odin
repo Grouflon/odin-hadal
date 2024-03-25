@@ -2,27 +2,16 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-IceManager :: struct {
-	using Manager(Ice),
-}
-
-ice_manager_initialize :: proc(using _manager: ^IceManager)
-{
-	update = ice_update
-	draw = ice_draw
-	destroy_entity = destroy_ice
-	manager_initialize(Ice, _manager)
-}
-
-ice_manager_shutdown :: proc(using _manager: ^IceManager) 
-{
-	manager_shutdown(Ice, _manager)
-}
-
 Ice :: struct {
 	position: Vector2,
 	size: Vector2,
 	friction: f32
+}
+
+ice_definition :: EntityDefinition(Ice) {
+
+	update = ice_update,
+	draw = ice_draw,
 }
 
 create_ice :: proc(_position: Vector2, _size: Vector2, _friction:f32) -> ^Ice 
@@ -32,19 +21,12 @@ create_ice :: proc(_position: Vector2, _size: Vector2, _friction:f32) -> ^Ice
 	size = _size
 	friction = _friction
 
-	manager_register_entity(Ice, &game().ice_manager, ice)
+	register_entity(ice)
 	return ice
 }
 
-destroy_ice:: proc(_ice: ^Ice)
-{
-	manager_unregister_entity(Ice, &game().ice_manager, _ice)
-	free(_ice)
-}
-
-
 ice_update :: proc(using _ice: ^Ice, dt: f32) {	
-	_agents := game().agent_manager.entities
+	_agents := get_entities(Agent)
 
 	for _agent in _agents
 	{

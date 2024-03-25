@@ -2,28 +2,16 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-LaserManager :: struct {
-	using Manager(Laser),
-}
-
-laser_manager_initialize :: proc(using _manager: ^LaserManager)
-{
-	update = laser_update
-	draw = laser_draw
-	destroy_entity = destroy_laser
-	manager_initialize(Laser, _manager)
-}
-
-laser_manager_shutdown :: proc(using _manager: ^LaserManager) 
-{
-	manager_shutdown(Laser, _manager)
-}
-
 Laser :: struct {
 	position: Vector2,
 	target: Vector2,
 	owner: rawptr,
 	time: f32
+}
+
+laser_definition :: EntityDefinition(Laser) {
+	update = laser_update,
+	draw = laser_draw,
 }
 
 create_laser_target:: proc(_position: Vector2, _target: Vector2, _owner: rawptr)
@@ -39,20 +27,13 @@ create_laser :: proc(_position: Vector2, _target: Vector2, _owner: rawptr) -> ^L
 	owner = _owner
 	time = 0
 
-	manager_register_entity(Laser, &game().laser_manager, laser)
+	register_entity(laser)
 
 	return laser
 }
 
-destroy_laser:: proc(_laser: ^Laser)
-{
-	manager_unregister_entity(Laser, &game().laser_manager, _laser)
-	free(_laser)
-}
-
-
 laser_update :: proc(using _laser: ^Laser, dt: f32) {	
-	_agents := game().agent_manager.entities
+	_agents := get_entities(Agent)
 	time+=dt
 
 	for _agent in _agents
@@ -67,7 +48,7 @@ laser_update :: proc(using _laser: ^Laser, dt: f32) {
 
 	if (time >= 3)
 	{
-		destroy_laser(_laser)
+		destroy_entity(_laser)
 		return
 	}
 }

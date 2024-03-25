@@ -2,31 +2,19 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-bullet_func :: proc(position: Vector2, _velocity:Vector2, _owner:rawptr)
-
-BulletManager :: struct {
-	using Manager(Bullet),
-}
-
-bullet_manager_initialize :: proc(using _manager: ^BulletManager)
-{
-	update = bullet_update
-	draw = bullet_draw
-	destroy_entity = destroy_bullet
-	manager_initialize(Bullet, _manager)
-}
-
-bullet_manager_shutdown :: proc(using _manager: ^BulletManager) 
-{
-	manager_shutdown(Bullet, _manager)
-}
-
 Bullet :: struct {
 	position: Vector2,
 	velocity: Vector2,
 	owner: rawptr,
 	time: f32
 }
+
+bullet_definition :: EntityDefinition(Bullet) {
+	update = bullet_update,
+	draw = bullet_draw,
+}
+
+bullet_func :: proc(position: Vector2, _velocity:Vector2, _owner:rawptr)
 
 create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
 {
@@ -41,47 +29,40 @@ create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> 
 	owner = _owner
 	time = 0
 
-	manager_register_entity(Bullet, &game().bullet_manager, bullet)
+	register_entity(bullet)
 
 	return bullet
 }
-
-destroy_bullet:: proc(_bullet: ^Bullet)
-{
-	manager_unregister_entity(Bullet, &game().bullet_manager, _bullet)
-	free(_bullet)
-}
-
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
 	position += velocity * dt
 	time+=dt
 	aabb := AABB{position,position}
 	
-	_agents := game().agent_manager.entities
+	_agents := get_entities(Agent)
 	for _agent in _agents
 	{
 		if (_agent.is_alive && collision_aabb_aabb( aabb,agent_aabb(_agent)))
 		{
 			agent_kill(_agent)
-			destroy_bullet(_bullet)
+			destroy_entity(_bullet)
 			return
 		}
 	}
 
-	_walls := game().wall_manager.entities
+	_walls := get_entities(Wall)
 	for _wall in _walls
 	{
 		if (collision_aabb_aabb(aabb,wall_aabb(_wall)))
 		{
-			destroy_bullet(_bullet)
+			destroy_entity(_bullet)
 			return
 		}
 	}
 
 	if (time >= 3)
 	{
-		destroy_bullet(_bullet)
+		destroy_entity(_bullet)
 		return
 	}
 }

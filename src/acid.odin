@@ -2,26 +2,14 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-AcidManager :: struct {
-	using Manager(Acid),
-}
-
-acid_manager_initialize :: proc(using _manager: ^AcidManager)
-{
-	update = acid_update
-	draw = acid_draw
-	destroy_entity = destroy_acid
-	manager_initialize(Acid, _manager)
-}
-
-acid_manager_shutdown :: proc(using _manager: ^AcidManager) 
-{
-	manager_shutdown(Acid, _manager)
-}
-
 Acid :: struct {
 	position: Vector2,
 	size: Vector2,
+}
+
+acid_definition :: EntityDefinition(Acid) {
+	update = acid_update,
+	draw = acid_draw,
 }
 
 create_acid :: proc(_position: Vector2, _size: Vector2) -> ^Acid 
@@ -30,19 +18,13 @@ create_acid :: proc(_position: Vector2, _size: Vector2) -> ^Acid
 	position = _position
 	size = _size
 
-	manager_register_entity(Acid, &game().acid_manager, acid)
+	register_entity(acid)
 	return acid
 }
 
-destroy_acid:: proc(_acid: ^Acid)
-{
-	manager_unregister_entity(Acid, &game().acid_manager, _acid)
-	free(_acid)
-}
-
-
-acid_update :: proc(using _acid: ^Acid, dt: f32) {	
-	_agents := game().agent_manager.entities
+acid_update :: proc(using _acid: ^Acid, _dt: f32)
+{	
+	_agents := get_entities(Agent)
 
 	aabb := AABB{min=position, max=position+size }
 

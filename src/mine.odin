@@ -2,24 +2,6 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-MineManager :: struct {
-	using Manager(Mine),
-}
-
-mine_manager_initialize:: proc(using _manager: ^MineManager)
-{
-	update = mine_update
-	draw = mine_draw
-	destroy_entity = destroy_mine
-
-	manager_initialize(Mine, _manager)
-}
-
-mine_manager_shutdown::proc(using _manager: ^MineManager)
-{
-	manager_shutdown(Mine, _manager)
-}
-
 Mine :: struct {
 	position:         Vector2,
 	radius:           f32,
@@ -32,6 +14,11 @@ Mine :: struct {
 	explosion_radius: f32,
 }
 
+mine_definition :: EntityDefinition(Mine) {
+	update = mine_update,
+	draw = mine_draw,
+}
+
 create_mine :: proc(_position: Vector2) -> ^Mine {
 	using _mine := new(Mine)
 	position = _position
@@ -41,14 +28,9 @@ create_mine :: proc(_position: Vector2) -> ^Mine {
 	time = 0
 	explosion_radius = game_settings.mine_explosion_radius
 
-	manager_register_entity(Mine, &game().mine_manager, _mine)
+	register_entity(_mine)
 
 	return _mine
-}
-
-destroy_mine :: proc(_mine: ^Mine) {
-	manager_unregister_entity(Mine, &game().mine_manager, _mine)
-	free(_mine)
 }
 
 mine_update :: proc(using _mine: ^Mine, dt: f32) {
@@ -61,7 +43,7 @@ mine_update :: proc(using _mine: ^Mine, dt: f32) {
 	}
 
 	if (is_started) {
-		for _agent in game().agent_manager.entities {
+		for _agent in get_entities(Agent) {
 			if (distance(position, _agent.position) < radius) {
 				mine_activate(_mine)
 			}
@@ -82,13 +64,13 @@ mine_activate :: proc(using _mine: ^Mine) {
 }
 
 mine_explode :: proc(using _mine: ^Mine) {
-	for _agent in game().agent_manager.entities {
+	for _agent in get_entities(Agent) {
 		if (distance(position, _agent.position) <= explosion_radius) {
 			agent_kill(_agent);
 		}
 	}
 
-	for mine in game().mine_manager.entities {
+	for mine in get_entities(Mine) {
 		if (mine.is_started && distance(position, mine.position) < explosion_radius) {
 			mine_activate(mine)
 		}

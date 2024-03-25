@@ -62,7 +62,7 @@ selection_update :: proc(using _selection: ^Selection)
 	_selectable_agents: [dynamic]^Agent // TODO use temp allocator
 	defer delete(_selectable_agents)
 
-	for _agent in game().agent_manager.entities
+	for _agent in get_entities(Agent)
 	{
 		if _agent.is_alive && collision_aabb_aabb(aabb, agent_aabb(_agent))
 		{

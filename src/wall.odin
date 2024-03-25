@@ -2,27 +2,15 @@ package main
 import rl "vendor:raylib"
 import "core:fmt"
 
-WallManager :: struct {
-	using Manager(Wall),
-}
-
-wall_manager_initialize :: proc(using _manager: ^WallManager)
-{
-	update = wall_update
-	draw = wall_draw
-	destroy_entity = destroy_wall
-	manager_initialize(Wall, _manager)
-}
-
-wall_manager_shutdown :: proc(using _manager: ^WallManager) 
-{
-	manager_shutdown(Wall, _manager)
-}
-
 Wall :: struct {
 	position: Vector2,
 	size: Vector2,
 	friction: f32
+}
+
+wall_definition :: EntityDefinition(Wall) {
+	update = wall_update,
+	draw = wall_draw,
 }
 
 create_wall :: proc(_position: Vector2, _size: Vector2) -> ^Wall 
@@ -31,19 +19,12 @@ create_wall :: proc(_position: Vector2, _size: Vector2) -> ^Wall
 	position = _position
 	size = _size
 
-	manager_register_entity(Wall, &game().wall_manager, wall)
+	register_entity(wall)
 	return wall
 }
 
-destroy_wall:: proc(_wall: ^Wall)
-{
-	manager_unregister_entity(Wall, &game().wall_manager, _wall)
-	free(_wall)
-}
-
-
 wall_update :: proc(using _wall: ^Wall, dt: f32) {	
-	_agents := game().agent_manager.entities
+	_agents := get_entities(Agent)
 
 	for _agent in _agents
 	{

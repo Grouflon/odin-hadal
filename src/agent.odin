@@ -5,9 +5,26 @@ import "core:math"
 import "core:log"
 import rl "vendor:raylib"
 
+Agent :: struct
+{
+	position: Vector2,
+	velocity : Vector2,
+	friction : f32,
+	is_alive: bool,
+
+	animation_player: AnimationPlayer,
+}
+
+agent_definition :: EntityDefinition(Agent) {
+
+	update = agent_update,
+	draw = agent_draw,
+	shutdown = agent_shutdown,
+}
+
 AgentManager :: struct
 {
-	using manager: Manager(Agent),
+	// using manager: Manager(Agent),
 
 	agent_texture: rl.Texture2D,
 	agent_spritesheet: Spritesheet,
@@ -22,11 +39,6 @@ agent_manager :: proc() -> ^AgentManager
 
 agent_manager_initialize :: proc(using _manager: ^AgentManager)
 {
-	update = agent_update
-	draw = agent_draw
-	destroy_entity = destroy_agent
-	manager_initialize(Agent, _manager)
-
 	agent_texture = rl.LoadTexture("data/sprites/agent.png");
 	if agent_texture.id <= 0
 	{
@@ -54,18 +66,6 @@ agent_manager_shutdown :: proc(using _manager: ^AgentManager)
 	delete_animation(agent_idle_animation)
 	delete_animation(agent_run_animation)
 	rl.UnloadTexture(agent_texture)
-
-	manager_shutdown(Agent, _manager)
-}
-
-Agent :: struct
-{
-	position: Vector2,
-	velocity : Vector2,
-	friction : f32,
-	is_alive: bool,
-
-	animation_player: AnimationPlayer,
 }
 
 create_agent :: proc(_position : Vector2) -> ^Agent
@@ -77,14 +77,12 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	animation_player.fps = 60
 	friction = 1
 
-	manager_register_entity(Agent, agent_manager(), _agent)
+	register_entity(_agent)
 	return _agent
 }
 
-destroy_agent :: proc(using _agent: ^Agent)
+agent_shutdown :: proc(using _agent: ^Agent)
 {
-	manager_unregister_entity(Agent, agent_manager(), _agent)
-	free(_agent)
 }
 
 agent_update :: proc(using _agent : ^Agent, _dt: f32)
@@ -187,7 +185,7 @@ agent_aabb :: proc(using _agent: ^Agent) -> AABB
 
 find_closest_agent :: proc(_position: Vector2, _range:f32) -> ^Agent
 {
-	_agents := game().agent_manager.entities
+	_agents := get_entities(Agent)
 	_closest_agent : ^Agent = nil
 	_range_temp := _range
 	for _agent in _agents
