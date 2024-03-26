@@ -217,17 +217,17 @@ entity_manager_get_entities :: proc(using _manager: ^EntityManager, $Type: typei
 }
 
 // Shorthands
-register_entity :: proc(_entity: $Type)
+register_entity :: proc(_entity: ^$Type)
 {
 	entity_manager_register_entity(&game().entity_manager, _entity)
 }
 
-unregister_entity :: proc(_entity: $Type)
+unregister_entity :: proc(_entity: ^$Type)
 {
 	entity_manager_unregister_entity(&game().entity_manager, _entity)
 }
 
-destroy_entity :: proc(_entity: $Type)
+destroy_entity :: proc(_entity: ^$Type)
 {
 	entity_manager_destroy_entity(&game().entity_manager, _entity)
 }
