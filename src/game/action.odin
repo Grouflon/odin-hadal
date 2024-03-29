@@ -1,4 +1,4 @@
-package main
+package game
 
 ActionProcedure :: proc(_action: ^Action)
 

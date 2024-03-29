@@ -1,4 +1,5 @@
-package main
+package game
+
 import rl "vendor:raylib"
 import "core:fmt"
 

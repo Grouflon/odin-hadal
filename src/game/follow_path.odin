@@ -1,4 +1,4 @@
-package main
+package game
 
 agent_follow_path :: proc(_agent: ^Agent, _path: []Vector2, _speed: f32)
 {

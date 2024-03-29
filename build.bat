@@ -5,7 +5,7 @@ rem CREATE BIN DIR
 
 rem COMPILE
 @echo on
-odin build ./src -out:bin/hadal.exe -warnings-as-errors -debug
+odin build ./src -out:bin/hadal.exe -collection:hadal=src -warnings-as-errors -debug -thread-count:1
 @echo off
 if %errorlevel% neq 0 goto error
 

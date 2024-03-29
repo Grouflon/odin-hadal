@@ -1,4 +1,5 @@
-package main
+package game
+
 import rl "vendor:raylib"
 
 collision_aabb_aabb :: proc(_a: AABB, _b: AABB) -> bool

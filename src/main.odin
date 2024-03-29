@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:mem"
+import "game"
 
 main :: proc()
 {
@@ -11,10 +12,10 @@ main :: proc()
 	context.allocator = mem.tracking_allocator(&track)
 
 	{
-		game_initialize()
-		defer game_shutdown()
+		game.game_initialize()
+		defer game.game_shutdown()
 
-		game_loop()
+		game.game_loop()
 	}
 
 	for _, leak in track.allocation_map

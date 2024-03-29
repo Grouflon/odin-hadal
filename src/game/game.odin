@@ -1,8 +1,9 @@
-package main
+package game
 
 import rl "vendor:raylib"
 import "core:fmt"
 import "core:log"
+import "hadal:ldtk"
 
 Game :: struct
 {
@@ -24,7 +25,7 @@ Game :: struct
 
 	selection : ^Selection,
 	is_game_paused: bool,
-	level_data: ^LdtkData
+	level_data: ^ldtk.LdtkData
 }
 g_game : Game
 
@@ -74,9 +75,9 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Ice, ice_definition)
 
 	// Uncommenting any of those 3 lines makes the compilation fail for mysterious reasons
-	// entity_manager_register_type(&entity_manager, Turret, turret_definition)
-	// entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
-	// entity_manager_register_type(&entity_manager, Laser, laser_definition)
+	entity_manager_register_type(&entity_manager, Turret, turret_definition)
+	entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
+	entity_manager_register_type(&entity_manager, Laser, laser_definition)
 
 	game_start()
 }
@@ -86,7 +87,7 @@ game_start:: proc()
 	using g_game
 	using rl
 
-	level_data = load_level("data/levels/map_ldtk.json")
+	level_data = ldtk.load_level("data/levels/map_ldtk.json")
 
 	agent_manager_initialize(&agent_manager)
 	action_manager_initialize(&action_manager)
@@ -135,8 +136,7 @@ game_stop :: proc()
 	action_manager_shutdown(&action_manager)
 	agent_manager_shutdown(&agent_manager)
 
-	free_level(level_data)
-
+	ldtk.free_level(level_data)
 }
 
 game_shutdown :: proc()
