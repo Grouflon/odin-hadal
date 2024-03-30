@@ -211,6 +211,16 @@ game_draw :: proc()
 
 		renderer_ordered_draw(&renderer)
 
+		// for _agent in get_entities(Agent)
+		// {
+		// 	aabb_draw(agent_aabb(_agent), RED)
+		// }
+
+		// for _wall in get_entities(Wall)
+		// {
+		// 	aabb_draw(wall_aabb(_wall), GREEN)
+		// }
+
 		// selection_draw(selection)
 		mouse_draw(&mouse)
 	}

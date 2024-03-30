@@ -39,7 +39,7 @@ laser_update :: proc(using _laser: ^Laser, dt: f32) {
 
 	for _agent in _agents
 	{
-		collide := collisionLinePoint(_agent.position, position, target)
+		collide := collision_line_point(_agent.position, position, target)
 		if (_agent.is_alive && collide)
 		{
 			agent_kill(_agent)
