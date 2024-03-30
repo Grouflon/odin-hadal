@@ -9,7 +9,6 @@ Agent :: struct
 {
 	position: Vector2,
 	velocity : Vector2,
-	friction : f32,
 	is_alive: bool,
 
 	animation_player: ^AnimationPlayer,
@@ -29,7 +28,6 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	position = _position
 	is_alive = true
 	animation_player = create_animation_player()
-	friction = 1
 
 	register_entity(_agent)
 	return _agent
@@ -41,65 +39,71 @@ agent_shutdown :: proc(using _agent: ^Agent)
 }
 
 agent_update :: proc(using _agent : ^Agent, _dt: f32)
-{
-	is_moving: = false
+{	
+	_is_moving: = false
+
+	// Velocity
+	_velocity_length: = length(velocity)
+	_direction: Vector2
 	if (is_alive && game().mouse.down[1])
 	{
 		_mouse: = game().mouse.world_position
-		velocity = normalize(_mouse - position) * game_settings.agent_speed
-
-		_movement: = velocity * _dt
-		_aabb: = agent_aabb(_agent)
-		for _wall in get_entities(Wall)
-		{
-			_wall_aabb: = wall_aabb(_wall)
-
-			_moved_aabb: AABB
-			_moved_aabb = aabb_move(_aabb, {_movement.x, 0})
-			if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
-			{
-				if (_movement.x < 0)
-				{
-					_movement.x += _wall_aabb.max.x - _moved_aabb.min.x
-				}
-				else
-				{
-					_movement.x += _wall_aabb.min.x - _moved_aabb.max.x
-				}
-			}
-
-			_moved_aabb = aabb_move(_aabb, {_movement.x, _movement.y})
-			if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
-			{
-				if (_movement.y < 0)
-				{
-					_movement.y += _wall_aabb.max.y - _moved_aabb.min.y
-				}
-				else
-				{
-					_movement.y += _wall_aabb.min.y - _moved_aabb.max.y
-				}
-			}
-		}
-
-		position += _movement
-		is_moving = true 
+		_direction = normalize(_mouse - position)
+		_velocity_length += game_settings.agent_acceleration * _dt
+		_velocity_length = math.min(_velocity_length, game_settings.agent_max_speed)
 	}
-	else if (friction != 1)
+	else
 	{
-		if (length(velocity) > 0)
+		_direction = normalize(velocity)
+		_velocity_length -= game_settings.agent_deceleration * _dt
+		_velocity_length = math.max(_velocity_length, 0)
+	}
+	velocity = _direction * _velocity_length
+
+	// Movement
+	_movement: = velocity * _dt
+	_aabb: = agent_aabb(_agent)
+	for _wall in get_entities(Wall)
+	{
+		_wall_aabb: = wall_aabb(_wall)
+
+		_moved_aabb: AABB
+		_moved_aabb = aabb_move(_aabb, {_movement.x, 0})
+		if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
 		{
-			velocity = velocity * TimeIndependentLerp2(1, 0, 0.2, _dt)
-			position += velocity
-			is_moving = true
+			if (_movement.x < 0)
+			{
+				_movement.x += _wall_aabb.max.x - _moved_aabb.min.x
+			}
+			else
+			{
+				_movement.x += _wall_aabb.min.x - _moved_aabb.max.x
+			}
+		}
+
+		_moved_aabb = aabb_move(_aabb, {_movement.x, _movement.y})
+		if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
+		{
+			if (_movement.y < 0)
+			{
+				_movement.y += _wall_aabb.max.y - _moved_aabb.min.y
+			}
+			else
+			{
+				_movement.y += _wall_aabb.min.y - _moved_aabb.max.y
+			}
 		}
 	}
+	position += _movement
 
+
+	// Animation
+	_is_moving = length_squared(velocity) > 0.001 
 	if !is_alive
 	{
 		animation_player_play(animation_player, resources().agent_animations, "dead")
 	}
-	else if is_moving
+	else if _is_moving
 	{
 		animation_player_play(animation_player, resources().agent_animations, "run")
 	}

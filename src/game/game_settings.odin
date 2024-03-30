@@ -2,7 +2,9 @@ package game
 
 GameSettings :: struct
 {
-	agent_speed: f32,
+	agent_max_speed: f32,
+	agent_acceleration: f32,
+	agent_deceleration: f32,
 
 	turret_range: f32,
 	turret_bullet_speed: f32,
@@ -14,7 +16,9 @@ GameSettings :: struct
 }
 
 game_settings :: GameSettings {
-	agent_speed = 20.0,
+	agent_max_speed = 25.0,
+	agent_acceleration = 150.0,
+	agent_deceleration = 85.0,
 
 	turret_range = 100,
 	turret_bullet_speed = 100,
