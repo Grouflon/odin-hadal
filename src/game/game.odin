@@ -55,7 +55,7 @@ game_initialize :: proc()
 	using rl
 	using g_game
 
-	game_width, game_height = 300, 200
+	game_width, game_height = 256, 256
 	pixel_ratio = 5
 	window_width = game_width * pixel_ratio
 	window_height = game_height * pixel_ratio
