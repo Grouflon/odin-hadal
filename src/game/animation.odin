@@ -1,138 +1,266 @@
 package game
 
 import rl "vendor:raylib"
+import "core:fmt"
+import "core:log"
 import "core:math"
+import "core:os"
+import "core:strings"
+import "hadal:aseprite"
 
-Spritesheet :: struct
+AnimationSet :: struct
 {
-    texture : rl.Texture2D,
-    columns : int,
-    rows : int,
-    cell_width : int,
-    cell_height : int,
+    texture: rl.Texture2D,
+    frames: []AnimationFrame,
+    animations: []Animation,
+    name_to_animation: map[string]i32
 }
 
-build_spritesheet :: proc (_texture : rl.Texture2D, _columns : int, _rows : int) -> Spritesheet
+AnimationFrame :: struct
 {
-    return Spritesheet{
-        texture = _texture,
-        columns = _columns,
-        rows = _rows,
-        cell_width = int(_texture.width) / _columns,
-        cell_height = int(_texture.height) / _rows,
-    }
-}
-
-AnimFrame :: struct
-{
-    index : int,
-    duration : int,
+    position: [2]i32,
+    size: [2]i32,
+    duration_in_ms: i32,
 }
 
 Animation :: struct
 {
-    spritesheet : ^Spritesheet,
-    loop : bool,
-    frames : [dynamic]AnimFrame,
+    name: string,
+    start_frame: i32,
+    end_frame: i32,
+    duration_in_ms: i32,
+    repeat_count: i32, // 0 means loop
 }
 
-make_animation :: proc(_spritesheet: ^Spritesheet, _loop: bool, _frames: []AnimFrame) -> ^Animation
+make_animation_set :: proc(_aseprite_data: ^aseprite.AsepriteData) -> ^AnimationSet
 {
-    _animation: = new(Animation)
-    _animation.spritesheet = _spritesheet
-    _animation.loop = _loop
-    _animation.frames = make([dynamic]AnimFrame)
-    for _frame in _frames
+    assert(_aseprite_data != nil)
+
+    _animation_set: = new(AnimationSet)
+    if os.exists(_aseprite_data.image_path)
     {
-        append(&_animation.frames, _frame)
+        _texture_path: = strings.clone_to_cstring(_aseprite_data.image_path, context.temp_allocator)
+        _animation_set.texture = rl.LoadTexture(_texture_path)
     }
-    return _animation
+    else
+    {
+        log.errorf("Can't load spritesheet \"%s\"", _aseprite_data.image_path)
+    }
+
+    _animation_set.frames = make([]AnimationFrame, len(_aseprite_data.frames))
+    for _frame, _i in _aseprite_data.frames
+    {
+        _animation_set.frames[_i].position = _frame.position
+        _animation_set.frames[_i].size = _frame.size
+        _animation_set.frames[_i].duration_in_ms = _frame.duration
+    }
+
+    _animation_set.animations = make([]Animation, len(_aseprite_data.frame_tags))
+    _animation_set.name_to_animation = make(map[string]i32, len(_aseprite_data.frame_tags))
+    _i: i32 = 0
+    for _name, _frame_tag in _aseprite_data.frame_tags
+    {
+        _animation: = &_animation_set.animations[_i]
+        _animation_set.name_to_animation[strings.clone(_name)] = _i
+
+        _animation.name = strings.clone(_name)
+        _animation.start_frame = _frame_tag.from
+        _animation.end_frame = _frame_tag.to
+        _animation.duration_in_ms = 0
+        for _j: i32 = 0; _j <= (_animation.end_frame - _animation.start_frame); _j += 1
+        {
+            _animation.duration_in_ms += _animation_set.frames[_animation.start_frame + _j].duration_in_ms
+        }
+        _i += 1
+    }
+
+    return _animation_set
 }
 
-delete_animation :: proc(_animation: ^Animation)
+delete_animation_set :: proc(_animation_set: ^AnimationSet)
 {
-    assert(_animation != nil)
-
-    delete(_animation.frames)
-    free(_animation)
+    rl.UnloadTexture(_animation_set.texture)
+    delete(_animation_set.frames)
+    for _animation in _animation_set.animations
+    {
+        delete(_animation.name)
+    }
+    for _name, _ in _animation_set.name_to_animation
+    {
+        delete(_name)
+    }
+    delete(_animation_set.animations)
+    delete(_animation_set.name_to_animation)
+    free(_animation_set)
 }
 
 AnimationPlayer :: struct
 {
-    fps : f32,
+    play_rate : f32,
 
-    _current_animation : ^Animation,
-    _total_animation_frames : int,
-    _frame : f32,
+    // private
+    animation_set: ^AnimationSet,
+    current_animation: i32,
+
+    current_frame: i32,
+    current_time_ms: f32,
+    current_repeat_count: i32,
+    is_playing: bool,
 }
 
-animation_player_play :: proc(_player : ^AnimationPlayer, _animation : ^Animation)
+AnimationManager :: struct
 {
-    if _player._current_animation == _animation { return }
+    players: [dynamic]^AnimationPlayer
+}
 
-    _player._current_animation = _animation
-    _player._frame = 0.0
-    _player._total_animation_frames = 0
+animation_manager_initialize :: proc(using _manager: ^AnimationManager)
+{
+    assert(_manager != nil)
+    players = make([dynamic]^AnimationPlayer)
+}
 
-    if _player._current_animation != nil
+animation_manager_shutdown :: proc(using _manager: ^AnimationManager)
+{
+    assert(_manager != nil)
+    assert(len(players) == 0, "All animation players must be destroyed by their creators")
+    delete(players)
+}
+
+animation_mananger_register_player :: proc(using _manager: ^AnimationManager, _player: ^AnimationPlayer)
+{
+    assert(_manager != nil)
+    assert(_player != nil)
+    assert(find(&players, _player) < 0, "Player already registered")
+
+    append(&players, _player)
+}
+
+animation_mananger_unregister_player :: proc(using _manager: ^AnimationManager, _player: ^AnimationPlayer)
+{
+    assert(_manager != nil)
+    assert(_player != nil)
+    _index := find(&players, _player)
+    assert(_index >= 0, "Trying to unregistered a non registered Player")
+
+    unordered_remove(&players, _index)
+}
+
+animation_manager_update :: proc(using _manager: ^AnimationManager, _dt: f32)
+{
+    assert(_manager != nil)
+    for _player in players
     {
-        for frame in _player._current_animation.frames
+        animation_player_update(_player, _dt)
+    }
+}
+
+create_animation_player :: proc() -> ^AnimationPlayer
+{
+    _player: = new(AnimationPlayer)
+    _player.play_rate = 1.0
+    _player.current_frame = -1
+    _player.current_animation = -1
+
+    animation_mananger_register_player(&game().animation_manager, _player)
+    return _player
+}
+
+destroy_animation_player :: proc(_player: ^AnimationPlayer)
+{
+    assert(_player != nil)
+
+    animation_mananger_unregister_player(&game().animation_manager, _player)
+    free(_player)
+}
+
+animation_player_play :: proc(using _player: ^AnimationPlayer, _animation_set: ^AnimationSet, _animation_name: string)
+{
+    assert(_player != nil)
+    assert(_animation_set != nil)
+
+    animation_set = _animation_set
+    if !(_animation_name in animation_set.name_to_animation) { return }
+    _wanted_animation, ok: = animation_set.name_to_animation[_animation_name]
+    if current_animation == _wanted_animation { return }
+
+    animation_player_stop(_player)
+
+    current_animation = _wanted_animation
+    current_time_ms = 0.0
+    current_frame = -1
+    current_repeat_count = 0
+    is_playing = true
+
+    animation_player_update(_player, 0.0)
+}
+
+animation_player_stop :: proc(using _player: ^AnimationPlayer)
+{
+    if is_playing
+    {
+        animation_player_update(_player, 0.0) // Note: maybe we need a stop requested flag instead of that
+        is_playing = false
+    }
+}
+
+animation_player_update :: proc(using _player : ^AnimationPlayer, _dt : f32)
+{
+    assert(_player != nil)
+
+    if !is_playing { return }
+    if current_animation < 0 { return }
+    _animation: = animation_set.animations[current_animation]
+
+    // Update loops
+    for current_time_ms > f32(_animation.duration_in_ms)
+    {
+        current_time_ms -= f32(_animation.duration_in_ms)
+        current_repeat_count += 1
+        if _animation.repeat_count > 0 && current_repeat_count >= _animation.repeat_count
         {
-            _player._total_animation_frames += frame.duration
+            current_time_ms = f32(_animation.duration_in_ms)
+            is_playing = false
         }
     }
-}
 
-animation_player_update :: proc(_player : ^AnimationPlayer, _dt : f32)
-{
-    if _player._total_animation_frames <= 0 { return }
-
-    total_frames : f32 = f32(_player._total_animation_frames)
-    if total_frames <= 0 { return }
-
-    _player._frame += _player.fps * _dt
-    if (_player._current_animation.loop)
+    // Update frame
+    _duration: i32 = 0 
+    _time_in_ms: i32 = floor_to_int(current_time_ms)
+    for _i: = _animation.start_frame; _i <= _animation.end_frame; _i+=1
     {
-        for _player._frame > total_frames
+        _frame: = &animation_set.frames[_i]
+        if _time_in_ms <= _duration + _frame.duration_in_ms
         {
-            _player._frame -= total_frames;
-        }
-    }
-    else
-    {
-        _player._frame = math.max(total_frames - 1.0, _player._frame)
-    }
-}
-
-animation_player_draw:: proc(_player : ^AnimationPlayer, _position : rl.Vector2, _flip_x : bool = false, _flip_y : bool = false, _tint : rl.Color = rl.WHITE)
-{
-    if _player._total_animation_frames <= 0 { return }
-
-    frame_index := int(math.floor(_player._frame))
-
-    sprite_index := -1
-    current_frame_index := 0
-    for frame in _player._current_animation.frames
-    {
-        if frame_index >= current_frame_index && frame_index < current_frame_index + frame.duration
-        {
-            sprite_index = frame.index
+            current_frame = _i
             break
         }
-        current_frame_index += frame.duration
+        _duration += _frame.duration_in_ms
     }
-    assert(sprite_index >= 0)
 
-    spritesheet := _player._current_animation.spritesheet
-    x := sprite_index % spritesheet.columns
-    y := sprite_index / spritesheet.columns
+    // Update time
+    if (is_playing)
+    {
+        current_time_ms += _dt * 1000
+    }
+}
+
+animation_player_draw:: proc(using _player : ^AnimationPlayer, _position : Vector2, _flip_x : bool = false, _flip_y : bool = false, _tint : Color = rl.WHITE)
+{
+    assert(_player != nil)
+
+    if (animation_set == nil) { return }
+    if (animation_set.texture.id == 0) { return }
+    if (current_frame < 0 || current_frame >= i32(len(animation_set.frames))) { return }
+
+    _frame: = &animation_set.frames[_player.current_frame]
+
     rl.DrawTextureRec(
-        spritesheet.texture,
+        animation_set.texture,
         {
-            f32(x * spritesheet.cell_width),
-            f32(y * spritesheet.cell_height),
-            (_flip_x ? -1.0 : 1.0) * f32(spritesheet.cell_width),
-            (_flip_y ? -1.0 : 1.0) * f32(spritesheet.cell_height)
+            f32(_frame.position[0]),
+            f32(_frame.position[1]),
+            (_flip_x ? -1.0 : 1.0) * f32(_frame.size[0]),
+            (_flip_y ? -1.0 : 1.0) * f32(_frame.size[1])
         },
         _position,
         _tint

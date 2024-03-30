@@ -18,14 +18,15 @@ Game :: struct
 	game_render_target : rl.RenderTexture2D,
 	game_camera : rl.Camera2D,
 
+	resources: GameResources,
+
 	entity_manager: EntityManager,
 
-	agent_manager : AgentManager,
-	action_manager : ActionManager,
+	action_manager: ActionManager,
+	animation_manager: AnimationManager,
 
 	selection : ^Selection,
 	is_game_paused: bool,
-	level_data: ^ldtk.LdtkData
 }
 g_game : Game
 
@@ -42,6 +43,11 @@ renderer :: proc() -> ^Renderer
 mouse :: proc() -> ^Mouse
 {
 	return &game().mouse
+}
+
+resources :: proc() -> ^GameResources
+{
+	return &game().resources
 }
 
 game_initialize :: proc()
@@ -73,8 +79,6 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Wall, wall_definition)
 	entity_manager_register_type(&entity_manager, Acid, acid_definition)
 	entity_manager_register_type(&entity_manager, Ice, ice_definition)
-
-	// Uncommenting any of those 3 lines makes the compilation fail for mysterious reasons
 	entity_manager_register_type(&entity_manager, Turret, turret_definition)
 	entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
 	entity_manager_register_type(&entity_manager, Laser, laser_definition)
@@ -87,12 +91,17 @@ game_start:: proc()
 	using g_game
 	using rl
 
-	level_data = ldtk.load_level("data/levels/map_ldtk.json")
+	game_resources_load(&resources)
 
-	agent_manager_initialize(&agent_manager)
+	animation_manager_initialize(&animation_manager)
 	action_manager_initialize(&action_manager)
 
-	for entity in level_data.entities
+	selection = make_selection()
+
+	// Create Level
+	_level_data: = ldtk.load_level("data/levels/map_ldtk.json")
+	defer ldtk.free_level(_level_data)
+	for entity in _level_data.entities
 	{
 		position := entity.position // ldtk grid not good scale
 		if (entity.identifier == "Agent")
@@ -115,13 +124,11 @@ game_start:: proc()
 		{
 			create_wall(position, Vector2{entity.width, entity.height})
 		}
-		// else if (entity.identifier == "Turret")
-		// {
-		// 	create_turret(position, game_settings.turret_cooldown)
-		// }
+		else if (entity.identifier == "Turret")
+		{
+			create_turret(position, game_settings.turret_cooldown)
+		}
 	}
-
-	selection = make_selection()
 }
 
 game_stop :: proc()
@@ -134,9 +141,9 @@ game_stop :: proc()
 	entity_manager_clear_entities(&entity_manager)
 
 	action_manager_shutdown(&action_manager)
-	agent_manager_shutdown(&agent_manager)
+	animation_manager_shutdown(&animation_manager)
 
-	ldtk.free_level(level_data)
+	game_resources_unload(&resources)
 }
 
 game_shutdown :: proc()
@@ -177,6 +184,7 @@ game_update :: proc()
 	if (!is_game_paused)
 	{
 		entity_manager_update(&entity_manager, _dt)
+		animation_manager_update(&animation_manager, _dt)
 	}
 
 	// We dont need selection for now
@@ -203,7 +211,7 @@ game_draw :: proc()
 
 		renderer_ordered_draw(&renderer)
 
-		selection_draw(selection)
+		// selection_draw(selection)
 		mouse_draw(&mouse)
 	}
 
