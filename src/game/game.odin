@@ -105,7 +105,7 @@ game_start:: proc()
 
 	for entity in _level_data.entities
 	{
-		position := entity.position // ldtk grid not good scale
+		position: = entity.position
 		if (entity.identifier == "Agent")
 		{
 			create_agent(position + Vector2{0, 0})
@@ -129,6 +129,10 @@ game_start:: proc()
 		else if (entity.identifier == "Turret")
 		{
 			create_turret(position, game_settings.turret_cooldown)
+		}
+		else if (entity.identifier == "Goal")
+		{
+			create_goal(position, Vector2{entity.width, entity.height})
 		}
 	}
 }
@@ -172,7 +176,7 @@ game_update :: proc()
 
 	if (IsKeyPressed(KeyboardKey.R))
 	{
-		game_stop();
+		game_stop()
 		game_start()
 	}
 
