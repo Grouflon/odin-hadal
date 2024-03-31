@@ -8,6 +8,11 @@ import "core:log"
 
 LdtkData :: struct
 {
+	levels: [dynamic]^LdtkLevel
+}
+LdtkLevel :: struct
+{
+	identifier: string,
 	entities: [dynamic]LdtkEntity
 }
 
@@ -53,7 +58,11 @@ load_level::proc(path:string) -> ^LdtkData
 	levels := root["levels"].(json.Array)
 	for lvl in levels
 	{
+		ldtk_level: = new(LdtkLevel)
+		append(&ldtk.levels, ldtk_level)
 		layerInstances := lvl.(json.Object)["layerInstances"].(json.Array)
+		ldtk_level.identifier = lvl.(json.Object)["identifier"].(json.String)
+
 		for layerInstance in layerInstances
 		{
 			entityInstances:= layerInstance.(json.Object)["entityInstances"].(json.Array)
@@ -70,15 +79,21 @@ load_level::proc(path:string) -> ^LdtkData
 				ldtk_entity.width = f32(entityInstanceObj["width"].(json.Float))
 				ldtk_entity.height = f32(entityInstanceObj["height"].(json.Float))
 
-				append(&ldtk.entities, ldtk_entity)
+				append(&ldtk_level.entities, ldtk_entity)
 			}
 		}
 	}
+
 	return ldtk
 }
 
 free_level :: proc(_level_data : ^LdtkData)
 {
-	delete(_level_data.entities)
+	for _i: = len(_level_data.levels) - 1; _i >= 0; _i -= 1
+	{
+		delete(_level_data.levels[_i].entities)
+		free(_level_data.levels[_i])
+	}
+	delete(_level_data.levels)
 	free(_level_data)
 }

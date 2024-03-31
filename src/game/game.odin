@@ -99,8 +99,10 @@ game_start:: proc()
 	selection = make_selection()
 
 	// Create Level
-	_level_data: = ldtk.load_level("data/levels/map_ldtk.json")
-	defer ldtk.free_level(_level_data)
+	_levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
+	defer ldtk.free_level(_levels_data)
+	_level_data: = _levels_data.levels[0];
+
 	for entity in _level_data.entities
 	{
 		position := entity.position // ldtk grid not good scale
