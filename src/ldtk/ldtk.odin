@@ -71,7 +71,6 @@ load_level::proc(path:string) -> ^LdtkData
 			{
 				entityInstanceObj := entityInstance.(json.Object)
 				ldtk_entity:LdtkEntity
-				assert(entityInstanceObj != nil, "hooho")
 				ldtk_entity.identifier = entityInstanceObj["__identifier"].(json.String)
 				ldtk_entity.id = i32(entityInstanceObj["defUid"].(json.Float))
 				position := entityInstanceObj["px"].(json.Array)
