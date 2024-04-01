@@ -82,6 +82,7 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Turret, turret_definition)
 	entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
 	entity_manager_register_type(&entity_manager, Laser, laser_definition)
+	entity_manager_register_type(&entity_manager, Goal, goal_definition)
 
 	game_start()
 }
