@@ -120,3 +120,9 @@ distance :: proc(_a: Vector2, _b: Vector2) -> f32
 {
 	return math.sqrt(distance_squared(_a, _b))
 }
+
+time_independent_lerp :: proc(_base: f32, _target: f32, _time_to_90: f32, _dt: f32) -> f32
+{
+	_lambda: = -math.log10_f32(1 - 0.9) / _time_to_90;
+	return math.lerp(_base, _target, 1 - math.exp_f32(-_lambda * _dt));
+}

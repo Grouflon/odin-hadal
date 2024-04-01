@@ -113,12 +113,6 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 	}
 }
 
-TimeIndependentLerp2 :: proc(_base:f32,_target:f32, _timeTo90:f32, _dt:f32) -> f32
-{
-	lambda := -math.log10_f32(1 - 0.9) / _timeTo90;
-	return math.lerp(_base, _target, 1 - math.exp_f32(-lambda * _dt));
-}
-
 agent_draw :: proc(using _agent: ^Agent)
 {
 	ordered_draw(int(position.y), _agent, proc(_payload: rawptr)
