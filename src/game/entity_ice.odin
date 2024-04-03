@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Ice :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	size: Vector2,
 	friction: f32
@@ -18,6 +20,8 @@ ice_definition :: EntityDefinition(Ice) {
 create_ice :: proc(_position: Vector2, _size: Vector2, _friction:f32) -> ^Ice 
 {
 	using ice := new(Ice)
+	entity.type = ice
+
 	position = _position
 	size = _size
 	friction = _friction

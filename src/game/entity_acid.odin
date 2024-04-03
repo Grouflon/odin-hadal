@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Acid :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	size: Vector2,
 }
@@ -16,6 +18,8 @@ acid_definition :: EntityDefinition(Acid) {
 create_acid :: proc(_position: Vector2, _size: Vector2) -> ^Acid 
 {
 	using acid := new(Acid)
+	entity.type = acid
+	
 	position = _position
 	size = _size
 

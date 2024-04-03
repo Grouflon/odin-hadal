@@ -83,6 +83,7 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Bullet, bullet_definition)
 	entity_manager_register_type(&entity_manager, Laser, laser_definition)
 	entity_manager_register_type(&entity_manager, Goal, goal_definition)
+	entity_manager_register_type(&entity_manager, Swarm, swarm_definition)
 
 	game_start()
 }
@@ -103,6 +104,15 @@ game_start:: proc()
 	_levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
 	defer ldtk.free_level(_levels_data)
 	_level_data: = _levels_data.levels[0];
+
+	_start: Vector2 = {150, 150}
+	for _x in 0..<5
+	{
+		for _y in 0..<5
+		{
+			create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
+		}
+	}
 
 	for entity in _level_data.entities
 	{

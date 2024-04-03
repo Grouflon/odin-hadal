@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Wall :: struct {
+	using entity: Entity,
+
 	position: Vector2,
 	size: Vector2,
 }
@@ -15,6 +17,8 @@ wall_definition :: EntityDefinition(Wall) {
 create_wall :: proc(_position: Vector2, _size: Vector2) -> ^Wall 
 {
 	using wall := new(Wall)
+	entity.type = wall
+	
 	position = _position
 	size = _size
 

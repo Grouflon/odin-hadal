@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Laser :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	target: Vector2,
 	owner: rawptr,
@@ -23,6 +25,8 @@ create_laser_target:: proc(_position: Vector2, _target: Vector2, _owner: rawptr)
 create_laser :: proc(_position: Vector2, _target: Vector2, _owner: rawptr) -> ^Laser 
 {
 	using laser := new(Laser)
+	entity.type = laser
+	
 	position = _position
 	target = _target
 	owner = _owner

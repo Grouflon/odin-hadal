@@ -4,6 +4,8 @@ import "core:fmt"
 import rl "vendor:raylib"
 
 Turret :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	range:f32,
 	cooldown:f32,
@@ -24,6 +26,8 @@ turret_definition :: EntityDefinition(Turret) {
 
 create_turret :: proc(_position: Vector2, _cooldown: f32) -> ^Turret {
 	using _turret := new(Turret)
+	entity.type = _turret
+	
 	position = _position
 	range = game_settings.turret_range
 	cooldown = _cooldown

@@ -1,5 +1,8 @@
 package game
 
+import "core:reflect"
+import "core:runtime"
+
 EntityDefinition :: struct($Type: typeid)
 {
 	registered: proc(e: ^Type),
@@ -16,11 +19,11 @@ EntityTypeBase :: struct
 	shutdown_type: proc(_type: ^EntityTypeBase),
 	clear_entities: proc(_type: ^EntityTypeBase),
 
-	register: proc(_type: ^EntityTypeBase, _e: rawptr),
-	unregister: proc(_type: ^EntityTypeBase, _e: rawptr),
+	register: proc(_type: ^EntityTypeBase, _e: ^Entity),
+	unregister: proc(_type: ^EntityTypeBase, _e: ^Entity),
 	update: proc(_type: ^EntityTypeBase, _dt: f32),
 	draw: proc(_type: ^EntityTypeBase),
-	destroy_entity: proc(_type: ^EntityTypeBase, _e: rawptr),
+	shutdown: proc(_type: ^EntityTypeBase, _e: ^Entity),
 }
 
 EntityType :: struct($Type: typeid)
@@ -63,18 +66,24 @@ entity_manager_shutdown :: proc(using _manager: ^EntityManager)
 	delete(types)
 }
 
-entity_manager_register_entity :: proc(using _manager: ^EntityManager, _entity: ^$Type)
+get_entity_typeid :: proc(_entity: ^Entity) -> typeid
 {
-	_type: = typeid_of(Type)
+	_pointer_type_info: = reflect.union_variant_type_info(_entity.type)
+	return _pointer_type_info.variant.(runtime.Type_Info_Pointer).elem.id
+}
+
+entity_manager_register_entity :: proc(using _manager: ^EntityManager, _entity: ^Entity)
+{
+	_type: = get_entity_typeid(_entity)
 	_entity_type: = types_map[_type]
 	assert(_entity_type != nil, "Unregistered entity type")
 
 	_entity_type.register(_entity_type, _entity)
 }
 
-entity_manager_unregister_entity :: proc(using _manager: ^EntityManager, _entity: ^$Type)
+entity_manager_unregister_entity :: proc(using _manager: ^EntityManager, _entity: ^Entity)
 {
-	_type: = typeid_of(Type)
+	_type: = get_entity_typeid(_entity)
 	_entity_type: = types_map[_type]
 	assert(_entity_type != nil, "Unregistered entity type")
 
@@ -97,20 +106,16 @@ entity_manager_draw :: proc(using _manager: ^EntityManager)
 	}
 }
 
-entity_manager_shutdown_entity :: proc(using _manager: ^EntityManager, _entity: ^$Type)
+entity_manager_shutdown_entity :: proc(using _manager: ^EntityManager, _entity: ^Entity)
 {
-	_type: = typeid_of(Type)
+	_type: = get_entity_typeid(_entity)
 	_entity_type: = types_map[_type]
 	assert(_entity_type != nil, "Unregistered entity type")
-	_true_type: = cast(^EntityType(Type))_entity_type
 
-	if _true_type.definition.shutdown != nil
-	{
-		_true_type.definition.shutdown(_entity)
-	}
+	_entity_type.shutdown(_entity_type, _entity)
 }
 
-entity_manager_destroy_entity :: proc(using _manager: ^EntityManager, _entity: ^$Type)
+entity_manager_destroy_entity :: proc(using _manager: ^EntityManager, _entity: ^Entity)
 {
 	entity_manager_unregister_entity(_manager, _entity)
 	entity_manager_shutdown_entity(_manager, _entity)
@@ -137,19 +142,16 @@ entity_manager_register_type :: proc(using _manager: ^EntityManager, $Type: type
 		_true_type: = cast(^EntityType(Type))_type
 		for _entity in _true_type.entities
 		{
-			if _true_type.definition.shutdown != nil
-			{
-				_true_type.definition.shutdown(_entity)
-			}
+			_type.shutdown(_type, _entity)
 			free(_entity)
 		}
 		clear(&_true_type.entities)
 	}
 
-	_entity_type.register = proc(_type: ^EntityTypeBase, _e: rawptr)
+	_entity_type.register = proc(_type: ^EntityTypeBase, _e: ^Entity)
 	{
 		_true_type: = cast(^EntityType(Type))_type
-		_entity: = cast(^Type)_e
+		_entity: = _e.type.(^Type)
 
 		assert(_entity != nil)
 		assert(find(&_true_type.entities, _entity) < 0, "Entity already present in the entities list")
@@ -161,10 +163,10 @@ entity_manager_register_type :: proc(using _manager: ^EntityManager, $Type: type
 		}
 	}
 
-	_entity_type.unregister = proc(_type: ^EntityTypeBase, _e: rawptr)
+	_entity_type.unregister = proc(_type: ^EntityTypeBase, _e: ^Entity)
 	{
 		_true_type: = cast(^EntityType(Type))_type
-		_entity: = cast(^Type)_e
+		_entity: = _e.type.(^Type)
 
 		assert(_entity != nil)
 		_index := find(&_true_type.entities, _entity)
@@ -202,6 +204,16 @@ entity_manager_register_type :: proc(using _manager: ^EntityManager, $Type: type
 		}
 	}
 
+	_entity_type.shutdown = proc(_type: ^EntityTypeBase, _e: ^Entity)
+	{
+		_true_type: = cast(^EntityType(Type))_type
+		_entity: = _e.type.(^Type)
+		if _true_type.definition.shutdown != nil
+		{
+			_true_type.definition.shutdown(_entity)
+		}
+	}
+
 	append(&types, _entity_type)
 	types_map[Type] = _entity_type
 }
@@ -217,17 +229,17 @@ entity_manager_get_entities :: proc(using _manager: ^EntityManager, $Type: typei
 }
 
 // Shorthands
-register_entity :: proc(_entity: ^$Type)
+register_entity :: proc(_entity: ^Entity)
 {
 	entity_manager_register_entity(&game().entity_manager, _entity)
 }
 
-unregister_entity :: proc(_entity: ^$Type)
+unregister_entity :: proc(_entity: ^Entity)
 {
 	entity_manager_unregister_entity(&game().entity_manager, _entity)
 }
 
-destroy_entity :: proc(_entity: ^$Type)
+destroy_entity :: proc(_entity: ^Entity)
 {
 	entity_manager_destroy_entity(&game().entity_manager, _entity)
 }

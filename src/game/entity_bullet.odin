@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Bullet :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	velocity: Vector2,
 	owner: rawptr,
@@ -25,6 +27,8 @@ create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr
 create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet 
 {
 	using bullet := new(Bullet)
+	entity.type = bullet
+	
 	position = _position
 	velocity = _velocity
 	owner = _owner

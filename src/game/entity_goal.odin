@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Goal :: struct {
+	using entity: Entity,
+	
 	position: Vector2,
 	size: Vector2,
 }
@@ -16,6 +18,8 @@ goal_definition :: EntityDefinition(Goal) {
 create_goal :: proc(_position: Vector2, _size: Vector2) -> ^Goal 
 {
 	using goal := new(Goal)
+	entity.type = goal
+
 	position = _position
 	size = _size
 

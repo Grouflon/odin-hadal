@@ -4,6 +4,8 @@ import rl "vendor:raylib"
 import "core:fmt"
 
 Mine :: struct {
+	using entity: Entity,
+	
 	position:         Vector2,
 	radius:           f32,
 	timer:            f32,
@@ -22,6 +24,8 @@ mine_definition :: EntityDefinition(Mine) {
 
 create_mine :: proc(_position: Vector2) -> ^Mine {
 	using _mine := new(Mine)
+	entity.type = _mine
+
 	position = _position
 	is_started = true
 	radius = game_settings.mine_detection_radius

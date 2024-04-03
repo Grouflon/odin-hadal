@@ -7,6 +7,8 @@ import rl "vendor:raylib"
 
 Agent :: struct
 {
+	using entity: Entity,
+	
 	position: Vector2,
 	velocity : Vector2,
 	is_alive: bool,
@@ -24,6 +26,7 @@ agent_definition :: EntityDefinition(Agent) {
 create_agent :: proc(_position : Vector2) -> ^Agent
 {
 	using _agent: = new(Agent)
+	entity.type = _agent
 
 	position = _position
 	is_alive = true
