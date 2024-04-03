@@ -13,6 +13,8 @@ GameSettings :: struct
 	mine_detection_radius: f32,
 	mine_explosion_timer: f32,
 	mine_explosion_radius: f32,
+
+	swarm_speed: f32,
 }
 
 game_settings :: GameSettings {
@@ -27,4 +29,6 @@ game_settings :: GameSettings {
 	mine_detection_radius = 1,
 	mine_explosion_timer = 0.5,
 	mine_explosion_radius = 5,
+
+	swarm_speed = 20,
 }

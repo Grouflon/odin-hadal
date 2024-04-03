@@ -7,6 +7,7 @@ GameResources :: struct
 {
 	agent_animations: ^AnimationSet,
 	cursor_texture: rl.Texture2D,
+	swarm_texture: rl.Texture2D,
 }
 
 game_resources_load :: proc(using _resources: ^GameResources)
@@ -16,10 +17,12 @@ game_resources_load :: proc(using _resources: ^GameResources)
 	agent_animations = make_animation_set(_agent_animation_data)
 
 	cursor_texture = rl.LoadTexture("data/sprites/cursor.png")
+	swarm_texture = rl.LoadTexture("data/sprites/swarm.png")
 }
 
 game_resources_unload :: proc(using _resources: ^GameResources)
 {
+	rl.UnloadTexture(swarm_texture)
 	rl.UnloadTexture(cursor_texture)
 
 	delete_animation_set(agent_animations)
