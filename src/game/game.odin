@@ -24,6 +24,7 @@ Game :: struct
 
 	action_manager: ActionManager,
 	animation_manager: AnimationManager,
+	physics_manager: PhysicsManager,
 
 	selection : ^Selection,
 	is_game_paused: bool,
@@ -48,6 +49,11 @@ mouse :: proc() -> ^Mouse
 resources :: proc() -> ^GameResources
 {
 	return &game().resources
+}
+
+physics :: proc() -> ^PhysicsManager
+{
+	return &game().physics_manager
 }
 
 game_initialize :: proc()
@@ -97,6 +103,7 @@ game_start:: proc()
 
 	animation_manager_initialize(&animation_manager)
 	action_manager_initialize(&action_manager)
+	physics_manager_initialize(&physics_manager)
 
 	selection = make_selection()
 
@@ -157,6 +164,7 @@ game_stop :: proc()
 
 	entity_manager_clear_entities(&entity_manager)
 
+	physics_manager_shutdown(&physics_manager)
 	action_manager_shutdown(&action_manager)
 	animation_manager_shutdown(&animation_manager)
 
@@ -228,15 +236,8 @@ game_draw :: proc()
 
 		renderer_ordered_draw(&renderer)
 
-		// for _agent in get_entities(Agent)
-		// {
-		// 	aabb_draw(agent_aabb(_agent), RED)
-		// }
-
-		// for _wall in get_entities(Wall)
-		// {
-		// 	aabb_draw(wall_aabb(_wall), GREEN)
-		// }
+		physics_manager_draw_layer(&physics_manager, .Agent, RED)
+		physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
 
 		// selection_draw(selection)
 		mouse_draw(&mouse)

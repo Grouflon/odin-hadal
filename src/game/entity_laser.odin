@@ -6,7 +6,6 @@ import "core:fmt"
 Laser :: struct {
 	using entity: Entity,
 	
-	position: Vector2,
 	target: Vector2,
 	owner: rawptr,
 	time: f32
@@ -26,8 +25,8 @@ create_laser :: proc(_position: Vector2, _target: Vector2, _owner: rawptr) -> ^L
 {
 	using laser := new(Laser)
 	entity.type = laser
+	entity.position = _position
 	
-	position = _position
 	target = _target
 	owner = _owner
 	time = 0
@@ -43,7 +42,7 @@ laser_update :: proc(using _laser: ^Laser, dt: f32) {
 
 	for _agent in _agents
 	{
-		collide := collision_line_point(_agent.position, position, target)
+		collide := collision_line_point(_agent.position, entity.position, target)
 		if (_agent.is_alive && collide)
 		{
 			agent_kill(_agent)
@@ -59,9 +58,9 @@ laser_update :: proc(using _laser: ^Laser, dt: f32) {
 }
 
 laser_draw :: proc(using _laser: ^Laser) {
-	ordered_draw(int(position.y), _laser, proc(_payload: rawptr)
+	ordered_draw(int(entity.position.y), _laser, proc(_payload: rawptr)
 	{
 		using laser := cast(^Laser)_payload
-		rl.DrawLineV(position, target, rl.PURPLE)
+		rl.DrawLineV(entity.position, target, rl.PURPLE)
 	})
 }

@@ -2,6 +2,8 @@ package game
 
 Entity :: struct
 {
+	position: Vector2,
+
 	type: union{
 		^Agent,
 		^Mine,

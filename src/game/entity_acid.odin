@@ -6,7 +6,6 @@ import "core:fmt"
 Acid :: struct {
 	using entity: Entity,
 	
-	position: Vector2,
 	size: Vector2,
 }
 
@@ -19,8 +18,8 @@ create_acid :: proc(_position: Vector2, _size: Vector2) -> ^Acid
 {
 	using acid := new(Acid)
 	entity.type = acid
-	
-	position = _position
+	entity.position = _position
+
 	size = _size
 
 	register_entity(acid)
@@ -31,7 +30,7 @@ acid_update :: proc(using _acid: ^Acid, _dt: f32)
 {	
 	_agents := get_entities(Agent)
 
-	aabb := AABB{min=position, max=position+size }
+	aabb := AABB{min=entity.position, max=entity.position+size }
 
 	for _agent in _agents
 	{
@@ -45,7 +44,7 @@ acid_update :: proc(using _acid: ^Acid, _dt: f32)
 
 acid_draw :: proc(using _acid: ^Acid) 
 {
-	x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
+	x, y : i32 = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 	w, h : i32 = floor_to_int(size.x), floor_to_int(size.y)
 	rl.DrawRectangle(x, y, w, h, rl.GREEN)
 }

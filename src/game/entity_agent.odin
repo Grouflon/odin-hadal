@@ -9,11 +9,11 @@ Agent :: struct
 {
 	using entity: Entity,
 	
-	position: Vector2,
 	velocity : Vector2,
 	is_alive: bool,
 
 	animation_player: ^AnimationPlayer,
+	collider: ^Collider,
 }
 
 agent_definition :: EntityDefinition(Agent) {
@@ -27,10 +27,19 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 {
 	using _agent: = new(Agent)
 	entity.type = _agent
+	entity.position = _position
 
-	position = _position
 	is_alive = true
 	animation_player = create_animation_player()
+	collider = create_collider(
+		_agent,
+		AABB{
+			{-3, -6},
+			{ 3,  0},
+		},
+		.Agent,
+		.Dynamic,
+	)
 
 	register_entity(_agent)
 	return _agent
@@ -38,6 +47,7 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 
 agent_shutdown :: proc(using _agent: ^Agent)
 {
+	destroy_collider(collider)
 	destroy_animation_player(animation_player)
 }
 
@@ -51,7 +61,7 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 	if (is_alive && game().mouse.down[1])
 	{
 		_mouse: = game().mouse.world_position
-		_direction = normalize(_mouse - position)
+		_direction = normalize(_mouse - entity.position)
 		_velocity_length += game_settings.agent_acceleration * _dt
 		_velocity_length = math.min(_velocity_length, game_settings.agent_max_speed)
 	}
@@ -97,7 +107,7 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 			}
 		}
 	}
-	position += _movement
+	entity.position += _movement
 
 
 	// Animation
@@ -118,11 +128,11 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 
 agent_draw :: proc(using _agent: ^Agent)
 {
-	ordered_draw(int(position.y), _agent, proc(_payload: rawptr)
+	ordered_draw(int(entity.position.y), _agent, proc(_payload: rawptr)
 	{
 		using agent := cast(^Agent)_payload
 		
-		x, y : = floor_to_int(position.x), floor_to_int(position.y)
+		x, y : = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
 	})
@@ -149,7 +159,7 @@ agent_kill :: proc(using _agent: ^ Agent)
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB
 {
-	x, y : f32 = math.floor(position.x), math.floor(position.y)
+	x, y : f32 = math.floor(entity.position.x), math.floor(entity.position.y)
 	return AABB {
 		{ x-3, y-6 },
 		{ x+3, y },

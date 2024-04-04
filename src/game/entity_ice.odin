@@ -6,7 +6,6 @@ import "core:fmt"
 Ice :: struct {
 	using entity: Entity,
 	
-	position: Vector2,
 	size: Vector2,
 	friction: f32
 }
@@ -21,8 +20,8 @@ create_ice :: proc(_position: Vector2, _size: Vector2, _friction:f32) -> ^Ice
 {
 	using ice := new(Ice)
 	entity.type = ice
-
-	position = _position
+	entity.position = _position
+	
 	size = _size
 	friction = _friction
 
@@ -48,12 +47,12 @@ ice_update :: proc(using _ice: ^Ice, dt: f32) {
 
 ice_aabb :: proc(using ice: ^Ice) -> AABB
 {
-	return  AABB{min=position, max=position+size}
+	return  AABB{min=entity.position, max=entity.position+size}
 }
 
 ice_draw :: proc(using _ice: ^Ice) 
 {
-	x, y : i32 = floor_to_int(position.x), floor_to_int(position.y)
+	x, y : i32 = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 	w, h : i32 = floor_to_int(size.x), floor_to_int(size.y)
 	rl.DrawRectangle(x, y, w, h, rl.BLUE)
 }

@@ -21,11 +21,11 @@ aabb_move :: proc(_aabb: AABB, _offset: Vector2) -> AABB
 
 // }
 
-aabb_draw :: proc(_aabb: AABB, _color: Color)
+aabb_draw :: proc(_position: Vector2, _aabb: AABB, _color: Color)
 {
 	rl.DrawRectangleLines(
-		floor_to_int(_aabb.min.x),
-		floor_to_int(_aabb.min.y),
+		floor_to_int(_aabb.min.x + _position.x),
+		floor_to_int(_aabb.min.y + _position.y),
 		floor_to_int(_aabb.max.x - _aabb.min.x),
 		floor_to_int(_aabb.max.y - _aabb.min.y),
 		_color
