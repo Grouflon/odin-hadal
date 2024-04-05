@@ -78,8 +78,10 @@ game_initialize :: proc()
 	game_camera.zoom = 1.0
 
 	// Game
+	physics_manager_initialize(&physics_manager)
 	entity_manager_initialize(&entity_manager)
 
+	// Setup
 	entity_manager_register_type(&entity_manager, Agent, agent_definition)
 	entity_manager_register_type(&entity_manager, Mine, mine_definition)
 	entity_manager_register_type(&entity_manager, Wall, wall_definition)
@@ -90,6 +92,12 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Laser, laser_definition)
 	entity_manager_register_type(&entity_manager, Goal, goal_definition)
 	entity_manager_register_type(&entity_manager, Swarm, swarm_definition)
+
+	physics_manager_set_layer_response(&physics_manager, Layer.Agent, Layer.Agent, .Collide)
+	physics_manager_set_layer_response(&physics_manager, Layer.Agent, Layer.Wall, .Collide)
+
+	physics_manager_set_layer_response(&physics_manager, Layer.Swarm, Layer.Swarm, .Collide)
+	physics_manager_set_layer_response(&physics_manager, Layer.Swarm, Layer.Wall, .Collide)
 
 	game_start()
 }
@@ -103,7 +111,6 @@ game_start:: proc()
 
 	animation_manager_initialize(&animation_manager)
 	action_manager_initialize(&action_manager)
-	physics_manager_initialize(&physics_manager)
 
 	selection = make_selection()
 
@@ -164,7 +171,6 @@ game_stop :: proc()
 
 	entity_manager_clear_entities(&entity_manager)
 
-	physics_manager_shutdown(&physics_manager)
 	action_manager_shutdown(&action_manager)
 	animation_manager_shutdown(&animation_manager)
 
@@ -179,6 +185,7 @@ game_shutdown :: proc()
 	game_stop();
 
 	entity_manager_shutdown(&entity_manager)
+	physics_manager_shutdown(&physics_manager)
 
 	UnloadRenderTexture(game_render_target)
 
@@ -210,6 +217,10 @@ game_update :: proc()
 	{
 		entity_manager_update(&entity_manager, _dt)
 		animation_manager_update(&animation_manager, _dt)
+
+		physics_manager_update(&physics_manager)
+
+
 	}
 
 	// We dont need selection for now

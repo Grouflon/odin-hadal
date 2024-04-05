@@ -16,6 +16,13 @@ ColliderMobility :: enum
 	Dynamic,
 }
 
+CollisionResponse :: enum // this will be encoded on 2 bits, so should never exceed 4 values
+{
+	None = 0,
+	Overlap = 1,
+	Collide = 2,
+}
+
 Collider :: struct
 {
 	entity: ^Entity,
@@ -78,6 +85,11 @@ physics_manager_shutdown :: proc(using _manager: ^PhysicsManager)
 	delete(colliders)
 }
 
+physics_manager_update :: proc(using _manager: ^PhysicsManager)
+{
+	
+}
+
 physics_manager_register_collider :: proc(using _manager: ^PhysicsManager, _collider: ^Collider)
 {
 	assert(_manager != nil)
@@ -108,4 +120,26 @@ physics_manager_draw_layer :: proc(using _manager: ^PhysicsManager, _layer: Laye
 	{
 		aabb_draw(_collider.entity.position, _collider.bounds, _color)
 	}
+}
+
+physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _layer_1: Layer, _layer_2: Layer, _response: CollisionResponse)
+{
+	_process_response :: proc(_previous_layer_response: u64, _layer_1: Layer, _layer_2: Layer, _response: CollisionResponse) -> u64
+	{
+		/*
+		Ex: 
+		   10            response
+		01 01 00 01      previous_layer_response
+		11 00 11 11 and  additive_mask
+		00 10 00 00 or   additive_response
+
+		01 10 00 01      result
+		*/
+		_additive_mask: = ~(u64(3) << (u64(_layer_2) * 2))
+		_additive_response: = u64(_response) << (u64(_layer_2) * 2)
+		return (_previous_layer_response & _additive_mask) | _additive_response
+	}
+	
+	layers_response[_layer_1] = _process_response(layers_response[_layer_1], _layer_1, _layer_2, _response)
+	layers_response[_layer_2] = _process_response(layers_response[_layer_2], _layer_2, _layer_1, _response)
 }
