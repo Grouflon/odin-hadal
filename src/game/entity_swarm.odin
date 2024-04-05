@@ -4,11 +4,14 @@ import rl "vendor:raylib"
 
 Swarm :: struct {
 	using entity: Entity,
+
+	collider: ^Collider,
 }
 
 swarm_definition :: EntityDefinition(Swarm) {
 	update = swarm_update,
 	draw = swarm_draw,
+	shutdown = swarm_shutdown,
 }
 
 create_swarm :: proc(_position: Vector2) -> ^Swarm
@@ -17,9 +20,24 @@ create_swarm :: proc(_position: Vector2) -> ^Swarm
 	entity.type = _swarm
 	entity.position = _position
 
+	collider = create_collider(
+		_swarm,
+		AABB{
+			{-3, -6},
+			{ 3,  0},
+		},
+		.Swarm,
+		.Dynamic,
+	)
+
 	register_entity(_swarm)
 
 	return _swarm
+}
+
+swarm_shutdown :: proc(using _swarm: ^Swarm)
+{
+	destroy_collider(collider)
 }
 
 swarm_update :: proc(using _swarm: ^Swarm, _dt: f32)
@@ -30,8 +48,7 @@ swarm_update :: proc(using _swarm: ^Swarm, _dt: f32)
 	{
 		_direction: = normalize(_target.position - entity.position)
 
-		_movement: = _direction * game_settings.swarm_speed * _dt 
-		entity.position += _movement
+		collider.movement = _direction * game_settings.swarm_speed * _dt 
 	}
 }
 

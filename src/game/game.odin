@@ -248,8 +248,9 @@ game_draw :: proc()
 
 		renderer_ordered_draw(&renderer)
 
-		physics_manager_draw_layer(&physics_manager, .Agent, RED)
-		physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
+		// physics_manager_draw_layer(&physics_manager, .Agent, RED)
+		// physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
+		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
 		// selection_draw(selection)
 		mouse_draw(&mouse)
