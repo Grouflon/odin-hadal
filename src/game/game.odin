@@ -157,7 +157,8 @@ game_start:: proc()
 		}
 		else if (entity.identifier == "Goal")
 		{
-			create_goal(position, Vector2{entity.width, entity.height})
+			_nextLevel: = entity.customVariables["nextLevel"].value.(i32)
+			create_goal(position, Vector2{entity.width, entity.height}, _nextLevel)
 		}
 	}
 }

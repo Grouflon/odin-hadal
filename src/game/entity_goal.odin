@@ -7,6 +7,7 @@ Goal :: struct {
 	using entity: Entity,
 	
 	size: Vector2,
+	nextLevel: i32,
 }
 
 goal_definition :: EntityDefinition(Goal) {
@@ -14,14 +15,15 @@ goal_definition :: EntityDefinition(Goal) {
 	draw = goal_draw,
 }
 
-create_goal :: proc(_position: Vector2, _size: Vector2) -> ^Goal 
+create_goal :: proc(_position: Vector2, _size: Vector2, _nextLevel: i32) -> ^Goal 
 {
 	using goal := new(Goal)
 	entity.type = goal
 
 	entity.position = _position
 	size = _size
-
+	nextLevel = _nextLevel
+	
 	register_entity(goal)
 	return goal
 }
