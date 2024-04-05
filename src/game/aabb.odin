@@ -16,6 +16,11 @@ aabb_move :: proc(_aabb: AABB, _offset: Vector2) -> AABB
 	}
 }
 
+aabb_center :: proc(_aabb: AABB) -> Vector2
+{
+	return _aabb.min + (_aabb.max - _aabb.min) * 0.5
+}
+
 // aabb_resolve_static_collision :: proc(_moving_aabb: AABB, _static_aabb: AABB, _movement: Vector2) -> AABB
 // {
 

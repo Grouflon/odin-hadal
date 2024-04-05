@@ -86,41 +86,7 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 	velocity = _direction * _velocity_length
 
 	// Movement
-	_movement: = velocity * _dt
-	_aabb: = agent_aabb(_agent)
-	for _wall in get_entities(Wall)
-	{
-		_wall_aabb: = wall_aabb(_wall)
-
-		_moved_aabb: AABB
-		_moved_aabb = aabb_move(_aabb, {_movement.x, 0})
-		if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
-		{
-			if (_movement.x < 0)
-			{
-				_movement.x += _wall_aabb.max.x - _moved_aabb.min.x
-			}
-			else
-			{
-				_movement.x += _wall_aabb.min.x - _moved_aabb.max.x
-			}
-		}
-
-		_moved_aabb = aabb_move(_aabb, {_movement.x, _movement.y})
-		if (collision_aabb_aabb(_moved_aabb, _wall_aabb))
-		{
-			if (_movement.y < 0)
-			{
-				_movement.y += _wall_aabb.max.y - _moved_aabb.min.y
-			}
-			else
-			{
-				_movement.y += _wall_aabb.min.y - _moved_aabb.max.y
-			}
-		}
-	}
-	entity.position += _movement
-
+	collider.movement = velocity * _dt
 
 	// Animation
 	_is_moving = length_squared(velocity) > 0.001 
