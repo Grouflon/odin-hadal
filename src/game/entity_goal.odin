@@ -6,7 +6,6 @@ import "core:fmt"
 Goal :: struct {
 	using entity: Entity,
 	
-	position: Vector2,
 	size: Vector2,
 }
 
@@ -20,7 +19,7 @@ create_goal :: proc(_position: Vector2, _size: Vector2) -> ^Goal
 	using goal := new(Goal)
 	entity.type = goal
 
-	position = _position
+	entity.position = _position
 	size = _size
 
 	register_entity(goal)
@@ -43,7 +42,7 @@ goal_update :: proc(using _goal: ^Goal, dt: f32)
 
 goal_aabb :: proc(using goal: ^Goal) -> AABB
 {
-	return  AABB{min=position, max=position+size}
+	return  AABB{min=entity.position, max=entity.position+size}
 }
 
 goal_draw :: proc(using _goal: ^Goal) 
