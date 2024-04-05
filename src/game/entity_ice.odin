@@ -12,7 +12,6 @@ Ice :: struct {
 
 ice_definition :: EntityDefinition(Ice) {
 
-	update = ice_update,
 	draw = ice_draw,
 }
 
@@ -27,22 +26,6 @@ create_ice :: proc(_position: Vector2, _size: Vector2, _friction:f32) -> ^Ice
 
 	register_entity(ice)
 	return ice
-}
-
-ice_update :: proc(using _ice: ^Ice, dt: f32) {	
-	_agents := get_entities(Agent)
-
-	// for _agent in _agents
-	// {
-	// 	if (_agent.is_alive && collision_aabb_aabb(ice_aabb(_ice), agent_aabb(_agent)))
-	// 	{
-	// 		_agent.friction = friction
-	// 	}
-	// 	else
-	// 	{
-	// 		_agent.friction = 1
-	// 	}
-	// }
 }
 
 ice_aabb :: proc(using ice: ^Ice) -> AABB

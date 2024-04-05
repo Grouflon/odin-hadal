@@ -51,13 +51,25 @@ agent_shutdown :: proc(using _agent: ^Agent)
 	destroy_animation_player(animation_player)
 }
 
-agent_update :: proc(using _agent : ^Agent, _dt: f32)
+agent_update :: proc(using _agent: ^Agent, _dt: f32)
 {	
 	_is_moving: = false
 
 	// Velocity
 	_velocity_length: = length(velocity)
 	_direction: Vector2
+
+	_deceleration_multiplier: f32 = 1.0
+	_ices: = get_entities(Ice)
+	for _ice in _ices
+	{
+		if (collision_aabb_aabb(agent_aabb(_agent), ice_aabb(_ice)))
+		{
+			_deceleration_multiplier = 0.1
+			break
+		}
+	}
+
 	if (is_alive && game().mouse.down[1])
 	{
 		_mouse: = game().mouse.world_position
@@ -68,7 +80,7 @@ agent_update :: proc(using _agent : ^Agent, _dt: f32)
 	else
 	{
 		_direction = normalize(velocity)
-		_velocity_length -= game_settings.agent_deceleration * _dt
+		_velocity_length -= game_settings.agent_deceleration * _deceleration_multiplier * _dt
 		_velocity_length = math.max(_velocity_length, 0)
 	}
 	velocity = _direction * _velocity_length
