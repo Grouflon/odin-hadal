@@ -23,7 +23,7 @@ create_goal :: proc(_position: Vector2, _size: Vector2, _nextLevel: i32) -> ^Goa
 	entity.position = _position
 	size = _size
 	nextLevel = _nextLevel
-	
+
 	register_entity(goal)
 	return goal
 }
@@ -36,7 +36,8 @@ goal_update :: proc(using _goal: ^Goal, dt: f32)
 		collide: = collision_aabb_aabb(goal_aabb(_goal),agent_aabb(_agent))
 		if (_agent.is_alive && collide)
 		{
-
+			game().switch_level = true
+			game().current_level = nextLevel
 			return
 		}
 	}

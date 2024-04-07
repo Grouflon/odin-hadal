@@ -14,7 +14,8 @@ LdtkData :: struct
 LdtkLevel :: struct
 {
 	identifier: string,
-	entities: [dynamic]LdtkEntity
+	position:[2]f32,
+	entities: [dynamic]^LdtkEntity
 }
 
 LdtkEntity :: struct
@@ -67,8 +68,12 @@ load_level :: proc(path:string) -> ^LdtkData
 	{
 		ldtk_level: = new(LdtkLevel)
 		append(&ldtk.levels, ldtk_level)
-		layerInstances := lvl.(json.Object)["layerInstances"].(json.Array)
-		ldtk_level.identifier = lvl.(json.Object)["identifier"].(json.String)
+		level: = lvl.(json.Object)
+		layerInstances: = level["layerInstances"].(json.Array)
+		ldtk_level.identifier = level["identifier"].(json.String)
+		_worldX: = level["worldX"].(json.Float)
+		_worldY: = level["worldY"].(json.Float)
+		ldtk_level.position = {f32(_worldX), f32(_worldY)}
 
 		for layerInstance in layerInstances
 		{
@@ -81,13 +86,12 @@ load_level :: proc(path:string) -> ^LdtkData
 			}
 		}
 	}
-
 	return ldtk
 }
 
-parse_entity :: proc(_entityInstanceObj: json.Object) -> LdtkEntity
+parse_entity :: proc(_entityInstanceObj: json.Object) -> ^LdtkEntity
 {
-	ldtk_entity: LdtkEntity
+	ldtk_entity: = new(LdtkEntity)
 	ldtk_entity.identifier = _entityInstanceObj["__identifier"].(json.String)
 	ldtk_entity.id = i32(_entityInstanceObj["defUid"].(json.Float))
 	position: = _entityInstanceObj["px"].(json.Array)
@@ -158,7 +162,7 @@ free_level :: proc(_level_data: ^LdtkData)
 	free(_level_data)
 }
 
-free_entities :: proc(_entities: [dynamic]LdtkEntity)
+free_entities :: proc(_entities: [dynamic]^LdtkEntity)
 {
 	for _i: = len(_entities) - 1; _i >= 0; _i -= 1
 	{
@@ -167,7 +171,8 @@ free_entities :: proc(_entities: [dynamic]LdtkEntity)
 	delete(_entities)
 }
 
-free_entity :: proc(using _entity: LdtkEntity)
+free_entity :: proc(using _entity: ^LdtkEntity)
 {
 	delete(customVariables)
+	free(_entity)
 }

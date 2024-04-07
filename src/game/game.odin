@@ -28,6 +28,9 @@ Game :: struct
 
 	selection : ^Selection,
 	is_game_paused: bool,
+
+	current_level: i32,
+	switch_level: bool,
 }
 g_game : Game
 
@@ -99,6 +102,9 @@ game_initialize :: proc()
 	physics_manager_set_layer_response(&physics_manager, Layer.Swarm, Layer.Swarm, .Collide)
 	physics_manager_set_layer_response(&physics_manager, Layer.Swarm, Layer.Wall, .Collide)
 
+	current_level = 0
+	switch_level = false
+
 	game_start()
 }
 
@@ -117,7 +123,7 @@ game_start:: proc()
 	// Create Level
 	_levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
 	defer ldtk.free_level(_levels_data)
-	_level_data: = _levels_data.levels[0];
+	_level_data: = _levels_data.levels[current_level];
 
 	_start: Vector2 = {150, 150}
 	for _x in 0..<5
@@ -127,7 +133,7 @@ game_start:: proc()
 			create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
 		}
 	}
-
+	
 	for entity in _level_data.entities
 	{
 		position: = entity.position
@@ -168,6 +174,8 @@ game_stop :: proc()
 	using g_game
 	using rl
 
+	switch_level = false
+
 	delete_selection(selection)
 
 	entity_manager_clear_entities(&entity_manager)
@@ -201,11 +209,31 @@ game_update :: proc()
 
 	_dt: = rl.GetFrameTime()
 
+	if (switch_level)
+	{
+		game_stop()
+		game_start()
+	}
+
 	if (IsKeyPressed(KeyboardKey.R))
 	{
 		game_stop()
 		game_start()
 	}
+
+	if (IsKeyPressed(KeyboardKey.ONE))
+	{
+		game_stop()
+		current_level = 0
+		game_start()
+	}
+	if (IsKeyPressed(KeyboardKey.TWO))
+	{
+		game_stop()
+		current_level = 1
+		game_start()
+	}
+	
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
 	
