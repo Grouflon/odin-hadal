@@ -16,6 +16,7 @@ Game :: struct
 	renderer : Renderer,
 
 	game_render_target : rl.RenderTexture2D,
+	game_render_target_ui : rl.RenderTexture2D,
 	game_camera : rl.Camera2D,
 
 	resources: GameResources,
@@ -76,6 +77,7 @@ game_initialize :: proc()
 	renderer_init(&renderer)
 
 	game_render_target = LoadRenderTexture(game_width, game_height);
+	game_render_target_ui = LoadRenderTexture(game_width, game_height);
 
 	game_camera = Camera2D{}
 	game_camera.zoom = 1.0
@@ -169,6 +171,8 @@ game_start:: proc()
 	}
 }
 
+db: = create_dialogue_box()
+
 game_stop :: proc()
 {
 	using g_game
@@ -233,7 +237,7 @@ game_update :: proc()
 		current_level = 1
 		game_start()
 	}
-	
+	dialogue_box_update(db)
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
 	
@@ -248,8 +252,6 @@ game_update :: proc()
 		animation_manager_update(&animation_manager, _dt)
 
 		physics_manager_update(&physics_manager)
-
-
 	}
 
 	// We dont need selection for now
@@ -281,14 +283,12 @@ game_draw :: proc()
 		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
 		// selection_draw(selection)
-		mouse_draw(&mouse)
+
 	}
 
 	// Scaled up final rendering
 	{
-		BeginDrawing()
-		defer EndDrawing()
-
+		
 		ClearBackground(WHITE)
 
 		render_camera := Camera2D{}
@@ -299,7 +299,29 @@ game_draw :: proc()
 		source_rect := Rectangle{ 0.0, 0.0, f32(game_render_target.texture.width), -f32(game_render_target.texture.height) }
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
-		DrawFPS(GetScreenWidth() - 95, 10)    
+		DrawFPS(GetScreenWidth() - 95, 10)
+		dialogue_box_draw(db)
+	}
+
+	{
+		BeginTextureMode(game_render_target_ui)
+		defer EndTextureMode()
+
+		BeginMode2D(game_camera)
+		defer EndMode2D()
+		ClearBackground(BLANK)
+
+		mouse_draw(&mouse)
+	}
+
+	{
+		BeginDrawing()
+		defer EndDrawing()
+		
+		source_rect := Rectangle{ 0.0, 0.0, f32(game_render_target_ui.texture.width), -f32(game_render_target_ui.texture.height) }
+		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
+		DrawTexturePro(game_render_target_ui.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
+
 	}
 }
 

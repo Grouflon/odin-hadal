@@ -33,6 +33,6 @@ aabb_draw :: proc(_position: Vector2, _aabb: AABB, _color: Color)
 		floor_to_int(_aabb.min.y + _position.y),
 		floor_to_int(_aabb.max.x - _aabb.min.x),
 		floor_to_int(_aabb.max.y - _aabb.min.y),
-		_color
+		_color,
 	)
 }

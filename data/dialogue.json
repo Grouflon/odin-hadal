@@ -1,0 +1,4 @@
+[{
+	"message": "Bonjours, a tous",
+	"choices": [{"message":"a", "action": 0}, {"message":"b", "action": 1}]
+}]

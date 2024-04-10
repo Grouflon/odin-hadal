@@ -263,6 +263,6 @@ animation_player_draw:: proc(using _player : ^AnimationPlayer, _position : Vecto
             (_flip_y ? -1.0 : 1.0) * f32(_frame.size[1])
         },
         _position,
-        _tint
+        _tint,
     );
 }
