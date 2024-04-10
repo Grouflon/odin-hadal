@@ -171,7 +171,7 @@ game_start:: proc()
 	}
 }
 
-db: = create_dialogue_box()
+db: = create_dialogue_box("yoyoyooy")
 
 game_stop :: proc()
 {

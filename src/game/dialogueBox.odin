@@ -39,7 +39,7 @@ create_dialogue_box :: proc(_message: string) -> ^DialogueBox
 			_choice_obj: = _choicea.(json.Object)
 			_choice_message: = strings.clone_to_cstring(_choice_obj["message"].(json.String))
 			_action: = EAction(_choice_obj["action"].(json.Float))
-			_sd: proc() = {}
+			_sd: proc() = proc() {  }
 			switch (_action)
 			{
 				case EAction.CLOSE:
