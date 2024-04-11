@@ -1,6 +1,7 @@
 package game
 
 import "core:fmt"
+import "core:math"
 import rl "vendor:raylib"
 
 Turret :: struct {
@@ -80,26 +81,70 @@ reset_turret:: proc(using _turret: ^Turret)
 turret_draw :: proc(using _turret: ^Turret) {
 	ordered_draw(int(position.y), _turret, proc(_payload: rawptr)
 	{
-		using _turret := cast(^Turret)_payload
-		
-		dir := Vector2{0,0}
+		using _turret: = cast(^Turret)_payload
+		using rl
+
+		dir: = Vector2{0,0}
+		pos: = floor_vec2(position)
+		// turret
+		DrawPixelV(pos, rl.PINK)
+		DrawPixelV(pos + Vector2{0,1}, rl.PINK)
+		DrawPixelV(pos + Vector2{0,-1}, rl.PINK)
+		DrawPixelV(pos + Vector2{1,0}, rl.PINK)
+		DrawPixelV(pos + Vector2{-1,0}, rl.PINK)
+
 		if (has_target_lock)
 		{ 
 			dir = normalize(target_lock - position)
+			raycast(pos + dir, dir)
+
+			angle: = trigo_angle(dir)
+			rect: Rectangle = {pos.x,pos.y, 2, 200}
+			//DrawRectanglePro(rect, {rect.width * 0.5,0}, angle - 90 , RED)
 		} else if (has_target)
 		{
 			dir = normalize(target.position - position)
 		}
-		pos:=floor_vec2(position)
-		rl.DrawPixelV(pos, rl.PINK)
-		rl.DrawPixelV(pos + Vector2{0,1}, rl.PINK)
-		rl.DrawPixelV(pos + Vector2{0,-1}, rl.PINK)
-		rl.DrawPixelV(pos + Vector2{1,0}, rl.PINK)
-		rl.DrawPixelV(pos + Vector2{-1,0}, rl.PINK)
-
-		for i:=0; i<2; i+=1
+		
+		// canon
+		for i: =0; i < 2; i += 1
 		{
-			rl.DrawPixelV(pos+dir*f32(i), rl.BLACK)
+			DrawPixelV(pos+dir*f32(i), rl.BLACK)
 		}
 	})
 }
+
+raycast :: proc(_position: Vector2, _direction: Vector2)
+{
+	walls: = get_entities(Wall)
+
+	_ray: Ray2d = {origin = _position, direction = _direction}
+	_collide: Vector2
+	_collideCloser: Vector2
+
+	collisions: [dynamic]Vector2
+	_distanceA: f32 = math.F32_MAX
+
+	for wall in walls
+	{
+		_bounds: AABB ={
+			min=wall.position, 
+			max = wall.collider.bounds.max,
+		}
+
+		if (CheckCollisionRay2dRect(_ray, _bounds, &_collide))
+		{
+			_dis: = distance_squared(_position, _collide)
+			if (_distanceA > _dis)
+			{
+				_distanceA = _dis
+				_collideCloser = _collide
+			}
+		}
+	}
+
+	rl.DrawLineV(_position, _collideCloser, rl.GREEN)
+
+	delete(collisions)
+}
+

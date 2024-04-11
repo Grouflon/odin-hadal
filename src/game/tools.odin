@@ -126,3 +126,13 @@ time_independent_lerp :: proc(_base: f32, _target: f32, _time_to_90: f32, _dt: f
 	_lambda: = -math.log10_f32(1 - 0.9) / _time_to_90;
 	return math.lerp(_base, _target, 1 - math.exp_f32(-_lambda * _dt));
 }
+
+trigo_angle :: proc(_direction: Vector2) -> f32
+{
+	_angle: = (math.atan2(_direction.y, _direction.x) - math.atan2(f32(0), f32(0))) * 180 / math.PI;
+	if (_angle < 0) 
+	{ 
+		_angle += 2 * math.PI;
+	}
+	return _angle
+}

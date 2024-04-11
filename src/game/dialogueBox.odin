@@ -5,7 +5,7 @@ import "core:math"
 import "core:strings"
 import "core:encoding/json"
 import "core:fmt"
-import "hadal:ldtk"
+import "hadal:tools"
 
 DialogueBox :: struct
 {
@@ -25,7 +25,7 @@ create_dialogue_box :: proc(_message: string) -> ^DialogueBox
 {
 	using _dialogue_box: = new(DialogueBox)
 
-	_data: = ldtk.load_json("data/dialogue.json")
+	_data: = tools.load_json("data/dialogue.json")
 	_dialogues: = _data.(json.Array)
 
 	for _dialogue in _dialogues

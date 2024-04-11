@@ -300,7 +300,7 @@ game_draw :: proc()
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
 		DrawFPS(GetScreenWidth() - 95, 10)
-		dialogue_box_draw(db)
+	//	dialogue_box_draw(db)
 	}
 
 	{
@@ -321,7 +321,6 @@ game_draw :: proc()
 		source_rect := Rectangle{ 0.0, 0.0, f32(game_render_target_ui.texture.width), -f32(game_render_target_ui.texture.height) }
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target_ui.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
-
 	}
 }
 
