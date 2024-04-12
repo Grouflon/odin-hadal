@@ -116,35 +116,37 @@ turret_draw :: proc(using _turret: ^Turret) {
 
 raycast :: proc(_position: Vector2, _direction: Vector2)
 {
-	walls: = get_entities(Wall)
+	_colliders: = get_colliders(.Wall)
 
 	_ray: Ray2d = {origin = _position, direction = _direction}
-	_collide: Vector2
-	_collideCloser: Vector2
+	_hit_point: Vector2
 
-	collisions: [dynamic]Vector2
-	_distanceA: f32 = math.F32_MAX
+	_hit_points: [dynamic]Vector2
 
-	for wall in walls
+	for _collider in _colliders
 	{
-		_bounds: AABB ={
-			min=wall.position, 
-			max = wall.collider.bounds.max,
-		}
+		_bounds: AABB = physics_bounds_position(_collider)
 
-		if (CheckCollisionRay2dRect(_ray, _bounds, &_collide))
+		if (CheckCollisionRay2dRect(_ray, _bounds, &_hit_point))
 		{
-			_dis: = distance_squared(_position, _collide)
-			if (_distanceA > _dis)
+			_distance: = distance_squared(_position, _hit_point)
+			_index: = 0
+
+			for hit_point in _hit_points
 			{
-				_distanceA = _dis
-				_collideCloser = _collide
+				_dist: = distance_squared(_position, hit_point)
+				if (_dist > _distance)
+				{
+					break
+				}
+				_index += 1
 			}
+			inject_at(&_hit_points, _index, _hit_point)
 		}
 	}
 
-	rl.DrawLineV(_position, _collideCloser, rl.GREEN)
+	rl.DrawLineV(_position, _hit_points[0], rl.GREEN)
 
-	delete(collisions)
+	delete(_hit_points)
 }
 

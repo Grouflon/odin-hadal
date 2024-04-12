@@ -26,7 +26,7 @@ CheckCollisionRay2dRect :: proc(ray: Ray2d, _bounds: AABB, intersection: ^Vector
 {
 	using math
 	minParam: f32 = F32_MIN
-	maxParam: f32 = F32_MAX;
+	maxParam: f32 = F32_MAX
 	_x: = _bounds.min.x
 	_y: = _bounds.min.y
 	_width: = _bounds.max.x
