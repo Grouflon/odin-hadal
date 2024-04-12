@@ -5,3 +5,4 @@ bin
 *.sublime-workspace
 *.rdbg
 .vscode
+ols.json
