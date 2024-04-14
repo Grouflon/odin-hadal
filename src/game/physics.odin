@@ -246,11 +246,6 @@ physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _lay
 	layers_response[_layer_2] = _process_response(layers_response[_layer_2], _layer_2, _layer_1, _response)
 }
 
-physics_bounds_position :: proc(using collider: ^Collider) -> AABB
-{
-	return { min=entity.position, max=collider.bounds.max }
-}
-
 // Shorthands
 get_colliders :: proc(_layer: Layer) -> [dynamic]^Collider
 {

@@ -125,7 +125,7 @@ raycast :: proc(_position: Vector2, _direction: Vector2)
 
 	for _collider in _colliders
 	{
-		_bounds: AABB = physics_bounds_position(_collider)
+		_bounds: AABB = aabb_move(_collider.bounds, _collider.entity.position)
 
 		if (CheckCollisionRay2dRect(_ray, _bounds, &_hit_point))
 		{

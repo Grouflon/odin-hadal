@@ -26,23 +26,23 @@ CheckCollisionRay2dRect :: proc(ray: Ray2d, _bounds: AABB, intersection: ^Vector
 {
 	using math
 	minParam: f32 = F32_MIN
-	maxParam: f32 = F32_MAX
-	_x: = _bounds.min.x
-	_y: = _bounds.min.y
-	_width: = _bounds.max.x
-	_height: = _bounds.max.y
+	maxParam: f32 = F32_MAX;
+	_x_min: = _bounds.min.x
+	_y_min: = _bounds.min.y
+	_x_max: = _bounds.max.x
+	_y_max: = _bounds.max.y
 
 	if (ray.direction.x != 0.0)
 	{
-		txMin: f32 = (_x - ray.origin.x) / ray.direction.x
-		txMax: f32 = (_x + _width - ray.origin.x) / ray.direction.x
+		txMin: f32 = (_x_min - ray.origin.x) / ray.direction.x
+		txMax: f32 = (_x_max - ray.origin.x) / ray.direction.x
 		minParam = max(minParam, min(txMin, txMax));
 		maxParam = min(maxParam, max(txMin, txMax));
 	}
 	if (ray.direction.y != 0.0)
 	{
-		tyMin: f32 = (_y - ray.origin.y) / ray.direction.y;
-		tyMax: f32 = (_y + _height - ray.origin.y) / ray.direction.y;
+		tyMin: f32 = (_y_min - ray.origin.y) / ray.direction.y;
+		tyMax: f32 = (_y_max - ray.origin.y) / ray.direction.y;
 		minParam = max(minParam, min(tyMin, tyMax));
 		maxParam = min(maxParam, max(tyMin, tyMax));
 	}
