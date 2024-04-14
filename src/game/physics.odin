@@ -288,38 +288,72 @@ physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _lay
 	layers_response[_layer_2] = _process_response(layers_response[_layer_2], _layer_2, _layer_1, _response)
 }
 
-physics_manager_raycast :: proc(using _manager: ^PhysicsManager, _layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _raycast_result: ^[dynamic]RaycastResult)
+physics_manager_raycast :: proc(using _manager: ^PhysicsManager, _layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _cast_results: ^[dynamic]RaycastResult = nil) -> bool
 {
-	_colliders: = colliders_per_layer[_layer]
+	has_collided: = false
+	layer_colliders: = colliders_per_layer[_layer]
 
-	_ray: Ray2d = {origin = _position, direction = _direction, length = _length}
-	_hit_point: Vector2
+	ray: Ray2d = {origin = _position, direction = _direction, length = _length}
+	hit_point: Vector2
 
-	for _collider in _colliders
+	for collider in layer_colliders
 	{
-		_bounds: AABB = aabb_move(_collider.bounds, _collider.entity.position)
+		bounds: AABB = aabb_move(collider.bounds, collider.entity.position)
 
-		if (collision_raycast2d_aabb(_ray, _bounds, &_hit_point))
+		if (collision_raycast2d_aabb(ray, bounds, &hit_point))
 		{
-			_distance: = distance_squared(_position, _hit_point)
-			_index: = 0
+			current_hit_distance_squared: = distance_squared(_position, hit_point)
+			index: = 0
 
-			for _raycast_result in _raycast_result
+			for raycast_result in _cast_results
 			{
-
-				_dist: = distance_squared(_position, _raycast_result.hit_point)
-				if (_dist > _distance)
+				hit_distance_squared: = distance_squared(_position, raycast_result.hit_point)
+				if (hit_distance_squared > current_hit_distance_squared)
 				{
 					break
 				}
-				_index += 1
+				index += 1
 			}
-			inject_at(_raycast_result, _index, RaycastResult{collider=_collider, hit_point=_hit_point})
+			if (_cast_results != nil)
+			{
+				inject_at(_cast_results, index, RaycastResult{collider=collider, hit_point=hit_point})
+			}
+			has_collided = true
 		}
 	}
+
+	return has_collided
 }
 
-physics_raycast :: proc(_layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _raycast_result: ^[dynamic]RaycastResult)
+physics_manager_pointcast :: proc(using _manager: ^PhysicsManager, _layer: Layer, _point: Vector2, _cast_results: ^[dynamic]^Collider = nil) -> bool
 {
-	physics_manager_raycast(&game().physics_manager, _layer, _position, _direction, _length, _raycast_result)
+	has_collided: = false
+	layer_colliders: = colliders_per_layer[_layer]
+
+	for collider in layer_colliders
+	{
+		bounds: AABB = aabb_move(collider.bounds, collider.entity.position)
+
+		if (collision_aabb_point(bounds, _point))
+		{
+			if (_cast_results != nil)
+			{
+				append(_cast_results, collider)
+			} 
+			has_collided = true
+		}
+	}
+
+	return has_collided
+}
+
+
+physics_raycast :: proc(_layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _cast_results: ^[dynamic]RaycastResult = nil) -> bool
+{
+	return physics_manager_raycast(&game().physics_manager, _layer, _position, _direction, _length, _cast_results)
+}
+
+physics_pointcast :: proc(_layer: Layer, _point: Vector2, _cast_results: ^[dynamic]^Collider = nil) -> bool
+{
+	return physics_manager_pointcast(&game().physics_manager, _layer, _point, _cast_results)
 }
