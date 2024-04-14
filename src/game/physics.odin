@@ -59,18 +59,18 @@ create_collider :: proc(_entity: ^Entity, _bounds: AABB, _layer: Layer, _mobilit
 {
 	assert(_entity != nil)
 
-	_collider: = new(Collider)
+	collider: = new(Collider)
 
-	_collider.entity = _entity
-	_collider.bounds = _bounds
-	_collider.layer = _layer
-	_collider.mobility = _mobility
-	_collider.overlaps = make([dynamic]^Collider)
-	_collider.collisions = make([dynamic]^Collider)
+	collider.entity = _entity
+	collider.bounds = _bounds
+	collider.layer = _layer
+	collider.mobility = _mobility
+	collider.overlaps = make([dynamic]^Collider)
+	collider.collisions = make([dynamic]^Collider)
 
-	physics_manager_register_collider(physics(), _collider)
+	physics_manager_register_collider(physics(), collider)
 
-	return _collider
+	return collider
 }
 
 destroy_collider :: proc(_collider: ^Collider)
@@ -106,40 +106,40 @@ physics_manager_shutdown :: proc(using _manager: ^PhysicsManager)
 physics_manager_update :: proc(using _manager: ^PhysicsManager)
 {
 	// Clear previous frame results
-	for _collider in colliders
+	for collider in colliders
 	{
-		clear(&_collider.collisions)
-		clear(&_collider.overlaps)
+		clear(&collider.collisions)
+		clear(&collider.overlaps)
 	}
 
 	// Iterate through every pair
-	for _i in 0..<LAYERS_COUNT
+	for i in 0..<LAYERS_COUNT
 	{
 		// Skip layer if total response is 0
-		if layers_response[_i] == 0 { continue }
+		if layers_response[i] == 0 { continue }
 
-		for _j in _i..<LAYERS_COUNT
+		for j in i..<LAYERS_COUNT
 		{
 			// Find collision response
-			_mask: u64 = 3 << u64(_j * 2)
-			_response: CollisionResponse = CollisionResponse((layers_response[_i] & _mask) >> u64(_j * 2))
+			mask: u64 = 3 << u64(j * 2)
+			response: CollisionResponse = CollisionResponse((layers_response[i] & mask) >> u64(j * 2))
 
 			// Skip layer if response is 0
-			if _response == .None { continue }
+			if response == .None { continue }
 
-			for _collider_a in colliders_per_layer[_i]
+			for collider_a in colliders_per_layer[i]
 			{
-				for _collider_b in colliders_per_layer[_j]
+				for collider_b in colliders_per_layer[j]
 				{
-					if (_collider_a == _collider_b) { continue }
+					if (collider_a == collider_b) { continue }
 
-					if (_response == .Collide)
+					if (response == .Collide)
 					{
-						solve_collision(_collider_a, _collider_b)
+						solve_collision(collider_a, collider_b)
 					}
-					else if (_response == .Overlap)
+					else if (response == .Overlap)
 					{
-						solve_overlap(_collider_a, _collider_b)
+						solve_overlap(collider_a, collider_b)
 					}
 				}	
 			}
@@ -151,72 +151,72 @@ solve_collision :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
 {
 	if (_collider_a.mobility == .Static && _collider_b.mobility == .Static) { return }
 
-	_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
-	_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
+	aabb_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
+	aabb_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
 
-	compute_push :: proc(_a: AABB, _b: AABB) -> Vector2
+	compute_push :: proc(_aabb_a: AABB, _aabb_b: AABB) -> Vector2
 	{
-		_a_center: = aabb_center(_a)
-		_b_center: = aabb_center(_b)
-		_bary_0: = _b_center
-		_bary_1: = _b.max
-		_bary_2: = Vector2{_b.max.x, _b.min.y}
+		a_center: = aabb_center(_aabb_a)
+		b_center: = aabb_center(_aabb_b)
+		bary_0: = b_center
+		bary_1: = _aabb_b.max
+		bary_2: = Vector2{_aabb_b.max.x, _aabb_b.min.y}
 
-		_bary_coords: = barycentric_coordinates(_a_center, _bary_0, _bary_1, _bary_2)
+		bary_coords: = barycentric_coordinates(a_center, bary_0, bary_1, bary_2)
 
-		_push: Vector2
-		if (_bary_coords.y > 0 && _bary_coords.z > 0) // push right
+		push: Vector2
+		if (bary_coords.y > 0 && bary_coords.z > 0) // push right
 		{
-			_push = { _b.max.x - _a.min.x, 0.0 }
+			push = { _aabb_b.max.x - _aabb_a.min.x, 0.0 }
 		}
-		else if (_bary_coords.y > 0 && _bary_coords.z <= 0) // push down
+		else if (bary_coords.y > 0 && bary_coords.z <= 0) // push down
 		{
-			_push = { 0.0,  _b.max.y - _a.min.y }
+			push = { 0.0,  _aabb_b.max.y - _aabb_a.min.y }
 		}
-		else if (_bary_coords.y <= 0 && _bary_coords.z <= 0) // push left
+		else if (bary_coords.y <= 0 && bary_coords.z <= 0) // push left
 		{
-			_push = {_b.min.x - _a.max.x,  0.0 } // push up
+			push = {_aabb_b.min.x - _aabb_a.max.x,  0.0 } // push up
 		}
-		else if (_bary_coords.y <= 0 && _bary_coords.z > 0)
+		else if (bary_coords.y <= 0 && bary_coords.z > 0)
 		{
-			_push = { 0.0, _b.min.y - _a.max.y }
+			push = { 0.0, _aabb_b.min.y - _aabb_a.max.y }
 		}
 
-		return _push
+		return push
 	}
 
-	if (collision_aabb_aabb(_a, _b))
+	if (collision_aabb_aabb(aabb_a, aabb_b))
 	{
 		append_unique(&_collider_a.collisions, _collider_b)
 		append_unique(&_collider_b.collisions, _collider_a)
 
 		if (_collider_a.mobility == .Static)
 		{
-			_b_push: = compute_push(_b, _a)
-			_collider_b.entity.position += _b_push
+			b_push: = compute_push(aabb_b, aabb_a)
+			_collider_b.entity.position += b_push
 		}
 		else if (_collider_b.mobility == .Static)
 		{
-			_a_push: = compute_push(_a, _b)
-			_collider_a.entity.position += _a_push
+			a_push: = compute_push(aabb_a, aabb_b)
+			_collider_a.entity.position += a_push
 		}
 		else
 		{
-			_a_push: = compute_push(_a, _b)
-			_b_push: = compute_push(_b, _a)
+			a_push: = compute_push(aabb_a, aabb_b)
+			b_push: = compute_push(aabb_b, aabb_a)
 
-			_collider_a.entity.position += _a_push * 0.5
-			_collider_b.entity.position += _b_push * 0.5
+			_collider_a.entity.position += a_push * 0.5
+			_collider_b.entity.position += b_push * 0.5
 		}
 	}
 }
 
 solve_overlap :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
 {
-	_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
-	_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
+	aabb_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
+	aabb_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
 	
-	if (collision_aabb_aabb(_a, _b))
+	if (collision_aabb_aabb(aabb_a, aabb_b))
 	{
 		append_unique(&_collider_a.overlaps, _collider_b)
 		append_unique(&_collider_b.overlaps, _collider_a)
@@ -242,27 +242,27 @@ physics_manager_unregister_collider :: proc(using _manager: ^PhysicsManager, _co
 	assert(_manager != nil)
 	assert(_collider != nil)
 
-	_index: = find(&colliders, _collider)
-	assert(_index >= 0, "Collider not registered")
-	unordered_remove(&colliders, _index)
+	index: = find(&colliders, _collider)
+	assert(index >= 0, "Collider not registered")
+	unordered_remove(&colliders, index)
 
 	if (_collider.mobility == .Dynamic)
 	{
-		_index = find(&dynamic_colliders, _collider)
-		assert(_index >= 0, "Dynamic Collider not registered")
-		unordered_remove(&dynamic_colliders, _index)
+		index = find(&dynamic_colliders, _collider)
+		assert(index >= 0, "Dynamic Collider not registered")
+		unordered_remove(&dynamic_colliders, index)
 	}
 
-	_index = find(&colliders_per_layer[_collider.layer], _collider)
-	assert(_index >= 0, "Collider not present in its assigned layer")
-	unordered_remove(&colliders_per_layer[_collider.layer], _index)
+	index = find(&colliders_per_layer[_collider.layer], _collider)
+	assert(index >= 0, "Collider not present in its assigned layer")
+	unordered_remove(&colliders_per_layer[_collider.layer], index)
 }
 
 physics_manager_draw_layer :: proc(using _manager: ^PhysicsManager, _layer: Layer, _color: Color)
 {
-	for _collider in colliders_per_layer[_layer]
+	for collider in colliders_per_layer[_layer]
 	{
-		aabb_draw(_collider.entity.position, _collider.bounds, _color)
+		aabb_draw(collider.entity.position, collider.bounds, _color)
 	}
 }
 
@@ -279,9 +279,9 @@ physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _lay
 
 		01 10 00 01      result
 		*/
-		_additive_mask: = ~(u64(3) << (u64(_layer_2) * 2))
-		_additive_response: = u64(_response) << (u64(_layer_2) * 2)
-		return (_previous_layer_response & _additive_mask) | _additive_response
+		additive_mask: = ~(u64(3) << (u64(_layer_2) * 2))
+		additive_response: = u64(_response) << (u64(_layer_2) * 2)
+		return (_previous_layer_response & additive_mask) | additive_response
 	}
 	
 	layers_response[_layer_1] = _process_response(layers_response[_layer_1], _layer_1, _layer_2, _response)
