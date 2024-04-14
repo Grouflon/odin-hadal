@@ -16,6 +16,7 @@ Bullet :: struct {
 bullet_definition :: EntityDefinition(Bullet) {
 	update = bullet_update,
 	draw = bullet_draw,
+	shutdown = bullet_shutdown,
 }
 
 bullet_func :: proc(position: Vector2, _velocity: Vector2, _owner:rawptr)
