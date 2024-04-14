@@ -251,6 +251,19 @@ game_update :: proc()
 
 	if (!is_game_paused)
 	{
+		agents: = get_entities(Agent)
+		if len(agents) > 0
+		{
+			if (mouse.down[1])
+			{
+				agents[0].move_direction = mouse.world_position - agents[0].position
+			}
+			else
+			{
+				agents[0].move_direction = {0, 0}
+			}
+		}
+
 		entity_manager_update(&entity_manager, _dt)
 		animation_manager_update(&animation_manager, _dt)
 

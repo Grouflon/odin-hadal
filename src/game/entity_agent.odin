@@ -9,7 +9,8 @@ Agent :: struct
 {
 	using entity: Entity,
 	
-	velocity : Vector2,
+	move_direction: Vector2,
+	velocity: Vector2,
 	is_alive: bool,
 
 	animation_player: ^AnimationPlayer,
@@ -70,10 +71,9 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 		}
 	}
 
-	if (is_alive && game().mouse.down[1])
+	if (is_alive && !is_zero(move_direction))
 	{
-		_mouse: = game().mouse.world_position
-		_direction = normalize(_mouse - entity.position)
+		_direction = normalize(move_direction)
 		_velocity_length += game_settings.agent_acceleration * _dt
 		_velocity_length = math.min(_velocity_length, game_settings.agent_max_speed)
 	}
