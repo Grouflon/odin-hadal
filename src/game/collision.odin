@@ -12,6 +12,16 @@ collision_aabb_aabb :: proc(_a: AABB, _b: AABB) -> bool
 		_a.max.y <= _b.min.y)
 }
 
+collision_aabb_point :: proc(_a: AABB, _b: Vector2) -> bool
+{
+	return !(
+		_a.min.x >= _b.x ||
+		_a.max.x <= _b.x ||
+		_a.min.y >= _b.y ||
+		_a.max.y <= _b.y)
+}
+
+
 collision_line_point :: proc(_point: Vector2, _p1: Vector2, _p2: Vector2) -> bool
 {
 	return rl.CheckCollisionPointLine(_point, _p1, _p2, 1)
