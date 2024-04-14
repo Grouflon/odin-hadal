@@ -8,6 +8,7 @@ Layer :: enum
 	Agent,
 	Swarm,
 	Hazard,
+	EnemyBullet,
 }
 
 ColliderMobility :: enum
@@ -29,6 +30,7 @@ Collider :: struct
 	bounds: AABB,
 	layer: Layer,
 	mobility: ColliderMobility,
+	collisions: [dynamic]^Collider,
 	overlaps: [dynamic]^Collider,
 }
 
@@ -64,6 +66,7 @@ create_collider :: proc(_entity: ^Entity, _bounds: AABB, _layer: Layer, _mobilit
 	_collider.layer = _layer
 	_collider.mobility = _mobility
 	_collider.overlaps = make([dynamic]^Collider)
+	_collider.collisions = make([dynamic]^Collider)
 
 	physics_manager_register_collider(physics(), _collider)
 
@@ -74,6 +77,7 @@ destroy_collider :: proc(_collider: ^Collider)
 {
 	physics_manager_unregister_collider(physics(), _collider)
 
+	delete(_collider.collisions)
 	delete(_collider.overlaps)
 	free(_collider)
 }
@@ -97,6 +101,50 @@ physics_manager_shutdown :: proc(using _manager: ^PhysicsManager)
 	}
 	delete(dynamic_colliders)
 	delete(colliders)
+}
+
+physics_manager_update :: proc(using _manager: ^PhysicsManager)
+{
+	// Clear previous frame results
+	for _collider in colliders
+	{
+		clear(&_collider.collisions)
+		clear(&_collider.overlaps)
+	}
+
+	// Iterate through every pair
+	for _i in 0..<LAYERS_COUNT
+	{
+		// Skip layer if total response is 0
+		if layers_response[_i] == 0 { continue }
+
+		for _j in _i..<LAYERS_COUNT
+		{
+			// Find collision response
+			_mask: u64 = 3 << u64(_j * 2)
+			_response: CollisionResponse = CollisionResponse((layers_response[_i] & _mask) >> u64(_j * 2))
+
+			// Skip layer if response is 0
+			if _response == .None { continue }
+
+			for _collider_a in colliders_per_layer[_i]
+			{
+				for _collider_b in colliders_per_layer[_j]
+				{
+					if (_collider_a == _collider_b) { continue }
+
+					if (_response == .Collide)
+					{
+						solve_collision(_collider_a, _collider_b)
+					}
+					else if (_response == .Overlap)
+					{
+						solve_overlap(_collider_a, _collider_b)
+					}
+				}	
+			}
+		}
+	}
 }
 
 solve_collision :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
@@ -139,6 +187,9 @@ solve_collision :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
 
 	if (collision_aabb_aabb(_a, _b))
 	{
+		append_unique(&_collider_a.collisions, _collider_b)
+		append_unique(&_collider_b.collisions, _collider_a)
+
 		if (_collider_a.mobility == .Static)
 		{
 			_b_push: = compute_push(_b, _a)
@@ -160,32 +211,15 @@ solve_collision :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
 	}
 }
 
-physics_manager_update :: proc(using _manager: ^PhysicsManager)
+solve_overlap :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
 {
-	for _i in 0..<LAYERS_COUNT
+	_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
+	_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
+	
+	if (collision_aabb_aabb(_a, _b))
 	{
-		// Skip layer if total response is 0
-		if layers_response[_i] == 0 { continue }
-
-		for _j in _i..<LAYERS_COUNT
-		{
-			// Find collision response
-			_mask: u64 = 3 << u64(_j * 2)
-			_response: CollisionResponse = CollisionResponse((layers_response[_i] & _mask) >> u64(_j * 2))
-
-			// Skip layer if response is 0
-			if _response == .None { continue }
-
-			for _collider_a in colliders_per_layer[_i]
-			{
-				for _collider_b in colliders_per_layer[_j]
-				{
-					if (_collider_a == _collider_b) { continue }
-
-					solve_collision(_collider_a, _collider_b)
-				}	
-			}
-		}
+		append_unique(&_collider_a.overlaps, _collider_b)
+		append_unique(&_collider_b.overlaps, _collider_a)
 	}
 }
 

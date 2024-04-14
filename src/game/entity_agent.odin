@@ -144,7 +144,7 @@ agent_aabb :: proc(using _agent: ^Agent) -> AABB
 	}
 }
 
-find_closest_agent :: proc(_position: Vector2, _range:f32) -> ^Agent
+find_closest_agent :: proc(_position: Vector2, _range: f32) -> ^Agent
 {
 	_agents := get_entities(Agent)
 	_closest_agent : ^Agent = nil

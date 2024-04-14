@@ -59,6 +59,19 @@ copy_array :: proc(_dst: ^$T/[dynamic]$E, _src: []E)
 	copy(_dst[:], _src[:])
 }
 
+append_unique :: proc(_array: ^$T/[dynamic]$E, _element: E)
+{
+	_array_length := len(_array)
+	for i := 0; i < _array_length; i+=1
+	{
+		if (_element == _array[i]) 
+		{
+			return
+		}
+	}
+	append(_array, _element)
+}
+
 // Math
 floor_f32 :: proc(_value: f32) -> f32
 {

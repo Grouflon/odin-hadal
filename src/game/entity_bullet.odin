@@ -11,6 +11,7 @@ Bullet :: struct {
 	owner: rawptr,
 	time: f32,
 	raycast_result: [dynamic]RaycastResult,
+	collider: ^Collider,
 }
 
 bullet_definition :: EntityDefinition(Bullet) {
@@ -19,7 +20,7 @@ bullet_definition :: EntityDefinition(Bullet) {
 	shutdown = bullet_shutdown,
 }
 
-bullet_func :: proc(position: Vector2, _velocity: Vector2, _owner:rawptr)
+bullet_func :: proc(_position: Vector2, _velocity:Vector2, _owner:rawptr)
 
 create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
 {
@@ -28,13 +29,22 @@ create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr
 
 create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet 
 {
-	using bullet := new(Bullet)
+	using bullet: = new(Bullet)
 	entity.type = bullet
 	
 	position = _position
 	velocity = _velocity
 	owner = _owner
 	time = 0
+	collider = create_collider(
+		bullet,
+		AABB{
+			{0, 0},
+			{1, 1},
+		},
+		.EnemyBullet,
+		.Dynamic,
+	)
 
 	physics_raycast(.Wall, _position, normalize_vec2(velocity), 400, &raycast_result)
 	register_entity(bullet)
@@ -42,38 +52,32 @@ create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> 
 	return bullet
 }
 
-bullet_shutdown :: proc(using _agent: ^Bullet)
+bullet_shutdown :: proc(using _bullet: ^Bullet)
 {
+	destroy_collider(collider)
 	delete(raycast_result)
 }
 
-bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
+bullet_update :: proc(using _bullet: ^Bullet, dt: f32)
+{
 	position += velocity * dt
-	time+=dt
-	aabb := AABB{position,position}
-	
-	_agents := get_entities(Agent)
-	for _agent in _agents
+	time += dt
+
+	has_collided: = false
+	for overlap in collider.overlaps
 	{
-		if (_agent.is_alive && collision_aabb_aabb( aabb,agent_aabb(_agent)))
+		#partial switch e in overlap.entity.type
 		{
-			agent_kill(_agent)
-			destroy_entity(_bullet)
-			return
+			case ^Agent:
+				agent_kill(e)
+				has_collided = true
+
+			case ^Wall:
+				has_collided = true
 		}
 	}
 
-	_walls := get_entities(Wall)
-	for _wall in _walls
-	{
-		if (collision_aabb_aabb(aabb,wall_aabb(_wall)))
-		{
-			destroy_entity(_bullet)
-			return
-		}
-	}
-
-	if (time >= 3)
+	if (has_collided || time >= 3)
 	{
 		destroy_entity(_bullet)
 		return
@@ -95,8 +99,8 @@ bullet_draw :: proc(using _bullet: ^Bullet) {
 
 make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
 {
-	dir := normalize( _velocity)
-	length := length( _velocity)
+	dir: = normalize( _velocity)
+	length: = length( _velocity)
 
 	create_bullet(_position, _velocity, _owner)
 	create_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
