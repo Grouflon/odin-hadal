@@ -51,7 +51,7 @@ load_level :: proc(path:string) -> ^LdtkData
 		append(&ldtk.levels, ldtk_level)
 		level: = lvl.(json.Object)
 		layerInstances: = level["layerInstances"].(json.Array)
-		ldtk_level.identifier = level["identifier"].(json.String)
+		ldtk_level.identifier = strings.clone(level["identifier"].(json.String))
 		_worldX: = level["worldX"].(json.Float)
 		_worldY: = level["worldY"].(json.Float)
 		ldtk_level.position = {f32(_worldX), f32(_worldY)}
@@ -73,7 +73,7 @@ load_level :: proc(path:string) -> ^LdtkData
 parse_entity :: proc(_entityInstanceObj: json.Object) -> ^LdtkEntity
 {
 	ldtk_entity: = new(LdtkEntity)
-	ldtk_entity.identifier = _entityInstanceObj["__identifier"].(json.String)
+	ldtk_entity.identifier = strings.clone(_entityInstanceObj["__identifier"].(json.String))
 	ldtk_entity.id = i32(_entityInstanceObj["defUid"].(json.Float))
 	position: = _entityInstanceObj["px"].(json.Array)
 	ldtk_entity.position = {f32(position[0].(json.Float)), f32(position[1].(json.Float))}
@@ -97,7 +97,7 @@ parse_entity :: proc(_entityInstanceObj: json.Object) -> ^LdtkEntity
 parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, identifier: string, ldtkVariable: LdtkVariable)
 {
 	_ldtkVariable: LdtkVariable
-	_identifier: = _fieldInstance["__identifier"].(json.String)
+	_identifier: = strings.clone(_fieldInstance["__identifier"].(json.String))
 	_type: = _fieldInstance["__type"].(json.String)
 
 	_value: = _fieldInstance["__value"]
@@ -113,7 +113,7 @@ parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, i
 		}
 		case "String":
 		{
-			_ldtkVariable.value = _value.(json.String)
+			_ldtkVariable.value = strings.clone(_value.(json.String))
 		}
 		case "Boolean":
 		{
@@ -121,7 +121,7 @@ parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, i
 		}
 		case "Color":
 		{
-			_ldtkVariable.value = _value.(json.String)
+			_ldtkVariable.value = strings.clone(_value.(json.String))
 		}
 		case:
 		{
@@ -132,14 +132,15 @@ parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, i
 	return false, _identifier, _ldtkVariable
 }
 
-free_level :: proc(_level_data: ^LdtkData)
+free_level :: proc(using _level_data: ^LdtkData)
 {
-	for _i: = len(_level_data.levels) - 1; _i >= 0; _i -= 1
+	for _i: = len(levels) - 1; _i >= 0; _i -= 1
 	{
-		free_entities(_level_data.levels[_i].entities)
-		free(_level_data.levels[_i])
+		free_entities(levels[_i].entities)
+		delete(levels[_i].identifier)
+		free(levels[_i])
 	}
-	delete(_level_data.levels)
+	delete(levels)
 	free(_level_data)
 }
 
@@ -154,6 +155,12 @@ free_entities :: proc(_entities: [dynamic]^LdtkEntity)
 
 free_entity :: proc(using _entity: ^LdtkEntity)
 {
+	for customVariable in customVariables {
+		delete(customVariable)
+	}
+
 	delete(customVariables)
+	delete(identifier)
+
 	free(_entity)
 }
