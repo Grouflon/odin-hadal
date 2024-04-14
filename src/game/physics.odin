@@ -32,6 +32,19 @@ Collider :: struct
 	overlaps: [dynamic]^Collider,
 }
 
+RaycastResult :: struct
+{
+	collider: ^Collider,
+	hit_point: Vector2,
+}
+
+Ray2d :: struct
+{
+	origin: Vector2,
+	direction: Vector2,
+	length: f32
+}
+
 PhysicsManager :: struct
 {
 	colliders: [dynamic]^Collider,
@@ -219,11 +232,6 @@ physics_manager_draw_layer :: proc(using _manager: ^PhysicsManager, _layer: Laye
 	}
 }
 
-physics_manager_get_colliders :: proc(using _manager: ^PhysicsManager, _layer: Layer) -> [dynamic]^Collider
-{
-	return colliders_per_layer[_layer]
-}
-
 physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _layer_1: Layer, _layer_2: Layer, _response: CollisionResponse)
 {
 	_process_response :: proc(_previous_layer_response: u64, _layer_1: Layer, _layer_2: Layer, _response: CollisionResponse) -> u64
@@ -246,8 +254,39 @@ physics_manager_set_layer_response :: proc(using _manager: ^PhysicsManager, _lay
 	layers_response[_layer_2] = _process_response(layers_response[_layer_2], _layer_2, _layer_1, _response)
 }
 
-// Shorthands
-get_colliders :: proc(_layer: Layer) -> [dynamic]^Collider
+physics_manager_raycast :: proc(using _manager: ^PhysicsManager, _layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _raycast_result: ^[dynamic]RaycastResult)
 {
-	return physics_manager_get_colliders(&game().physics_manager, _layer)
+	_colliders: = colliders_per_layer[_layer]
+
+	_ray: Ray2d = {origin = _position, direction = _direction, length = _length}
+	_hit_point: Vector2
+
+	for _collider in _colliders
+	{
+		_bounds: AABB = aabb_move(_collider.bounds, _collider.entity.position)
+
+		if (collision_raycast2d_aabb(_ray, _bounds, &_hit_point))
+		{
+			_distance: = distance_squared(_position, _hit_point)
+			_index: = 0
+
+			for _raycast_result in _raycast_result
+			{
+
+				_dist: = distance_squared(_position, _raycast_result.hit_point)
+				if (_dist > _distance)
+				{
+					break
+				}
+				_index += 1
+			}
+			inject_at(_raycast_result, _index, RaycastResult{collider=_collider, hit_point=_hit_point})
+		}
+	}
+}
+
+
+physics_raycast :: proc(_layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _raycast_result: ^[dynamic]RaycastResult)
+{
+	physics_manager_raycast(&game().physics_manager, _layer, _position, _direction, _length, _raycast_result)
 }

@@ -7,8 +7,3 @@ Vector3 :: [3]f32
 
 Color :: rl.Color
 
-Ray2d :: struct
-{
-	origin: Vector2,
-	direction: Vector2,
-}

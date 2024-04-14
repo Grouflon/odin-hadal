@@ -9,7 +9,8 @@ Bullet :: struct {
 	position: Vector2,
 	velocity: Vector2,
 	owner: rawptr,
-	time: f32
+	time: f32,
+	raycast_result: [dynamic]RaycastResult,
 }
 
 bullet_definition :: EntityDefinition(Bullet) {
@@ -17,7 +18,7 @@ bullet_definition :: EntityDefinition(Bullet) {
 	draw = bullet_draw,
 }
 
-bullet_func :: proc(position: Vector2, _velocity:Vector2, _owner:rawptr)
+bullet_func :: proc(position: Vector2, _velocity: Vector2, _owner:rawptr)
 
 create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
 {
@@ -34,9 +35,15 @@ create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> 
 	owner = _owner
 	time = 0
 
+	physics_raycast(.Wall, _position, normalize_vec2(velocity), 400, &raycast_result)
 	register_entity(bullet)
 
 	return bullet
+}
+
+bullet_shutdown :: proc(using _agent: ^Bullet)
+{
+	delete(raycast_result)
 }
 
 bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {	
@@ -75,8 +82,13 @@ bullet_update :: proc(using _bullet: ^Bullet, dt: f32) {
 bullet_draw :: proc(using _bullet: ^Bullet) {
 	ordered_draw(int(position.y), _bullet, proc(_payload: rawptr)
 	{
-		using bullet := cast(^Bullet)_payload
-		rl.DrawPixelV(floor_vec2(position), rl.BLACK)
+		using bullet: = cast(^Bullet)_payload
+		using rl
+		if (len(raycast_result) > 0)
+		{
+			DrawLineV(position, raycast_result[0].hit_point, BLUE)
+		}
+		DrawPixelV(floor_vec2(position), rl.BLACK)
 	})
 }
 

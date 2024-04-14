@@ -22,11 +22,11 @@ collision_point_circle :: proc(_point: Vector2, _center: Vector2, _radius: f32) 
 	return rl.CheckCollisionPointCircle(_point, _center, _radius)
 }
 
-CheckCollisionRay2dRect :: proc(ray: Ray2d, _bounds: AABB, intersection: ^Vector2) -> bool
+collision_raycast2d_aabb :: proc(ray: Ray2d, _bounds: AABB, intersection: ^Vector2) -> bool
 {
 	using math
 	minParam: f32 = F32_MIN
-	maxParam: f32 = F32_MAX;
+	maxParam: f32 = ray.length;
 	_x_min: = _bounds.min.x
 	_y_min: = _bounds.min.y
 	_x_max: = _bounds.max.x
