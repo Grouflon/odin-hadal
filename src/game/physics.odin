@@ -29,7 +29,6 @@ Collider :: struct
 	bounds: AABB,
 	layer: Layer,
 	mobility: ColliderMobility,
-	movement: Vector2, // Let's try not using dt in the physics system for now
 	overlaps: [dynamic]^Collider,
 }
 
@@ -51,7 +50,6 @@ create_collider :: proc(_entity: ^Entity, _bounds: AABB, _layer: Layer, _mobilit
 	_collider.bounds = _bounds
 	_collider.layer = _layer
 	_collider.mobility = _mobility
-	_collider.movement = {0, 0}
 	_collider.overlaps = make([dynamic]^Collider)
 
 	physics_manager_register_collider(physics(), _collider)
@@ -88,6 +86,67 @@ physics_manager_shutdown :: proc(using _manager: ^PhysicsManager)
 	delete(colliders)
 }
 
+solve_collision :: proc(_collider_a: ^Collider, _collider_b: ^Collider)
+{
+	if (_collider_a.mobility == .Static && _collider_b.mobility == .Static) { return }
+
+	_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
+	_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
+
+	compute_push :: proc(_a: AABB, _b: AABB) -> Vector2
+	{
+		_a_center: = aabb_center(_a)
+		_b_center: = aabb_center(_b)
+		_bary_0: = _b_center
+		_bary_1: = _b.max
+		_bary_2: = Vector2{_b.max.x, _b.min.y}
+
+		_bary_coords: = barycentric_coordinates(_a_center, _bary_0, _bary_1, _bary_2)
+
+		_push: Vector2
+		if (_bary_coords.y > 0 && _bary_coords.z > 0) // push right
+		{
+			_push = { _b.max.x - _a.min.x, 0.0 }
+		}
+		else if (_bary_coords.y > 0 && _bary_coords.z <= 0) // push down
+		{
+			_push = { 0.0,  _b.max.y - _a.min.y }
+		}
+		else if (_bary_coords.y <= 0 && _bary_coords.z <= 0) // push left
+		{
+			_push = {_b.min.x - _a.max.x,  0.0 } // push up
+		}
+		else if (_bary_coords.y <= 0 && _bary_coords.z > 0)
+		{
+			_push = { 0.0, _b.min.y - _a.max.y }
+		}
+
+		return _push
+	}
+
+	if (collision_aabb_aabb(_a, _b))
+	{
+		if (_collider_a.mobility == .Static)
+		{
+			_b_push: = compute_push(_b, _a)
+			_collider_b.entity.position += _b_push
+		}
+		else if (_collider_b.mobility == .Static)
+		{
+			_a_push: = compute_push(_a, _b)
+			_collider_a.entity.position += _a_push
+		}
+		else
+		{
+			_a_push: = compute_push(_a, _b)
+			_b_push: = compute_push(_b, _a)
+
+			_collider_a.entity.position += _a_push * 0.5
+			_collider_b.entity.position += _b_push * 0.5
+		}
+	}
+}
+
 physics_manager_update :: proc(using _manager: ^PhysicsManager)
 {
 	for _i in 0..<LAYERS_COUNT
@@ -106,113 +165,14 @@ physics_manager_update :: proc(using _manager: ^PhysicsManager)
 
 			for _collider_a in colliders_per_layer[_i]
 			{
-				_aabb_a: = aabb_move(_collider_a.bounds, _collider_a.entity.position)
-
 				for _collider_b in colliders_per_layer[_j]
 				{
-					// Early exit if both colliders are static
-					if _collider_a.mobility == .Static && _collider_b.mobility == .Static { continue }
+					if (_collider_a == _collider_b) { continue }
 
-					_aabb_b: = aabb_move(_collider_b.bounds, _collider_b.entity.position)
-
-					// First move and resolve along x
-					_moved_a: = aabb_move(_aabb_a, {_collider_a.movement.x, 0})
-					_moved_b: = aabb_move(_aabb_b, {_collider_b.movement.x, 0})
-
-					if (collision_aabb_aabb(_moved_a, _moved_b))
-					{
-						_moved_a_center: = aabb_center(_moved_a)
-						_moved_b_center: = aabb_center(_moved_b)
-
-						_left_collider: ^Collider
-						_left_moved_aabb: AABB
-						_right_collider: ^Collider
-						_right_moved_aabb: AABB
-						if (_moved_a_center.x < _moved_b_center.x)
-						{
-							_left_collider = _collider_a
-							_left_moved_aabb = _moved_a
-							_right_collider = _collider_b
-							_right_moved_aabb = _moved_b
-						}
-						else
-						{
-							_left_collider = _collider_b
-							_left_moved_aabb = _moved_b
-							_right_collider = _collider_a
-							_right_moved_aabb = _moved_a
-						}
-
-						_penetration: = _left_moved_aabb.max.x - _right_moved_aabb.min.x
-						if (_left_collider.mobility == .Static)
-						{
-							_right_collider.movement += {_penetration, 0}
-						}
-						else if (_right_collider.mobility == .Static)
-						{
-							_left_collider.movement -= {_penetration, 0}
-						}
-						else // both dynamic
-						{
-							_half_penetration: = _penetration * 0.5
-							_right_collider.movement += {_half_penetration, 0}
-							_left_collider.movement -= {_half_penetration, 0}
-						}
-					}
-
-					// Then move and resolve along y
-					_moved_a = aabb_move(_aabb_a, _collider_a.movement)
-					_moved_b = aabb_move(_aabb_b, _collider_b.movement)
-
-					if (collision_aabb_aabb(_moved_a, _moved_b))
-					{
-						_moved_a_center: = aabb_center(_moved_a)
-						_moved_b_center: = aabb_center(_moved_b)
-
-						_top_collider: ^Collider
-						_top_moved_aabb: AABB
-						_bottom_collider: ^Collider
-						_bottom_moved_aabb: AABB
-						if (_moved_a_center.y < _moved_b_center.y)
-						{
-							_top_collider = _collider_a
-							_top_moved_aabb = _moved_a
-							_bottom_collider = _collider_b
-							_bottom_moved_aabb = _moved_b
-						}
-						else
-						{
-							_top_collider = _collider_b
-							_top_moved_aabb = _moved_b
-							_bottom_collider = _collider_a
-							_bottom_moved_aabb = _moved_a
-						}
-
-						_penetration: = _top_moved_aabb.max.y - _bottom_moved_aabb.min.y
-						if (_top_collider.mobility == .Static)
-						{
-							_bottom_collider.movement += {0, _penetration}
-						}
-						else if (_bottom_collider.mobility == .Static)
-						{
-							_top_collider.movement -= {0, _penetration}
-						}
-						else // both dynamic
-						{
-							_half_penetration: = _penetration * 0.5
-							_bottom_collider.movement += {0, _half_penetration}
-							_top_collider.movement -= {0, _half_penetration}
-						}
-					}
+					solve_collision(_collider_a, _collider_b)
 				}	
 			}
 		}
-	}
-
-	for _collider in dynamic_colliders
-	{
-		_collider.entity.position += _collider.movement
-		_collider.movement = {0, 0}
 	}
 }
 

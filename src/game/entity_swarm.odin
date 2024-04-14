@@ -48,7 +48,7 @@ swarm_update :: proc(using _swarm: ^Swarm, _dt: f32)
 	{
 		_direction: = normalize(_target.position - entity.position)
 
-		collider.movement = _direction * game_settings.swarm_speed * _dt 
+		entity.position += _direction * game_settings.swarm_speed * _dt 
 	}
 }
 

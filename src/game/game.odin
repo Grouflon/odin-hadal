@@ -128,13 +128,13 @@ game_start:: proc()
 	_level_data: = _levels_data.levels[current_level];
 
 	_start: Vector2 = {150, 150}
-	for _x in 0..<5
-	{
-		for _y in 0..<5
-		{
-			create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
-		}
-	}
+	// for _x in 0..<5
+	// {
+	// 	for _y in 0..<5
+	// 	{
+	// 		create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
+	// 	}
+	// }
 	
 	for entity in _level_data.entities
 	{

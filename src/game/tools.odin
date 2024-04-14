@@ -136,3 +136,23 @@ trigo_angle :: proc(_direction: Vector2) -> f32
 	}
 	return _angle
 }
+
+barycentric_coordinates :: proc(_p: Vector2, _a, _b, _c: Vector2) -> (_result: Vector3)
+{
+	_v0 := _b - _a
+	_v1 := _c - _a
+	_v2 := _p - _a
+	_d00 := linalg.dot(_v0, _v0)
+	_d01 := linalg.dot(_v0, _v1)
+	_d11 := linalg.dot(_v1, _v1)
+	_d20 := linalg.dot(_v2, _v0)
+	_d21 := linalg.dot(_v2, _v1)
+
+	_denom := _d00*_d11 - _d01*_d01
+
+	_result.y = (_d11*_d20 - _d01*_d21)/_denom
+	_result.z = (_d00*_d21 - _d01*_d20)/_denom
+	_result.x = 1 - (_result.z + _result.y)
+
+	return _result
+}

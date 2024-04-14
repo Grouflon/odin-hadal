@@ -86,7 +86,7 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 	velocity = _direction * _velocity_length
 
 	// Movement
-	collider.movement = velocity * _dt
+	entity.position += velocity * _dt
 
 	// Animation
 	_is_moving = length_squared(velocity) > 0.001 
