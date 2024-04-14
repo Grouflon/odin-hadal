@@ -4,6 +4,8 @@ import "core:math"
 import "core:math/linalg"
 import rl "vendor:raylib"
 
+SMALL_NUMBER :: f32(0.0001)
+
 // Array
 find :: proc(_array: ^$T/[dynamic]$E, _element: E) -> int
 {
@@ -168,4 +170,16 @@ barycentric_coordinates :: proc(_p: Vector2, _a, _b, _c: Vector2) -> (_result: V
 	_result.x = 1 - (_result.z + _result.y)
 
 	return _result
+}
+
+is_zero :: proc{ is_zero_vector2, is_zero_f32 }
+
+is_zero_f32 :: proc(_v: f32, _threshold: f32 = SMALL_NUMBER) -> bool
+{
+	return math.abs(_v) <= SMALL_NUMBER
+}
+
+is_zero_vector2 :: proc(_v: Vector2, _threshold: f32 = SMALL_NUMBER) -> bool
+{
+	return is_zero_f32(_v.x) && is_zero_f32(_v.y)
 }
