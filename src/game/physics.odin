@@ -319,7 +319,6 @@ physics_manager_raycast :: proc(using _manager: ^PhysicsManager, _layer: Layer, 
 	}
 }
 
-
 physics_raycast :: proc(_layer: Layer, _position: Vector2, _direction: Vector2, _length: f32, _raycast_result: ^[dynamic]RaycastResult)
 {
 	physics_manager_raycast(&game().physics_manager, _layer, _position, _direction, _length, _raycast_result)

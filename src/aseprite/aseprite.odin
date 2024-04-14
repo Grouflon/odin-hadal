@@ -236,7 +236,7 @@ load_data_from_bytes :: proc(_root_path: string, _data: []byte) -> ^AsepriteData
 				}
 			}
 
-			_data.frame_tags[_frame_tag_object["name"].(json.String)] = _frame_tag 
+			_data.frame_tags[strings.clone(_frame_tag_object["name"].(json.String))] = _frame_tag 
 		}
 
 		// Layers
@@ -269,7 +269,12 @@ free_data :: proc(_data: ^AsepriteData)
 
 	delete(_data.version)
 	delete(_data.image_path)
+	for key, frame_tag in _data.frame_tags
+	{
+		delete(key)
+	}
 	delete(_data.frame_tags)
+	
 	for _layer in _data.layers
 	{
 		delete(_layer.name)

@@ -258,7 +258,7 @@ game_update :: proc()
 	}
 
 	// We dont need selection for now
-	// selection_update(selection)
+	selection_update(selection)
 }
 
 game_draw :: proc()
@@ -285,13 +285,12 @@ game_draw :: proc()
 		// physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
 		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
-		// selection_draw(selection)
+		selection_draw(selection)
 
 	}
 
 	// Scaled up final rendering
 	{
-		
 		ClearBackground(WHITE)
 
 		render_camera := Camera2D{}
@@ -303,7 +302,7 @@ game_draw :: proc()
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
 		DrawFPS(GetScreenWidth() - 95, 10)
-	//	dialogue_box_draw(db)
+		// dialogue_box_draw(db)
 	}
 
 	{
