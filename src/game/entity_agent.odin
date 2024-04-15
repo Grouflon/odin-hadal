@@ -13,6 +13,12 @@ Agent :: struct
 	velocity: Vector2,
 	is_alive: bool,
 
+	is_jumping: bool,
+	jump_length: f32,
+	jump_cooldown: f32,
+	jump_timer: f32,
+	jump_direction: Vector2,
+
 	animation_player: ^AnimationPlayer,
 	collider: ^Collider,
 }
@@ -31,6 +37,11 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	entity.position = _position
 
 	is_alive = true
+	is_jumping = false
+	jump_length = 20
+	jump_timer = 5
+	jump_cooldown = jump_timer
+	jump_direction = {0, 1}
 	animation_player = create_animation_player()
 	collider = create_collider(
 		_agent,
@@ -54,6 +65,7 @@ agent_shutdown :: proc(using _agent: ^Agent)
 
 agent_update :: proc(using _agent: ^Agent, _dt: f32)
 {	
+	using rl
 	_is_moving: = false
 
 	// Velocity
@@ -71,9 +83,29 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 		}
 	}
 
+	if (is_jumping)
+	{
+		jump_cooldown -= _dt
+
+		if (jump_cooldown <= 0)
+		{
+			jump_cooldown = jump_timer
+			is_jumping = false
+		}
+	}
+
+	if (is_alive && IsKeyDown(KeyboardKey.LEFT_CONTROL) && game().mouse.down[1] && !is_jumping)
+	{
+		is_jumping = true
+		_direction = normalize(move_direction)
+		_agent.position = _agent.position + _direction * jump_length
+		return
+	}
+
 	if (is_alive && !is_zero(move_direction))
 	{
 		_direction = normalize(move_direction)
+		jump_direction = _direction
 		_velocity_length += game_settings.agent_acceleration * _dt
 		_velocity_length = math.min(_velocity_length, game_settings.agent_max_speed)
 	}
@@ -108,11 +140,23 @@ agent_draw :: proc(using _agent: ^Agent)
 {
 	ordered_draw(int(entity.position.y), _agent, proc(_payload: rawptr)
 	{
-		using agent := cast(^Agent)_payload
+		using agent: = cast(^Agent)_payload
 		
-		x, y : = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
+		x, y: = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
+
+		//direction
+		angle: f32 = 20 * rl.DEG2RAD
+		babord: = rl.Vector2Rotate(agent.move_direction, -angle/2)
+		tribord: = rl.Vector2Rotate(agent.move_direction, angle/2)
+		
+		// jump
+		xx: = rl.Vector2Rotate({1, 0}, 0)
+		yy: = rl.Vector2Rotate({0, 1}, 0)
+		rl.DrawLineV(agent.position, agent.position + agent.jump_direction * agent.jump_length, rl.BLUE)
+	//	rl.DrawLineV(agent.position, agent.position + babord * 500, rl.RED)
+	//	rl.DrawLineV(agent.position, agent.position + tribord * 500, rl.GREEN)
 	})
 }
 
