@@ -20,14 +20,15 @@ bullet_definition :: EntityDefinition(Bullet) {
 	shutdown = bullet_shutdown,
 }
 
-bullet_func :: proc(_position: Vector2, _velocity:Vector2, _owner:rawptr)
+bullet_func :: proc(_position: Vector2, _velocity:Vector2, _owner:rawptr, _layer: Layer)
 
-create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr)
+create_bullet_fire :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr, _layer: Layer)
 {
-	create_bullet(_position, _velocity,_owner)
+	create_bullet(_position, _velocity,_owner, _layer)
 }
 
-create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> ^Bullet 
+
+create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr, _layer: Layer) -> ^Bullet 
 {
 	using bullet: = new(Bullet)
 	entity.type = bullet
@@ -42,7 +43,7 @@ create_bullet :: proc(_position: Vector2,_velocity: Vector2, _owner: rawptr) -> 
 			{0, 0},
 			{1, 1},
 		},
-		.EnemyBullet,
+		_layer,
 		.Dynamic,
 	)
 
@@ -74,6 +75,9 @@ bullet_update :: proc(using _bullet: ^Bullet, dt: f32)
 
 			case ^Wall:
 				has_collided = true
+			case ^Turret:
+				turret_kill(e)
+				has_collided = true
 		}
 	}
 
@@ -97,12 +101,12 @@ bullet_draw :: proc(using _bullet: ^Bullet) {
 	})
 }
 
-make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr)
+make_and_register_triple_bullet :: proc(_position: Vector2, _velocity: Vector2, _owner: rawptr, _layer: Layer)
 {
 	dir: = normalize( _velocity)
 	length: = length( _velocity)
 
-	create_bullet(_position, _velocity, _owner)
-	create_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner)
-	create_bullet(_position,Vector2{-_velocity.y, _velocity.x}, _owner)
+	create_bullet(_position, _velocity, _owner, _layer)
+	create_bullet(_position, Vector2{_velocity.y, -_velocity.x}, _owner, _layer)
+	create_bullet(_position,Vector2{-_velocity.y, _velocity.x}, _owner, _layer)
 }

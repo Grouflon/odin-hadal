@@ -8,7 +8,9 @@ Layer :: enum
 	Agent,
 	Swarm,
 	Hazard,
+	Turret,
 	EnemyBullet,
+	AllyBullet,
 }
 
 ColliderMobility :: enum

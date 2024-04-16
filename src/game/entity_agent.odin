@@ -136,7 +136,7 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 			{
 				is_reloading = true
 				dir: = normalize(aim_target - _agent.position)
-				create_bullet_fire(_agent.position + dir * 10, dir * 50, _agent)
+				create_bullet_fire(_agent.position + dir * 10, dir * 50, _agent, .AllyBullet)
 			}
 		}
 	}
@@ -223,7 +223,7 @@ agent_draw :: proc(using _agent: ^Agent)
 	})
 }
 
-agent_kill :: proc(using _agent: ^ Agent)
+agent_kill :: proc(using _agent: ^Agent)
 {
 	hover := game().selection.hovered_agents
 	index := find(&hover, _agent)

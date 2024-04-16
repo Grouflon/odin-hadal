@@ -107,6 +107,8 @@ game_initialize :: proc()
 	physics_manager_set_layer_response(&physics_manager, Layer.EnemyBullet, Layer.Agent, .Overlap)
 	physics_manager_set_layer_response(&physics_manager, Layer.EnemyBullet, Layer.Wall, .Overlap)
 
+	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.Turret, .Overlap)
+
 	current_level = 0
 	switch_level = false
 
