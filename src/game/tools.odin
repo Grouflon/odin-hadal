@@ -183,3 +183,20 @@ is_zero_vector2 :: proc(_v: Vector2, _threshold: f32 = SMALL_NUMBER) -> bool
 {
 	return is_zero_f32(_v.x) && is_zero_f32(_v.y)
 }
+
+cooldown_timer :: proc(_condition: ^bool, _current_timer: ^f32, _reset_timer: f32, _dt: f32) -> bool
+{
+	if (_condition^)
+	{
+		_current_timer^ -= _dt
+
+		if (_current_timer^ <= 0)
+		{
+			_current_timer^ = _reset_timer
+			_condition^ = false
+			return true;
+		}
+	}
+
+	return false
+}
