@@ -1,86 +1,160 @@
 package game
 
-ActionProcedure :: proc(_action: ^Action)
-
-ActionManager :: struct
+ActionSystem :: struct
 {
-	actions: [dynamic]^Action,
+	action_queue: [dynamic]^Action,
 }
 
-action_manager_initialize :: proc(using _manager: ^ActionManager)
+ActionDefinition :: struct
 {
-	_manager.actions = make([dynamic]^Action)
+	start: proc(_action: ^Action),
+	update: proc(_action: ^Action, _dt: f32),
+	stop: proc(_action: ^Action),
+
+	shutdown: proc(_payload: rawptr),
 }
 
-action_manager_shutdown :: proc(using _manager: ^ActionManager)
+ActionState :: enum
 {
-	delete(_manager.actions)
+	Queued,
+	Running,
+	Stopped,
 }
 
 Action :: struct
 {
+	definition: ActionDefinition,
+	state: ActionState,
 	payload: rawptr,
-	manager: ^ActionManager,
-
-	start: ActionProcedure,
-	update: ActionProcedure,
-	stop: ActionProcedure,
+	system: ^ActionSystem,
 }
 
-action_start :: proc(_payload: rawptr = nil, _start: ActionProcedure = nil, _update: ActionProcedure, _stop: ActionProcedure) -> ^Action
+action_system_initialize :: proc(using _system: ^ActionSystem)
 {
-	_action := new(Action)
-	_action.payload = _payload
-	_action.start = _start
-	_action.update = _update
-	_action.stop = _stop
+	assert(_system != nil)
 
-	_manager := &game().action_manager
+	_system.action_queue = make([dynamic]^Action)
+}
 
-	append(&_manager.actions, _action)
-	_action.manager = _manager
+action_system_shutdown :: proc(using _system: ^ActionSystem)
+{
+	assert(_system != nil)
 
-	if _action.start != nil
+	action_system_clear_actions(_system)
+	delete(_system.action_queue)
+}
+
+action_system_queue_action :: proc(using _system: ^ActionSystem, _definition: ActionDefinition, _payload: rawptr = nil) -> ^Action
+{
+	assert(_system != nil)
+
+	action: = new(Action)
+	action.definition = _definition
+	action.payload = _payload
+	action.system = _system
+	action.state = .Queued
+
+	append(&action_queue, action)
+
+	return action
+}
+
+action_system_clear_actions :: proc(using _system: ^ActionSystem)
+{
+	assert(_system != nil)
+
+	for i: = 0; i < len(action_queue); i += 1
 	{
-		_action.start(_action)
-	}
-	return _action
-}
-
-action_stop :: proc(_action: ^Action)
-{
-	assert(_action != nil)
-	assert(action_is_running(_action))
-
-	if _action.stop != nil
-	{
-		_action.stop(_action)
-	}
-}
-
-action_is_running :: proc(_action: ^Action) -> bool
-{
-	assert(_action != nil)
-	return _action.manager != nil
-}
-
-actions_update :: proc(using _manager: ^ActionManager)
-{
-	// We go backwards so we can remove actions as we iterate
-	for _i := len(actions) - 1; _i >= 0; _i-=1
-	{		
-		_action: = actions[_i]
-		assert(action_is_running(_action))
-
-		if (_action.update != nil)
+		action: = action_queue[i]
+		if (action.state == .Running)
 		{
-			_action.update(_action)
+			action_stop(action)
 		}
 
-		if (!action_is_running(_action))
+		action_shutdown(action)
+		free(action)
+	}
+	clear(&action_queue)
+}
+
+action_system_dequeue_actions :: proc(using _system: ^ActionSystem)
+{
+	assert(_system != nil)
+
+	for len(action_queue) > 0 && action_queue[0].state != .Running
+	{
+		action: ^Action = action_queue[0]
+		if (action.state == .Queued)
 		{
-			unordered_remove(&actions, _i)
-			free(_action)
+			action_start(action)
 		}
+
+		if (action.state == .Stopped)
+		{
+			action_shutdown(action)
+			ordered_remove(&action_queue, 0)
+			free(action)
+		}
+	}
+}
+
+action_system_update :: proc(using _system: ^ActionSystem, _dt: f32)
+{
+	assert(_system != nil)
+
+	action_system_dequeue_actions(_system)
+
+	if (len(action_queue) > 0)
+	{
+		assert(action_queue[0].state == .Running)
+		action_update(action_queue[0], _dt)
+	}
+
+	action_system_dequeue_actions(_system)
+}
+
+action_start :: proc(using _action: ^Action)
+{
+	assert(_action != nil)
+	assert(_action.state == .Queued)
+
+	_action.state = .Running
+	if (_action.definition.start != nil)
+	{
+		_action.definition.start(_action)
+	}
+}
+
+action_update :: proc(using _action: ^Action, _dt: f32)
+{
+	assert(_action != nil)
+	assert(_action.state == .Running)
+
+	if (_action.definition.update != nil)
+	{
+		_action.definition.update(_action, _dt)
+	}
+}
+
+action_stop :: proc(using _action: ^Action)
+{
+	assert(_action != nil)
+	assert(_action.state == .Running)
+
+	if (_action.definition.stop != nil)
+	{
+		_action.definition.stop(_action)
+	}
+	_action.state = .Stopped
+}
+
+action_shutdown :: proc(using _action: ^Action)
+{
+	assert(_action != nil)
+	assert(_action.state != .Running)
+
+	if (_action.definition.shutdown != nil)
+	{
+		_action.definition.shutdown(_action.payload)
 	}
 }

@@ -23,7 +23,6 @@ Game :: struct
 
 	entity_manager: EntityManager,
 
-	action_manager: ActionManager,
 	animation_manager: AnimationManager,
 	physics_manager: PhysicsManager,
 
@@ -123,7 +122,6 @@ game_start:: proc()
 	game_resources_load(&resources)
 
 	animation_manager_initialize(&animation_manager)
-	action_manager_initialize(&action_manager)
 
 	selection = make_selection()
 
@@ -189,7 +187,6 @@ game_stop :: proc()
 
 	entity_manager_clear_entities(&entity_manager)
 
-	action_manager_shutdown(&action_manager)
 	animation_manager_shutdown(&animation_manager)
 
 	game_resources_unload(&resources)
@@ -245,7 +242,20 @@ game_update :: proc()
 	dialogue_box_update(db)
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
-	
+
+	selection_update(selection)
+	if (mouse.pressed[1])
+	{
+		for agent in selection.selected_agents
+		{
+			if (!IsKeyDown(KeyboardKey.LEFT_SHIFT))
+			{
+				action_system_clear_actions(&agent.action_system)
+			}
+			agent_queue_move_to(agent, mouse.world_position)
+		}
+	}
+
 	if (IsKeyPressed(KeyboardKey.SPACE))
 	{
 		is_game_paused = !is_game_paused
@@ -253,27 +263,11 @@ game_update :: proc()
 
 	if (!is_game_paused)
 	{
-		agents: = get_entities(Agent)
-		if len(agents) > 0
-		{
-			if (mouse.down[1])
-			{
-				agents[0].move_direction = mouse.world_position - agents[0].position
-			}
-			else
-			{
-				agents[0].move_direction = {0, 0}
-			}
-		}
-
 		entity_manager_update(&entity_manager, _dt)
 		animation_manager_update(&animation_manager, _dt)
 
 		physics_manager_update(&physics_manager)
 	}
-
-	// We dont need selection for now
-	selection_update(selection)
 }
 
 game_draw :: proc()

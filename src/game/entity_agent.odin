@@ -35,9 +35,10 @@ Agent :: struct
 	reload_cooldown: f32,
 	reload_timer: f32,
 	
-
 	animation_player: ^AnimationPlayer,
 	collider: ^Collider,
+
+	action_system: ActionSystem,
 }
 
 agent_definition :: EntityDefinition(Agent) {
@@ -79,12 +80,15 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 		.Dynamic,
 	)
 
+	action_system_initialize(&action_system)
+
 	register_entity(_agent)
 	return _agent
 }
 
 agent_shutdown :: proc(using _agent: ^Agent)
 {
+	action_system_shutdown(&action_system)
 	destroy_collider(collider)
 	destroy_animation_player(animation_player)
 }
@@ -93,6 +97,9 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 {	
 	using rl
 	_is_moving: = false
+
+	// Actions
+	action_system_update(&action_system, _dt)
 
 	// Velocity
 	_velocity_length: = length(velocity)
@@ -238,6 +245,8 @@ agent_kill :: proc(using _agent: ^Agent)
 	{
 		unordered_remove(&selected, index_select)
 	}
+
+	action_system_clear_actions(&action_system)
 
 	is_alive = false
 }
