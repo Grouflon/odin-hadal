@@ -10,7 +10,6 @@ ActionDefinition :: struct
 	start: proc(_action: ^Action),
 	update: proc(_action: ^Action, _dt: f32),
 	stop: proc(_action: ^Action),
-
 	shutdown: proc(_payload: rawptr),
 }
 

@@ -14,10 +14,11 @@ Agent :: struct
 	is_alive: bool,
 
 	is_jumping: bool,
+	can_jump: bool,
 	jump_length: f32,
 	jump_cooldown: f32,
 	jump_timer: f32,
-	jump_direction: Vector2,
+	jump_speed: f32,
 
 	is_search_target: bool,
 
@@ -63,11 +64,12 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	reload_timer = 3
 	reload_cooldown = reload_timer
 
+	can_jump = true
 	is_jumping = false
 	jump_length = 20
+	jump_speed = 50
 	jump_timer = 5
 	jump_cooldown = jump_timer
-	jump_direction = {0, 1}
 
 	animation_player = create_animation_player()
 	collider = create_collider(
@@ -118,45 +120,30 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 
 	// aim
 	{
-		if (cooldown_timer(&is_reloading, &reload_cooldown, reload_timer, _dt))
+		if (is_reloading)
 		{
+			is_reloading = cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt)
 			can_aim = true
 		}
 
-		if (is_alive && IsKeyDown(KeyboardKey.LEFT_SHIFT) && can_aim)
+		if (is_alive && IsKeyDown(KeyboardKey.A) && can_aim)
 		{
 			is_search_target = true
 			aim_target = game().mouse.world_position
-
-			if (game().mouse.down[0])
-			{
-				is_aiming = true
-				can_aim = false
-			}
 		} else if (is_search_target) {
 			is_search_target = false
-		}
-
-		if (is_alive && is_aiming)
-		{
-			if (cooldown_timer(&is_aiming, &aim_cooldown, aim_timer, _dt))
-			{
-				is_reloading = true
-				dir: = normalize(aim_target - _agent.position)
-				create_bullet_fire(_agent.position + dir * 10, dir * 50, _agent, .AllyBullet)
-			}
 		}
 	}
 
 	// jump
 	{
-		cooldown_timer(&is_jumping, &jump_cooldown, jump_timer, _dt)
-		if (is_alive && IsKeyDown(KeyboardKey.LEFT_CONTROL) && game().mouse.down[1] && !is_jumping)
+		if (!can_jump)
 		{
-			world_position: = game().mouse.world_position
-			is_jumping = true
-			jump_direction = normalize(world_position - _agent.position)
-			_agent.position = _agent.position + jump_direction * jump_length
+			can_jump = cooldown_timer(!can_jump, &jump_cooldown, jump_timer, _dt)
+		}
+
+		if (is_jumping)
+		{
 			return
 		}
 	}
@@ -164,7 +151,6 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 	if (is_alive && !is_zero(move_direction))
 	{
 		_direction = normalize(move_direction)
-		jump_direction = _direction
 		_velocity_length += game_settings.agent_acceleration * _dt
 		_velocity_length = math.min(_velocity_length, game_settings.agent_max_speed)
 	}
@@ -208,9 +194,7 @@ agent_draw :: proc(using _agent: ^Agent)
 		// jump
 		xx: = rl.Vector2Rotate({1, 0}, 0)
 		yy: = rl.Vector2Rotate({0, 1}, 0)
-		jump_color: = is_jumping ? rl.RED : rl.GREEN
-	
-		rl.DrawLineV(agent.position, agent.position + agent.jump_direction * agent.jump_length, jump_color)
+		
 
 		if (is_search_target || is_aiming)
 		{
@@ -226,6 +210,14 @@ agent_draw :: proc(using _agent: ^Agent)
 		reload_color: = is_reloading || is_aiming ? rl.RED : rl.GREEN
 		reload_position: = agent.position + Vector2{-5, 0}
 		rl.DrawLineV(reload_position, reload_position + Vector2{0, -1} * 5, reload_color)
+
+		pos: = agent.position
+		for action in action_system.action_queue
+		{
+			move_to: = cast(^ActionAgentMoveTo)action.payload
+			rl.DrawLineV(pos,  move_to.target, reload_color)
+			pos = move_to.target
+		}
 
 	})
 }

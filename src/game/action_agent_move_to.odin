@@ -61,6 +61,5 @@ action_agent_move_to_update :: proc(_action: ^Action, _dt: f32)
 action_agent_move_to_shutdown :: proc(_payload: rawptr)
 {
 	move_to: = cast(^ActionAgentMoveTo)_payload
-
 	free(move_to)
 }

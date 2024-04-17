@@ -252,7 +252,26 @@ game_update :: proc()
 			{
 				action_system_clear_actions(&agent.action_system)
 			}
-			agent_queue_move_to(agent, mouse.world_position)
+
+			if (IsKeyDown(KeyboardKey.LEFT_CONTROL))
+			{
+				if (agent.can_jump)
+				{
+					agent_queue_jump(agent, mouse.world_position)
+				}
+			}
+			else if (IsKeyDown(KeyboardKey.A))
+			{
+				if (agent.can_aim)
+				{
+					fmt.printf("fire\n")
+					agent_queue_fire(agent, mouse.world_position)
+				}
+			}
+			else
+			{
+				agent_queue_move_to(agent, mouse.world_position)
+			}
 		}
 	}
 
