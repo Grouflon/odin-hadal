@@ -213,7 +213,6 @@ agent_draw :: proc(using _agent: ^Agent)
 					case ^ActionAgentFire:
 					{
 						fire: = action.payload.(^ActionAgentFire)
-						start = fire.target
 					}
 					case ^ActionAgentJump:
 					{
