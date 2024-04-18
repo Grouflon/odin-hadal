@@ -196,16 +196,33 @@ agent_draw :: proc(using _agent: ^Agent)
 		yy: = rl.Vector2Rotate({0, 1}, 0)
 		
 
-		if (is_search_target || is_aiming)
+		if (rl.IsKeyDown(rl.KeyboardKey.A) && can_aim)
 		{
-			//direction
-			angle: f32 = 10 * rl.DEG2RAD
-			aim_direction: = aim_target - agent.position
-			babord: = rl.Vector2Rotate(aim_direction, -angle/2)
-			tribord: = rl.Vector2Rotate(aim_direction, angle/2)
-
-			rl.DrawLineV(agent.position, agent.position + babord * 500, rl.PINK)
-			rl.DrawLineV(agent.position, agent.position + tribord * 500, rl.PINK)
+			aim_target = game().mouse.world_position
+			start: = agent.position
+			if (len(action_system.action_queue) > 0)
+			{
+				action: = action_system.action_queue[len(action_system.action_queue) - 1]
+			
+				switch _ in action.payload {
+					case ^ActionAgentMoveTo:
+					{
+						move_to: = action.payload.(^ActionAgentMoveTo)
+						start = move_to.target
+					}
+					case ^ActionAgentFire:
+					{
+						fire: = action.payload.(^ActionAgentFire)
+						start = fire.target
+					}
+					case ^ActionAgentJump:
+					{
+						jump: = action.payload.(^ActionAgentJump)
+						start = jump.target
+					}
+				}
+			}
+			agent_draw_fire(start, aim_target)
 		}
 		reload_color: = is_reloading || is_aiming ? rl.RED : rl.GREEN
 		reload_position: = agent.position + Vector2{-5, 0}
@@ -214,12 +231,38 @@ agent_draw :: proc(using _agent: ^Agent)
 		pos: = agent.position
 		for action in action_system.action_queue
 		{
-			move_to: = cast(^ActionAgentMoveTo)action.payload
-			rl.DrawLineV(pos,  move_to.target, reload_color)
-			pos = move_to.target
+			switch _ in action.payload {
+				case ^ActionAgentMoveTo:
+				{
+					move_to: = action.payload.(^ActionAgentMoveTo)
+					rl.DrawLineV(pos,  move_to.target, reload_color)
+					pos = move_to.target
+				}
+				case ^ActionAgentFire:
+				{
+					fire: = action.payload.(^ActionAgentFire)
+					agent_draw_fire(pos, fire.target)
+				}
+				case ^ActionAgentJump:
+				{
+					jump: = action.payload.(^ActionAgentJump)
+					rl.DrawLineV(pos,  jump.target, rl.RED)
+					pos = jump.target
+				}
+			}
 		}
-
 	})
+}
+
+agent_draw_fire :: proc(start: Vector2, target: Vector2)
+{
+	angle: f32 = 10 * rl.DEG2RAD
+	aim_direction: = target - start
+	babord: = rl.Vector2Rotate(aim_direction, -angle/2)
+	tribord: = rl.Vector2Rotate(aim_direction, angle/2)
+
+	rl.DrawLineV(start, start + babord * 500, rl.PINK)
+	rl.DrawLineV(start, start + tribord * 500, rl.PINK)
 }
 
 agent_kill :: proc(using _agent: ^Agent)

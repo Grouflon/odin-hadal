@@ -10,7 +10,7 @@ ActionDefinition :: struct
 	start: proc(_action: ^Action),
 	update: proc(_action: ^Action, _dt: f32),
 	stop: proc(_action: ^Action),
-	shutdown: proc(_payload: rawptr),
+	shutdown: proc(_payload: ActionUnion),
 }
 
 ActionState :: enum
@@ -20,11 +20,17 @@ ActionState :: enum
 	Stopped,
 }
 
+ActionUnion :: union{
+	^ActionAgentFire,
+	^ActionAgentMoveTo,
+	^ActionAgentJump,
+}
+
 Action :: struct
 {
 	definition: ActionDefinition,
 	state: ActionState,
-	payload: rawptr,
+	payload: ActionUnion,
 	system: ^ActionSystem,
 }
 
@@ -43,7 +49,7 @@ action_system_shutdown :: proc(using _system: ^ActionSystem)
 	delete(_system.action_queue)
 }
 
-action_system_queue_action :: proc(using _system: ^ActionSystem, _definition: ActionDefinition, _payload: rawptr = nil) -> ^Action
+action_system_queue_action :: proc(using _system: ^ActionSystem, _definition: ActionDefinition, _payload: ActionUnion = nil) -> ^Action
 {
 	assert(_system != nil)
 

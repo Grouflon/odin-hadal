@@ -264,7 +264,6 @@ game_update :: proc()
 			{
 				if (agent.can_aim)
 				{
-					fmt.printf("fire\n")
 					agent_queue_fire(agent, mouse.world_position)
 				}
 			}

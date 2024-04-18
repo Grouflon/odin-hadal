@@ -24,20 +24,20 @@ agent_queue_fire :: proc(_agent: ^Agent, _target: Vector2, _reach_threshold: f32
 	fire.agent = _agent
 	fire.reach_threshold = _reach_threshold
 	fire.target = _target
+	fire.agent.can_aim = false
 
 	action_system_queue_action(&_agent.action_system, agent_fire_definition, fire)
 }
 
 action_agent_fire_start :: proc(_action: ^Action)
 {
-	fire: = cast(^ActionAgentFire)_action.payload
-	fire.agent.can_aim = false
+	fire: = _action.payload.(^ActionAgentFire)
 	fire.agent.is_aiming = true
 }
 
 action_agent_fire_update :: proc(_action: ^Action, _dt: f32)
 {
-	fire: = cast(^ActionAgentFire)_action.payload
+	fire: = _action.payload.(^ActionAgentFire)
 
 	if (cooldown_timer(fire.agent.is_aiming, &fire.agent.aim_cooldown, fire.agent.aim_timer, _dt))
 	{
@@ -48,9 +48,9 @@ action_agent_fire_update :: proc(_action: ^Action, _dt: f32)
 	}
 }
 
-action_agent_fire_shutdown :: proc(_payload: rawptr)
+action_agent_fire_shutdown :: proc(_payload: ActionUnion)
 {
-	fire: = cast(^ActionAgentFire)_payload
+	fire: = _payload.(^ActionAgentFire)
 	fire.agent.is_aiming = false
 	fire.agent.is_reloading = true
 

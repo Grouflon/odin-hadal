@@ -30,14 +30,14 @@ agent_queue_move_to :: proc(_agent: ^Agent, _target: Vector2, _reach_threshold: 
 
 action_agent_move_to_start :: proc(_action: ^Action)
 {
-	move_to: = cast(^ActionAgentMoveTo)_action.payload
+	move_to: = _action.payload.(^ActionAgentMoveTo)
 
 	move_to.previous_position = move_to.agent.entity.position
 }
 
 action_agent_move_to_update :: proc(_action: ^Action, _dt: f32)
 {
-	move_to: = cast(^ActionAgentMoveTo)_action.payload
+	move_to: = _action.payload.(^ActionAgentMoveTo)
 
 	agent_position: = move_to.agent.entity.position
 	previous_movement: = agent_position - move_to.previous_position
@@ -58,8 +58,8 @@ action_agent_move_to_update :: proc(_action: ^Action, _dt: f32)
 	move_to.previous_position = move_to.agent.entity.position
 }
 
-action_agent_move_to_shutdown :: proc(_payload: rawptr)
+action_agent_move_to_shutdown :: proc(_payload: ActionUnion)
 {
-	move_to: = cast(^ActionAgentMoveTo)_payload
+	move_to: = _payload.(^ActionAgentMoveTo)
 	free(move_to)
 }
