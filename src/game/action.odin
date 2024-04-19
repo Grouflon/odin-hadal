@@ -21,7 +21,6 @@ ActionState :: enum
 }
 
 ActionUnion :: union{
-	^ActionAgentFire,
 	^ActionAgentMoveTo,
 	^ActionAgentJump,
 }
@@ -128,11 +127,6 @@ action_system_last_action_position :: proc(using _system: ^ActionSystem) -> Vect
 			{
 				move_to: = last_action.payload.(^ActionAgentMoveTo)
 				return  move_to.target
-			}
-			case ^ActionAgentFire:
-			{
-				fire: = last_action.payload.(^ActionAgentFire)
-				return fire.agent.position
 			}
 			case ^ActionAgentJump:
 			{

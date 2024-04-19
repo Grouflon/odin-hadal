@@ -259,7 +259,7 @@ game_update :: proc()
 			}
 			else if (IsKeyDown(KeyboardKey.A))
 			{
-				agent_queue_fire(agent, mouse.world_position)
+				agent_aim(agent)
 			}
 			else
 			{
