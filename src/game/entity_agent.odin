@@ -20,11 +20,8 @@ Agent :: struct
 	jump_timer: f32,
 	jump_speed: f32,
 
-	is_search_target: bool,
-
 	can_aim: bool,
 	is_aiming: bool,
-	aim_target: Vector2,
 	aim_cooldown: f32,
 	aim_timer: f32,
 
@@ -120,18 +117,10 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 
 	// aim
 	{
-		if (is_reloading)
+		if (is_reloading && cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt))
 		{
-			is_reloading = cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt)
+			is_reloading = false
 			can_aim = true
-		}
-
-		if (is_alive && IsKeyDown(KeyboardKey.A) && can_aim)
-		{
-			is_search_target = true
-			aim_target = game().mouse.world_position
-		} else if (is_search_target) {
-			is_search_target = false
 		}
 	}
 
@@ -191,37 +180,11 @@ agent_draw :: proc(using _agent: ^Agent)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
 
-		// jump
-		xx: = rl.Vector2Rotate({1, 0}, 0)
-		yy: = rl.Vector2Rotate({0, 1}, 0)
-		
-
 		if (rl.IsKeyDown(rl.KeyboardKey.A) && can_aim)
 		{
-			aim_target = game().mouse.world_position
+			aim_target: = game().mouse.world_position
 			start: = agent.position
-			if (len(action_system.action_queue) > 0)
-			{
-				action: = action_system.action_queue[len(action_system.action_queue) - 1]
-			
-				switch _ in action.payload {
-					case ^ActionAgentMoveTo:
-					{
-						move_to: = action.payload.(^ActionAgentMoveTo)
-						start = move_to.target
-					}
-					case ^ActionAgentFire:
-					{
-						fire: = action.payload.(^ActionAgentFire)
-					}
-					case ^ActionAgentJump:
-					{
-						jump: = action.payload.(^ActionAgentJump)
-						start = jump.target
-					}
-				}
-			}
-			agent_draw_fire(start, aim_target)
+			agent_draw_fire_angle(agent.position, aim_target)
 		}
 		reload_color: = is_reloading || is_aiming ? rl.RED : rl.GREEN
 		reload_position: = agent.position + Vector2{-5, 0}
@@ -240,7 +203,7 @@ agent_draw :: proc(using _agent: ^Agent)
 				case ^ActionAgentFire:
 				{
 					fire: = action.payload.(^ActionAgentFire)
-					agent_draw_fire(pos, fire.target)
+					agent_draw_fire_angle(agent.position, fire.target)
 				}
 				case ^ActionAgentJump:
 				{
@@ -250,10 +213,25 @@ agent_draw :: proc(using _agent: ^Agent)
 				}
 			}
 		}
+		
+		if (len(action_system.action_queue) > 0)
+		{
+			last_action: = action_system.action_queue[len(action_system.action_queue) - 1]
+			#partial switch _ in last_action.payload
+			{
+				case ^ActionAgentFire: 
+				{
+					fire: = last_action.payload.(^ActionAgentFire)
+					agent_draw_fire_angle(agent.position, fire.target)
+				}
+			}
+		}
+
 	})
 }
 
-agent_draw_fire :: proc(start: Vector2, target: Vector2)
+
+agent_draw_fire_angle :: proc(start: Vector2, target: Vector2)
 {
 	angle: f32 = 10 * rl.DEG2RAD
 	aim_direction: = target - start

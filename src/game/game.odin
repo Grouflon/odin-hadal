@@ -255,17 +255,11 @@ game_update :: proc()
 
 			if (IsKeyDown(KeyboardKey.LEFT_CONTROL))
 			{
-				if (agent.can_jump)
-				{
-					agent_queue_jump(agent, mouse.world_position)
-				}
+				agent_queue_jump(agent, mouse.world_position)
 			}
 			else if (IsKeyDown(KeyboardKey.A))
 			{
-				if (agent.can_aim)
-				{
-					agent_queue_fire(agent, mouse.world_position)
-				}
+				agent_queue_fire(agent, mouse.world_position)
 			}
 			else
 			{

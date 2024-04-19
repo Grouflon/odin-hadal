@@ -118,6 +118,33 @@ action_system_update :: proc(using _system: ^ActionSystem, _dt: f32)
 	action_system_dequeue_actions(_system)
 }
 
+action_system_last_action_position :: proc(using _system: ^ActionSystem) -> Vector2
+{
+	if (len(action_queue) > 0)
+	{
+		last_action: = action_queue[len(action_queue) - 1]
+		switch _ in last_action.payload {
+			case ^ActionAgentMoveTo:
+			{
+				move_to: = last_action.payload.(^ActionAgentMoveTo)
+				return  move_to.target
+			}
+			case ^ActionAgentFire:
+			{
+				fire: = last_action.payload.(^ActionAgentFire)
+				return fire.agent.position
+			}
+			case ^ActionAgentJump:
+			{
+				jump: = last_action.payload.(^ActionAgentJump)
+				return jump.target
+			}
+		}
+	}
+
+	return Vector2{0,0}
+}
+
 action_start :: proc(using _action: ^Action)
 {
 	assert(_action != nil)
@@ -163,3 +190,4 @@ action_shutdown :: proc(using _action: ^Action)
 		_action.definition.shutdown(_action.payload)
 	}
 }
+
