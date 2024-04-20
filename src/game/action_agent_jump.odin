@@ -24,12 +24,10 @@ agent_queue_jump :: proc(_agent: ^Agent, _target: Vector2, _reach_threshold: f32
 	jump: = new(ActionAgentJump)
 	jump.agent = _agent
 	jump.reach_threshold = _reach_threshold
-	action_queue: = _agent.action_system.action_queue
 
-	if (len(action_queue) > 0)
-	{	last_action: = action_queue[len(action_queue) - 1]
-		move_to: = cast(^ActionAgentMoveTo)last_action.payload
-		jump.previous_position = move_to.target
+	if (len( _agent.action_system.action_queue) > 0)
+	{
+		jump.previous_position = action_system_last_action_position(&_agent.action_system)
 	}
 	else
 	{
@@ -43,15 +41,20 @@ agent_queue_jump :: proc(_agent: ^Agent, _target: Vector2, _reach_threshold: f32
 
 action_agent_jump_start :: proc(_action: ^Action)
 {
-	jump: = cast(^ActionAgentJump)_action.payload
+	jump: = _action.payload.(^ActionAgentJump)
+	if (!jump.agent.can_jump)
+	{
+		action_stop(_action)
+		return
+	}
 	jump.previous_position = jump.agent.entity.position
-	jump.agent.can_jump = false
 	jump.agent.is_jumping = true
+	jump.agent.can_jump = false
 }
 
 action_agent_jump_update :: proc(_action: ^Action, _dt: f32)
 {
-	jump: = cast(^ActionAgentJump)_action.payload
+	jump: = _action.payload.(^ActionAgentJump)
 
 	agent_position: = jump.agent.entity.position
 	previous_movement: = agent_position - jump.previous_position
@@ -73,9 +76,9 @@ action_agent_jump_update :: proc(_action: ^Action, _dt: f32)
 	jump.previous_position = jump.agent.entity.position
 }
 
-action_agent_jump_shutdown :: proc(_payload: rawptr)
+action_agent_jump_shutdown :: proc(_payload: ActionUnion)
 {
-	jump: = cast(^ActionAgentJump)_payload
+	jump: = _payload.(^ActionAgentJump)
 	jump.agent.is_jumping = false
 
 	free(jump)

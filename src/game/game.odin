@@ -143,9 +143,10 @@ game_start:: proc()
 	// 	}
 	// }
 	
+	game_camera.target = _level_data.position
 	for entity in _level_data.entities
 	{
-		position: = entity.position
+		position: = entity.position + _level_data.position
 		if (entity.identifier == "Agent")
 		{
 			create_agent(position + Vector2{0, 0})
@@ -261,23 +262,32 @@ game_update :: proc()
 
 			if (IsKeyDown(KeyboardKey.LEFT_CONTROL))
 			{
-				if (agent.can_jump)
-				{
-					agent_queue_jump(agent, mouse.world_position)
-				}
+				agent_queue_jump(agent, mouse.world_position)
 			}
 			else if (IsKeyDown(KeyboardKey.A))
 			{
-				if (agent.can_aim)
-				{
-					fmt.printf("fire\n")
-					agent_queue_fire(agent, mouse.world_position)
-				}
+				agent_aim(agent, mouse.world_position)
 			}
 			else
 			{
 				agent_queue_move_to(agent, mouse.world_position)
 			}
+		}
+	}
+	else if (IsKeyDown(KeyboardKey.A))
+	{
+		for agent in selection.selected_agents
+		{
+			if (agent.can_aim)
+			{
+				agent.is_preview_aim = true
+			}
+		}
+	} else if (IsKeyReleased(KeyboardKey.A))
+	{
+		for agent in selection.selected_agents
+		{
+			agent.is_preview_aim = false
 		}
 	}
 

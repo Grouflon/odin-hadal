@@ -20,11 +20,10 @@ Agent :: struct
 	jump_timer: f32,
 	jump_speed: f32,
 
-	is_search_target: bool,
-
+	is_preview_aim: bool,
+	aim_target: Vector2,
 	can_aim: bool,
 	is_aiming: bool,
-	aim_target: Vector2,
 	aim_cooldown: f32,
 	aim_timer: f32,
 
@@ -120,18 +119,21 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 
 	// aim
 	{
-		if (is_reloading)
+		if (is_reloading && cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt))
 		{
-			is_reloading = cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt)
+			is_reloading = false
 			can_aim = true
 		}
 
-		if (is_alive && IsKeyDown(KeyboardKey.A) && can_aim)
+		if (is_alive && is_aiming)
 		{
-			is_search_target = true
-			aim_target = game().mouse.world_position
-		} else if (is_search_target) {
-			is_search_target = false
+			if (cooldown_timer(is_aiming, &aim_cooldown, aim_timer, _dt))
+			{
+				is_aiming = false
+				is_reloading = true
+				dir: = normalize(aim_target - _agent.position)
+				create_bullet_fire(_agent.position + dir * 10, dir * 50, _agent, .AllyBullet)
+			}
 		}
 	}
 
@@ -183,6 +185,7 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 
 agent_draw :: proc(using _agent: ^Agent)
 {
+	// Draw sprite
 	ordered_draw(int(entity.position.y), _agent, proc(_payload: rawptr)
 	{
 		using agent: = cast(^Agent)_payload
@@ -190,30 +193,21 @@ agent_draw :: proc(using _agent: ^Agent)
 		x, y: = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
-
-		// jump
-		xx: = rl.Vector2Rotate({1, 0}, 0)
-		yy: = rl.Vector2Rotate({0, 1}, 0)
-		
-		reload_color: = is_reloading || is_aiming ? rl.RED : rl.GREEN
-		reload_position: = agent.position + Vector2{-5, 0}
-		rl.DrawLineV(reload_position, reload_position + Vector2{0, -1} * 5, reload_color)
 	})
 
+	// Draw back UI
 	ordered_draw(-1, _agent, proc(_payload: rawptr)
 	{
 		using agent: = cast(^Agent)_payload
 
-		if (is_search_target || is_aiming)
+		if (is_preview_aim)
 		{
-			//direction
-			angle: f32 = 10 * rl.DEG2RAD
-			aim_direction: = aim_target - agent.position
-			babord: = rl.Vector2Rotate(aim_direction, -angle/2)
-			tribord: = rl.Vector2Rotate(aim_direction, angle/2)
-
-			rl.DrawLineV(agent.position, agent.position + babord * 500, rl.PINK)
-			rl.DrawLineV(agent.position, agent.position + tribord * 500, rl.PINK)
+			aim_target_temp: = game().mouse.world_position
+			agent_draw_fire_angle(agent.position, aim_target_temp)
+		}
+		if (is_aiming)
+		{
+			agent_draw_fire_angle(agent.position, aim_target)
 		}
 		
 
@@ -221,13 +215,36 @@ agent_draw :: proc(using _agent: ^Agent)
 		pos: = agent.position
 		for action in action_system.action_queue
 		{
-			move_to: = cast(^ActionAgentMoveTo)action.payload
-			draw_dashed_line(pos, move_to.target, path_color, 2.0, game().time * 10)
-			rl.DrawEllipseLines(i32(move_to.target.x), i32(move_to.target.y), 4, 2, path_color)
-
-			pos = move_to.target
+			switch _ in action.payload {
+				case ^ActionAgentMoveTo:
+				{
+					move_to: = action.payload.(^ActionAgentMoveTo)
+					draw_dashed_line(pos, move_to.target, path_color, 2.0, game().time * 10)
+					rl.DrawEllipseLines(i32(move_to.target.x), i32(move_to.target.y), 4, 2, path_color)
+					pos = move_to.target
+				}
+				case ^ActionAgentJump:
+				{
+					jump: = action.payload.(^ActionAgentJump)
+					rl.DrawLineV(pos,  jump.target, rl.RED)
+					pos = jump.target
+				}
+			}
 		}
+
 	})
+}
+
+
+agent_draw_fire_angle :: proc(start: Vector2, target: Vector2)
+{
+	angle: f32 = 10 * rl.DEG2RAD
+	aim_direction: = target - start
+	babord: = rl.Vector2Rotate(aim_direction, -angle/2)
+	tribord: = rl.Vector2Rotate(aim_direction, angle/2)
+
+	rl.DrawLineV(start, start + babord * 500, rl.PINK)
+	rl.DrawLineV(start, start + tribord * 500, rl.PINK)
 }
 
 agent_kill :: proc(using _agent: ^Agent)
@@ -249,6 +266,18 @@ agent_kill :: proc(using _agent: ^Agent)
 	action_system_clear_actions(&action_system)
 
 	is_alive = false
+}
+
+
+agent_aim ::proc(using _agent: ^Agent, _target: Vector2)
+{
+	if (can_aim)
+	{
+		can_aim = false
+		is_aiming = true
+		is_preview_aim = false
+		aim_target = _target
+	} 
 }
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB
