@@ -185,6 +185,7 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 
 agent_draw :: proc(using _agent: ^Agent)
 {
+	// Draw sprite
 	ordered_draw(int(entity.position.y), _agent, proc(_payload: rawptr)
 	{
 		using agent: = cast(^Agent)_payload
@@ -192,6 +193,12 @@ agent_draw :: proc(using _agent: ^Agent)
 		x, y: = floor_to_int(entity.position.x), floor_to_int(entity.position.y)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
+	})
+
+	// Draw back UI
+	ordered_draw(-1, _agent, proc(_payload: rawptr)
+	{
+		using agent: = cast(^Agent)_payload
 
 		if (is_preview_aim)
 		{
@@ -202,10 +209,9 @@ agent_draw :: proc(using _agent: ^Agent)
 		{
 			agent_draw_fire_angle(agent.position, aim_target)
 		}
-		reload_color: = is_reloading || is_aiming ? rl.RED : rl.GREEN
-		reload_position: = agent.position + Vector2{-5, 0}
-		rl.DrawLineV(reload_position, reload_position + Vector2{0, -1} * 5, reload_color)
+		
 
+		path_color: = Color{255, 255, 255, 100}
 		pos: = agent.position
 		for action in action_system.action_queue
 		{
@@ -213,7 +219,8 @@ agent_draw :: proc(using _agent: ^Agent)
 				case ^ActionAgentMoveTo:
 				{
 					move_to: = action.payload.(^ActionAgentMoveTo)
-					rl.DrawLineV(pos,  move_to.target, reload_color)
+					draw_dashed_line(pos, move_to.target, path_color, 2.0, game().time * 10)
+					rl.DrawEllipseLines(i32(move_to.target.x), i32(move_to.target.y), 4, 2, path_color)
 					pos = move_to.target
 				}
 				case ^ActionAgentJump:
@@ -224,6 +231,7 @@ agent_draw :: proc(using _agent: ^Agent)
 				}
 			}
 		}
+
 	})
 }
 
