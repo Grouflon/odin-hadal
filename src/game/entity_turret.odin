@@ -70,7 +70,7 @@ turret_update :: proc(using _turret: ^Turret, dt: f32)
 	if (target != nil && !target.is_alive)
 	{
 		target = nil
-		reset_turret(_turret)
+		turret_reset(_turret)
 	}
 
 	if (target == nil)
@@ -93,7 +93,7 @@ turret_update :: proc(using _turret: ^Turret, dt: f32)
 	{
 		dir := normalize(target_lock - position)
 		bullet_func(position + dir, dir * bullet_speed, _turret, .EnemyBullet)
-		reset_turret(_turret)
+		turret_reset(_turret)
 	}
 
 	
@@ -106,7 +106,7 @@ turret_kill :: proc(using _turret: ^Turret)
 	has_target = false
 }
 
-reset_turret:: proc(using _turret: ^Turret)
+turret_reset:: proc(using _turret: ^Turret)
 {
 	cooldown_timer = 0
 	has_target_lock = false

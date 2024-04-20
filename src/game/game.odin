@@ -118,7 +118,6 @@ game_initialize :: proc()
 
 db: = create_dialogue_box("yoyoyooy")
 
-
 game_reset :: proc()
 {
 	using g_game

@@ -2,6 +2,7 @@ package game
 
 GameSettings :: struct
 {
+	agent_number: i32,
 	agent_max_speed: f32,
 	agent_acceleration: f32,
 	agent_deceleration: f32,
@@ -18,6 +19,7 @@ GameSettings :: struct
 }
 
 game_settings :: GameSettings {
+	agent_number = 3,
 	agent_max_speed = 25.0,
 	agent_acceleration = 150.0,
 	agent_deceleration = 85.0,

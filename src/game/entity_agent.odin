@@ -273,6 +273,8 @@ agent_kill :: proc(using _agent: ^Agent)
 	action_system_clear_actions(&action_system)
 
 	is_alive = false
+	is_preview_aim = false
+	is_aiming = false
 }
 
 

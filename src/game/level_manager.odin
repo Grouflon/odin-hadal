@@ -44,6 +44,12 @@ level_manager_start :: proc(level_manager: ^LevelManager)
 		agent_reset(agent)
 	}
 
+	turrets: = get_entities(Turret)
+	for turret in turrets
+	{
+		turret_reset(turret)
+	}
+
 	//start
 	next_level_index: = level_manager.next_level
 	if (len(level_manager.levels) > int(next_level_index))
@@ -51,11 +57,8 @@ level_manager_start :: proc(level_manager: ^LevelManager)
 		previews_level: = level_manager.levels[level_manager.current_level]
 		next_level: = level_manager.levels[next_level_index]
 		dir: = normalize(next_level.position - previews_level.position)
-		if (length(dir) == 0)
-		{
-			dir.y = -1
-		}
 		game().game_camera.target = next_level.position
+
 		agents: = get_entities(Agent)
 		if (len(agents) > 0)
 		{
@@ -63,15 +66,26 @@ level_manager_start :: proc(level_manager: ^LevelManager)
 			y: = next_level.position.y + offset * dir.y + next_level.size.y * ((dir.y*dir.y-dir.y)/2)
 			for agent in agents
 			{
-				agent.level_index = next_level_index
-				agent.position = Vector2{next_level.position.x + next_level.size.x / 2, y}
+				if (agent.is_alive)
+				{
+					agent.level_index = next_level_index
+					agent.position = Vector2{next_level.position.x + next_level.size.x / 2, y}
+				}
+			}
+		} else
+		{
+			nbr_agent: i32 = game_settings.agent_number
+			for i: i32 = 0; i < nbr_agent; i += 1
+			{
+				entity_: = create_agent(Vector2{next_level.size.x / 2 + 5 * f32(i), next_level.size.y / 2})
+				entity_.level_index = next_level_index
 			}
 		}
 
 		level_manager.current_level = next_level_index
-
 	}
 }
+
 
 level_manager_clear:: proc(level_manager: ^LevelManager)
 {
@@ -96,11 +110,6 @@ load_level :: proc(level: ^ldtk.LdtkLevel, index: i32) -> LevelInfo
 		position: = entity.position + level.position
 		if (entity.identifier == "Agent")
 		{
-			agents: = get_entities(Agent)
-			if (len(agents) == 0)
-			{
-				entity_ = create_agent(position + Vector2{0, 0})
-			}
 		}
 		else if (entity.identifier == "Mine")
 		{
