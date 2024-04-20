@@ -27,6 +27,7 @@ Game :: struct
 	physics_manager: PhysicsManager,
 
 	selection : ^Selection,
+	time: f32,
 	is_game_paused: bool,
 
 	current_level: i32,
@@ -126,6 +127,8 @@ game_start:: proc()
 
 	selection = make_selection()
 
+	time = 0.0
+
 	// Create Level
 	_levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
 	defer ldtk.free_level(_levels_data)
@@ -216,6 +219,7 @@ game_update :: proc()
 	using g_game
 
 	_dt: = rl.GetFrameTime()
+	time += _dt
 
 	if (switch_level)
 	{
