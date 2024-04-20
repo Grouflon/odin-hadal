@@ -20,6 +20,7 @@ Agent :: struct
 	jump_timer: f32,
 	jump_speed: f32,
 
+	is_preview_aim: bool,
 	aim_target: Vector2,
 	can_aim: bool,
 	is_aiming: bool,
@@ -192,10 +193,9 @@ agent_draw :: proc(using _agent: ^Agent)
 
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
 
-		if (rl.IsKeyDown(rl.KeyboardKey.A) && can_aim)
+		if (is_preview_aim)
 		{
 			aim_target_temp: = game().mouse.world_position
-			start: = agent.position
 			agent_draw_fire_angle(agent.position, aim_target_temp)
 		}
 		if (is_aiming)
@@ -261,13 +261,14 @@ agent_kill :: proc(using _agent: ^Agent)
 }
 
 
-agent_aim ::proc(using _agent: ^Agent)
+agent_aim ::proc(using _agent: ^Agent, _target: Vector2)
 {
 	if (can_aim)
 	{
 		can_aim = false
 		is_aiming = true
-		aim_target = game().mouse.world_position
+		is_preview_aim = false
+		aim_target = _target
 	} 
 }
 
