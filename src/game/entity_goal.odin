@@ -31,14 +31,18 @@ create_goal :: proc(_position: Vector2, _size: Vector2, _nextLevel: i32) -> ^Goa
 goal_update :: proc(using _goal: ^Goal, dt: f32)
 {
 	_agents: = get_entities(Agent)
-	for _agent in _agents
+	
+	if (game().mouse.pressed[1])
 	{
-		collide: = collision_aabb_aabb(goal_aabb(_goal),agent_aabb(_agent))
-		if (_agent.is_alive && collide)
+		for _agent in _agents
 		{
-			game().switch_level = true
-			game().current_level = nextLevel
-			return
+			collide: = collision_aabb_aabb(goal_aabb(_goal),agent_aabb(_agent))
+			if (_agent.is_alive && collide)
+			{
+				game().switch_level = true
+				game().current_level = nextLevel
+				return
+			}
 		}
 	}
 }

@@ -25,6 +25,7 @@ Game :: struct
 
 	animation_manager: AnimationManager,
 	physics_manager: PhysicsManager,
+	level_manager: LevelManager,
 
 	selection : ^Selection,
 	is_game_paused: bool,
@@ -111,6 +112,10 @@ game_initialize :: proc()
 	current_level = 0
 	switch_level = false
 
+	selection = make_selection()
+	game_resources_load(&resources)
+	animation_manager_initialize(&animation_manager)
+	level_manager_initialize(&level_manager)
 	game_start()
 }
 
@@ -119,18 +124,8 @@ game_start:: proc()
 	using g_game
 	using rl
 
-	game_resources_load(&resources)
-
-	animation_manager_initialize(&animation_manager)
-
-	selection = make_selection()
-
-	// Create Level
-	_levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
-	defer ldtk.free_level(_levels_data)
-	_level_data: = _levels_data.levels[current_level];
-
-	_start: Vector2 = {150, 150}
+	level_manager_start(&level_manager, current_level)
+	//_start: Vector2 = {150, 150}
 	// for _x in 0..<5
 	// {
 	// 	for _y in 0..<5
@@ -138,41 +133,6 @@ game_start:: proc()
 	// 		create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
 	// 	}
 	// }
-	
-	game_camera.target = _level_data.position
-	for entity in _level_data.entities
-	{
-		position: = entity.position + _level_data.position
-		if (entity.identifier == "Agent")
-		{
-			create_agent(position + Vector2{0, 0})
-		}
-		else if (entity.identifier == "Mine")
-		{
-			create_mine(position)
-		} 
-		else if (entity.identifier == "Acid")
-		{
-			create_acid(position, Vector2{entity.width, entity.height})
-		}
-		else if (entity.identifier == "Ice")
-		{
-			create_ice(position, Vector2{entity.width, entity.height}, 0.3)
-		}
-		else if (entity.identifier == "Wall")
-		{
-			create_wall(position, Vector2{entity.width, entity.height})
-		}
-		else if (entity.identifier == "Turret")
-		{
-			create_turret(position, game_settings.turret_cooldown)
-		}
-		else if (entity.identifier == "Goal")
-		{
-			_nextLevel: = entity.customVariables["nextLevel"].value.(i32)
-			create_goal(position, Vector2{entity.width, entity.height}, _nextLevel)
-		}
-	}
 }
 
 db: = create_dialogue_box("yoyoyooy")
@@ -184,13 +144,7 @@ game_stop :: proc()
 
 	switch_level = false
 
-	delete_selection(selection)
-
-	entity_manager_clear_entities(&entity_manager)
-
-	animation_manager_shutdown(&animation_manager)
-
-	game_resources_unload(&resources)
+//	
 }
 
 game_shutdown :: proc()
@@ -199,9 +153,15 @@ game_shutdown :: proc()
 	using g_game
 
 	game_stop();
+	
+	delete_selection(selection)
+	entity_manager_clear_entities(&entity_manager)
+	animation_manager_shutdown(&animation_manager)
+	game_resources_unload(&resources)
 
 	entity_manager_shutdown(&entity_manager)
 	physics_manager_shutdown(&physics_manager)
+	level_manager_shutdown(&level_manager)
 
 	UnloadRenderTexture(game_render_target)
 
