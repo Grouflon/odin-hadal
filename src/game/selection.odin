@@ -28,6 +28,13 @@ delete_selection :: proc(_selection: ^Selection)
 	free(_selection)
 }
 
+clear_selection :: proc(_selection: ^Selection)
+{
+	clear(&_selection.hovered_agents)
+	clear(&_selection.selected_agents)
+	_selection.is_selecting = false
+}
+
 selection_update :: proc(using _selection: ^Selection)
 {
 	mouse_position : Vector2 = mouse().world_position;

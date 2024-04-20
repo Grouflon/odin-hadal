@@ -16,6 +16,7 @@ LdtkLevel :: struct
 {
 	identifier: string,
 	position:[2]f32,
+	size:[2]f32,
 	entities: [dynamic]^LdtkEntity
 }
 
@@ -54,7 +55,10 @@ load_level :: proc(path:string) -> ^LdtkData
 		ldtk_level.identifier = strings.clone(level["identifier"].(json.String))
 		_worldX: = level["worldX"].(json.Float)
 		_worldY: = level["worldY"].(json.Float)
+		_worldW: = level["pxWid"].(json.Float)
+		_worldH: = level["pxHei"].(json.Float)
 		ldtk_level.position = {f32(_worldX), f32(_worldY)}
+		ldtk_level.size = {f32(_worldW), f32(_worldH)}
 
 		for layerInstance in layerInstances
 		{

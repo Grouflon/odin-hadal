@@ -30,9 +30,6 @@ Game :: struct
 	selection : ^Selection,
 	time: f32,
 	is_game_paused: bool,
-
-	current_level: i32,
-	switch_level: bool,
 }
 g_game : Game
 
@@ -82,7 +79,7 @@ game_initialize :: proc()
 	game_render_target_ui = LoadRenderTexture(game_width, game_height);
 
 	game_camera = Camera2D{}
-	game_camera.zoom = 1.0
+	game_camera.zoom = 1
 
 	// Game
 	physics_manager_initialize(&physics_manager)
@@ -111,43 +108,27 @@ game_initialize :: proc()
 
 	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.Turret, .Overlap)
 
-	current_level = 0
-	switch_level = false
-
 	selection = make_selection()
 	game_resources_load(&resources)
 	animation_manager_initialize(&animation_manager)
 	level_manager_initialize(&level_manager)
-	game_start()
+	level_manager_start(&level_manager)
 	time = 0.0
-}
-
-game_start:: proc()
-{
-	using g_game
-	using rl
-
-	level_manager_start(&level_manager, current_level)
-	//_start: Vector2 = {150, 150}
-	// for _x in 0..<5
-	// {
-	// 	for _y in 0..<5
-	// 	{
-	// 		create_swarm(_start + Vector2{ f32(_x*10), f32(_y*10) })
-	// 	}
-	// }
 }
 
 db: = create_dialogue_box("yoyoyooy")
 
-game_stop :: proc()
+
+game_reset :: proc()
 {
 	using g_game
-	using rl
 
-	switch_level = false
+	clear_selection(selection)
+	entity_manager_clear_entities(&entity_manager)
+	level_manager_clear(&level_manager)
 
-//	
+	level_manager_initialize(&level_manager)
+	level_manager_start(&level_manager)
 }
 
 game_shutdown :: proc()
@@ -155,8 +136,6 @@ game_shutdown :: proc()
 	using rl
 	using g_game
 
-	game_stop();
-	
 	delete_selection(selection)
 	entity_manager_clear_entities(&entity_manager)
 	animation_manager_shutdown(&animation_manager)
@@ -181,30 +160,25 @@ game_update :: proc()
 	_dt: = rl.GetFrameTime()
 	time += _dt
 
-	if (switch_level)
+	if (level_manager.switch_level)
 	{
-		game_stop()
-		game_start()
+		level_manager_start(&level_manager)
 	}
 
 	if (IsKeyPressed(KeyboardKey.R))
 	{
-		game_stop()
-		game_start()
+		game_reset()
 	}
 
 	if (IsKeyPressed(KeyboardKey.ONE))
 	{
-		game_stop()
-		current_level = 0
-		game_start()
+		switch_level_to(0)
 	}
 	if (IsKeyPressed(KeyboardKey.TWO))
 	{
-		game_stop()
-		current_level = 1
-		game_start()
+		switch_level_to(1)
 	}
+
 	dialogue_box_update(db)
 
 	mouse_update(&mouse, game_camera, pixel_ratio)

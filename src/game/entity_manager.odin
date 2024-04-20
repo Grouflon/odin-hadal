@@ -99,11 +99,6 @@ entity_manager_update :: proc(using _manager: ^EntityManager, _dt: f32)
 	}
 }
 
- a:: proc($Type:typeid)
- {
-	entity: = cast(^EntityType(Type))_type
-
- }
 entity_manager_draw :: proc(using _manager: ^EntityManager)
 {
 	for _type in types
@@ -194,7 +189,7 @@ entity_manager_register_type :: proc(using _manager: ^EntityManager, $Type: type
 			for _entity in _true_type.entities
 			{
 				entity: = cast(^Entity)_entity
-				if (entity.level_index == game().current_level)
+				if (entity.level_index == game().level_manager.current_level)
 				{
 					_true_type.definition.update(_entity, _dt)
 				}
@@ -210,7 +205,7 @@ entity_manager_register_type :: proc(using _manager: ^EntityManager, $Type: type
 			for _entity in _true_type.entities
 			{
 				entity: = cast(^Entity)_entity
-				if (entity.level_index == game().current_level)
+				if (entity.level_index == game().level_manager.current_level)
 				{
 					_true_type.definition.draw(_entity)
 				}

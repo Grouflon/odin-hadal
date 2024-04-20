@@ -87,6 +87,13 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	return _agent
 }
 
+agent_reset :: proc(_agent: ^Agent)
+{
+	action_system_clear_actions(&_agent.action_system)
+	_agent.move_direction = Vector2{0,0}
+	_agent.velocity = Vector2{0,0}
+}
+
 agent_shutdown :: proc(using _agent: ^Agent)
 {
 	action_system_shutdown(&action_system)
