@@ -74,6 +74,7 @@ game_initialize :: proc()
 
 	HideCursor();
 	renderer_init(&renderer)
+	draw_init()
 
 	game_render_target = LoadRenderTexture(game_width, game_height);
 	game_render_target_ui = LoadRenderTexture(game_width, game_height);
@@ -204,6 +205,7 @@ game_shutdown :: proc()
 
 	UnloadRenderTexture(game_render_target)
 
+	draw_shutdown()
 	renderer_shutdown(&renderer)
 	CloseWindow()
 }
@@ -303,6 +305,7 @@ game_draw :: proc()
 		defer EndMode2D()
 
 		ClearBackground(GRAY)
+
 		selection_draw_agents(selection)
 
 		entity_manager_draw(&entity_manager)
@@ -314,7 +317,6 @@ game_draw :: proc()
 		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
 		selection_draw(selection)
-
 	}
 
 	// Scaled up final rendering
