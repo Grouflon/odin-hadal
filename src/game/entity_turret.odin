@@ -95,8 +95,6 @@ turret_update :: proc(using _turret: ^Turret, dt: f32)
 		bullet_func(position + dir, dir * bullet_speed, _turret, .EnemyBullet)
 		turret_reset(_turret)
 	}
-
-	
 }
 
 turret_kill :: proc(using _turret: ^Turret)

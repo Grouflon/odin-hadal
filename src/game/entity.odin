@@ -16,5 +16,6 @@ Entity :: struct
 		^Laser,
 		^Goal,
 		^Swarm,
+		^Ia,
 	}
 }

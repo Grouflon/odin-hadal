@@ -87,6 +87,7 @@ game_initialize :: proc()
 
 	// Setup
 	entity_manager_register_type(&entity_manager, Agent, agent_definition)
+	entity_manager_register_type(&entity_manager, Ia, ia_definition)
 	entity_manager_register_type(&entity_manager, Mine, mine_definition)
 	entity_manager_register_type(&entity_manager, Wall, wall_definition)
 	entity_manager_register_type(&entity_manager, Acid, acid_definition)

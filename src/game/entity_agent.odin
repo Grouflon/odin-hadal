@@ -5,6 +5,13 @@ import "core:math"
 import "core:log"
 import rl "vendor:raylib"
 
+AgentTeam :: enum
+{
+	NEUTRAL,
+	PLAYER,
+	ENEMY,
+}
+
 Agent :: struct
 {
 	using entity: Entity,
@@ -12,6 +19,8 @@ Agent :: struct
 	move_direction: Vector2,
 	velocity: Vector2,
 	is_alive: bool,
+	health_max: i32,
+	health: i32,
 
 	is_jumping: bool,
 	can_jump: bool,
@@ -38,6 +47,8 @@ Agent :: struct
 	animation_player: ^AnimationPlayer,
 	collider: ^Collider,
 
+	team: AgentTeam,
+
 	action_system: ActionSystem,
 }
 
@@ -48,13 +59,15 @@ agent_definition :: EntityDefinition(Agent) {
 	shutdown = agent_shutdown,
 }
 
-create_agent :: proc(_position : Vector2) -> ^Agent
+create_agent :: proc(_position : Vector2, _team: AgentTeam = .NEUTRAL) -> ^Agent
 {
 	using _agent: = new(Agent)
 	entity.type = _agent
 	entity.position = _position
 
 	is_alive = true
+	health_max = 8
+	health = health_max
 
 	can_aim = true
 	aim_timer = 3
@@ -69,6 +82,8 @@ create_agent :: proc(_position : Vector2) -> ^Agent
 	jump_speed = 50
 	jump_timer = 5
 	jump_cooldown = jump_timer
+
+	team = _team
 
 	animation_player = create_animation_player()
 	collider = create_collider(
@@ -254,20 +269,29 @@ agent_draw_fire_angle :: proc(start: Vector2, target: Vector2)
 	rl.DrawLineV(start, start + tribord * 500, rl.PINK)
 }
 
+agent_hit_damage :: proc(_agent: ^Agent, _damage: i32)
+{
+	_agent.health -= _damage
+
+	if (_agent.health <= 0)
+	{
+		_agent.health = 0
+		_agent.is_alive = false
+	}
+}
+
 agent_kill :: proc(using _agent: ^Agent)
 {
-	hover := game().selection.hovered_agents
-	index := find(&hover, _agent)
+	index: = find(&game().selection.hovered_agents, _agent)
 	if (index >= 0)
 	{
-		unordered_remove(&hover, index)
+		unordered_remove(&game().selection.hovered_agents, index)
 	}
 	
-	selected := game().selection.selected_agents
-	index_select := find(&selected, _agent)
+	index_select: = find(&game().selection.selected_agents, _agent)
 	if (index_select >= 0)
 	{
-		unordered_remove(&selected, index_select)
+		unordered_remove(&game().selection.selected_agents, index_select)
 	}
 
 	action_system_clear_actions(&action_system)
@@ -305,7 +329,7 @@ find_closest_agent :: proc(_position: Vector2, _range: f32) -> ^Agent
 	_range_temp := _range
 	for _agent in _agents
 	{
-		if (!_agent.is_alive ){ continue }
+		if (!_agent.is_alive || _agent.team != .PLAYER ){ continue }
 
 		_dist := distance(_position, _agent.position)
 

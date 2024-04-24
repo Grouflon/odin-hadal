@@ -59,12 +59,22 @@ level_manager_start :: proc(level_manager: ^LevelManager)
 		dir: = normalize(next_level.position - previews_level.position)
 		game().game_camera.target = next_level.position
 
-		agents: = get_entities(Agent)
-		if (len(agents) > 0)
+		agents_player: [dynamic]^Agent
+		defer(delete(agents_player))
+		for agent in agents
+		{
+			if (agent.team == .PLAYER)
+			{
+				append(&agents_player, agent)
+			}
+		}
+		
+
+		if (len(agents_player) > 0)
 		{
 			offset: f32 = 20
 			y: = next_level.position.y + offset * dir.y + next_level.size.y * ((dir.y*dir.y-dir.y)/2)
-			for agent in agents
+			for agent in agents_player
 			{
 				if (agent.is_alive)
 				{
@@ -72,13 +82,14 @@ level_manager_start :: proc(level_manager: ^LevelManager)
 					agent.position = Vector2{next_level.position.x + next_level.size.x / 2, y}
 				}
 			}
-		} else
+		}
+		else
 		{
 			nbr_agent: i32 = game_settings.agent_number
 			for i: i32 = 0; i < nbr_agent; i += 1
 			{
-				entity_: = create_agent(Vector2{next_level.size.x / 2 + 5 * f32(i), next_level.size.y / 2})
-				entity_.level_index = next_level_index
+				agent: = create_agent(Vector2{next_level.size.x / 2 + 5 * f32(i), next_level.size.y / 2}, .PLAYER)
+				agent.level_index = next_level_index
 			}
 		}
 
@@ -106,40 +117,41 @@ load_level :: proc(level: ^ldtk.LdtkLevel, index: i32) -> LevelInfo
 
 	for entity in level.entities
 	{
-		entity_: ^Entity = nil;
+		entity_tmp: ^Entity = nil;
 		position: = entity.position + level.position
 		if (entity.identifier == "Agent")
 		{
+			entity_tmp = create_ia(position, index)
 		}
 		else if (entity.identifier == "Mine")
 		{
-			entity_ = create_mine(position)
+			entity_tmp = create_mine(position)
 		} 
 		else if (entity.identifier == "Acid")
 		{
-			entity_ = create_acid(position, Vector2{entity.width, entity.height})
+			entity_tmp = create_acid(position, Vector2{entity.width, entity.height})
 		}
 		else if (entity.identifier == "Ice")
 		{
-			entity_ = create_ice(position, Vector2{entity.width, entity.height}, 0.3)
+			entity_tmp = create_ice(position, Vector2{entity.width, entity.height}, 0.3)
 		}
 		else if (entity.identifier == "Wall")
 		{
-			entity_ = create_wall(position, Vector2{entity.width, entity.height})
+			entity_tmp = create_wall(position, Vector2{entity.width, entity.height})
 		}
 		else if (entity.identifier == "Turret")
 		{
-			entity_ = create_turret(position, game_settings.turret_cooldown)
+			entity_tmp = create_turret(position, game_settings.turret_cooldown)
 		}
 		else if (entity.identifier == "Goal")
 		{
 			_nextLevel: = entity.customVariables["nextLevel"].value.(i32)
-			entity_ = create_goal(position, Vector2{entity.width, entity.height}, _nextLevel)
+			entity_tmp = create_goal(position, Vector2{entity.width, entity.height}, _nextLevel)
 		}
 
-		if (entity_ != nil)
+		if (entity_tmp != nil)
 		{
-			entity_.level_index = index
+			entity_tmp.level_index = index
 		}
 	}
 

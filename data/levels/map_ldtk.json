@@ -1434,22 +1434,6 @@
 							"__worldY": -256
 						},
 						{
-							"__identifier": "Agent",
-							"__grid": [7,14],
-							"__pivot": [0,0],
-							"__tags": [],
-							"__tile": null,
-							"__smartColor": "#124E89",
-							"iid": "ce6d43c0-d7b0-11ee-8181-9bd8fc25a9f5",
-							"width": 1,
-							"height": 2,
-							"defUid": 3,
-							"px": [117,228],
-							"fieldInstances": [],
-							"__worldX": 117,
-							"__worldY": -28
-						},
-						{
 							"__identifier": "Goal",
 							"__grid": [7,15],
 							"__pivot": [0,0],
