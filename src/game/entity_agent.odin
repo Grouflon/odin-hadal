@@ -92,7 +92,7 @@ create_agent :: proc(_position : Vector2, _team: AgentTeam = .NEUTRAL) -> ^Agent
 			{-3, -6},
 			{ 3,  0},
 		},
-		.Agent,
+		team == .PLAYER ? .Agent : .EnemyAgent,
 		.Dynamic,
 	)
 
@@ -276,7 +276,7 @@ agent_hit_damage :: proc(_agent: ^Agent, _damage: i32)
 	if (_agent.health <= 0)
 	{
 		_agent.health = 0
-		_agent.is_alive = false
+		agent_kill(_agent)
 	}
 }
 

@@ -6,6 +6,7 @@ Layer :: enum
 {
 	Wall = 0,
 	Agent,
+	EnemyAgent,
 	Swarm,
 	Hazard,
 	Turret,

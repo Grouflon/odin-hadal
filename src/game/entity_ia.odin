@@ -22,7 +22,7 @@ create_ia :: proc(_position: Vector2, _level_index: i32) -> ^Ia
 
 	agent = create_agent(_position, .ENEMY)
 	agent.level_index = _level_index
-
+	
 	register_entity(ia)
 	return ia
 }

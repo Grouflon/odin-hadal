@@ -108,6 +108,7 @@ game_initialize :: proc()
 	physics_manager_set_layer_response(&physics_manager, Layer.EnemyBullet, Layer.Wall, .Overlap)
 
 	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.Turret, .Overlap)
+	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.EnemyAgent, .Overlap)
 
 	selection = make_selection()
 	game_resources_load(&resources)
