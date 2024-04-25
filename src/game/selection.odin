@@ -23,20 +23,46 @@ delete_selection :: proc(_selection: ^Selection)
 {
 	assert(_selection != nil)
 
+	selection_clear(_selection)
+
 	delete(_selection.hovered_agents)
 	delete(_selection.selected_agents)
 	free(_selection)
 }
 
-clear_selection :: proc(_selection: ^Selection)
+selection_clear :: proc(using _selection: ^Selection)
 {
-	clear(&_selection.hovered_agents)
-	clear(&_selection.selected_agents)
-	_selection.is_selecting = false
+	clear(&hovered_agents)
+	clear(&selected_agents)
+	is_selecting = false
+}
+
+selection_unselect_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
+{
+	index: = find(&hovered_agents, _agent)
+	if (index >= 0)
+	{
+		unordered_remove(&hovered_agents, index)
+	}
+	
+	index_select: = find(&selected_agents, _agent)
+	if (index_select >= 0)
+	{
+		unordered_remove(&selected_agents, index_select)
+	}
 }
 
 selection_update :: proc(using _selection: ^Selection)
 {
+	// Clear non selectable agents from selection
+	for i: = len(selected_agents) - 1; i >= 0; i -= 1
+	{
+		if (!agent_is_selectable(selected_agents[i]))
+		{
+			unordered_remove(&selected_agents, i)
+		}
+	}
+
 	mouse_position : Vector2 = mouse().world_position;
 	aabb = {
 		mouse_position,
@@ -71,7 +97,7 @@ selection_update :: proc(using _selection: ^Selection)
 
 	for _agent in get_entities(Agent)
 	{
-		if _agent.is_alive && _agent.team == .PLAYER && collision_aabb_aabb(aabb, agent_aabb(_agent))
+		if agent_is_selectable(_agent) && collision_aabb_aabb(aabb, agent_aabb(_agent))
 		{
 			append(&_selectable_agents, _agent)
 		}

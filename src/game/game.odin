@@ -5,6 +5,8 @@ import "core:fmt"
 import "core:log"
 import "hadal:ldtk"
 
+
+
 Game :: struct
 {
 	game_width, game_height : i32,
@@ -27,9 +29,10 @@ Game :: struct
 	physics_manager: PhysicsManager,
 	level_manager: LevelManager,
 
-	selection : ^Selection,
 	time: f32,
 	is_game_paused: bool,
+
+	player_controller: PlayerController,
 }
 g_game : Game
 
@@ -110,12 +113,14 @@ game_initialize :: proc()
 	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.Turret, .Overlap)
 	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.EnemyAgent, .Overlap)
 
-	selection = make_selection()
 	game_resources_load(&resources)
 	animation_manager_initialize(&animation_manager)
 	level_manager_initialize(&level_manager)
-	level_manager_start(&level_manager)
+	player_controller_initialize(&player_controller)
 	time = 0.0
+
+	level_manager_start(&level_manager)
+	// switch_level_to(1)
 }
 
 db: = create_dialogue_box("yoyoyooy")
@@ -124,7 +129,7 @@ game_reset :: proc()
 {
 	using g_game
 
-	clear_selection(selection)
+	player_controller_reset(&player_controller)
 	entity_manager_clear_entities(&entity_manager)
 	level_manager_clear(&level_manager)
 
@@ -137,14 +142,13 @@ game_shutdown :: proc()
 	using rl
 	using g_game
 
-	delete_selection(selection)
-	entity_manager_clear_entities(&entity_manager)
+	player_controller_shutdown(&player_controller)
+	level_manager_shutdown(&level_manager)
 	animation_manager_shutdown(&animation_manager)
 	game_resources_unload(&resources)
-
+	entity_manager_clear_entities(&entity_manager)
 	entity_manager_shutdown(&entity_manager)
 	physics_manager_shutdown(&physics_manager)
-	level_manager_shutdown(&level_manager)
 
 	UnloadRenderTexture(game_render_target)
 
@@ -184,51 +188,7 @@ game_update :: proc()
 
 	mouse_update(&mouse, game_camera, pixel_ratio)
 
-	selection_update(selection)
-	if (mouse.pressed[1])
-	{
-		for agent in selection.selected_agents
-		{
-			if (!IsKeyDown(KeyboardKey.LEFT_SHIFT))
-			{
-				action_system_clear_actions(&agent.action_system)
-			}
-
-			if (IsKeyDown(KeyboardKey.LEFT_CONTROL))
-			{
-				agent_queue_jump(agent, mouse.world_position)
-			}
-			else if (IsKeyDown(KeyboardKey.A))
-			{
-				agent_aim(agent, mouse.world_position)
-			}
-			else
-			{
-				agent_queue_move_to(agent, mouse.world_position)
-			}
-		}
-	}
-	else if (IsKeyDown(KeyboardKey.A))
-	{
-		for agent in selection.selected_agents
-		{
-			if (agent.can_aim)
-			{
-				agent.is_preview_aim = true
-			}
-		}
-	} else if (IsKeyReleased(KeyboardKey.A))
-	{
-		for agent in selection.selected_agents
-		{
-			agent.is_preview_aim = false
-		}
-	}
-
-	if (IsKeyPressed(KeyboardKey.SPACE))
-	{
-		is_game_paused = !is_game_paused
-	}
+	player_controller_update(&player_controller, _dt)
 
 	if (!is_game_paused)
 	{
@@ -254,8 +214,6 @@ game_draw :: proc()
 
 		ClearBackground(GRAY)
 
-		selection_draw_agents(selection)
-
 		entity_manager_draw(&entity_manager)
 
 		renderer_ordered_draw(&renderer)
@@ -264,7 +222,7 @@ game_draw :: proc()
 		// physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
 		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
-		selection_draw(selection)
+		player_controller_draw(&player_controller)
 	}
 
 	// Scaled up final rendering

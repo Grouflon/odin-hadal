@@ -7,7 +7,6 @@ import rl "vendor:raylib"
 
 AgentTeam :: enum
 {
-	NEUTRAL,
 	PLAYER,
 	ENEMY,
 }
@@ -59,7 +58,7 @@ agent_definition :: EntityDefinition(Agent) {
 	shutdown = agent_shutdown,
 }
 
-create_agent :: proc(_position : Vector2, _team: AgentTeam = .NEUTRAL) -> ^Agent
+create_agent :: proc(_position : Vector2, _team: AgentTeam) -> ^Agent
 {
 	using _agent: = new(Agent)
 	entity.type = _agent
@@ -222,6 +221,8 @@ agent_draw :: proc(using _agent: ^Agent)
 	{
 		using agent: = cast(^Agent)_payload
 
+		if (team != .PLAYER) { return }
+
 		if (is_preview_aim)
 		{
 			aim_target_temp: = game().mouse.world_position
@@ -231,7 +232,6 @@ agent_draw :: proc(using _agent: ^Agent)
 		{
 			agent_draw_fire_angle(agent.position, aim_target)
 		}
-		
 
 		path_color: = Color{255, 255, 255, 100}
 		pos: = agent.position
@@ -282,18 +282,6 @@ agent_hit_damage :: proc(_agent: ^Agent, _damage: i32)
 
 agent_kill :: proc(using _agent: ^Agent)
 {
-	index: = find(&game().selection.hovered_agents, _agent)
-	if (index >= 0)
-	{
-		unordered_remove(&game().selection.hovered_agents, index)
-	}
-	
-	index_select: = find(&game().selection.selected_agents, _agent)
-	if (index_select >= 0)
-	{
-		unordered_remove(&game().selection.selected_agents, index_select)
-	}
-
 	action_system_clear_actions(&action_system)
 
 	is_alive = false
@@ -320,6 +308,14 @@ agent_aabb :: proc(using _agent: ^Agent) -> AABB
 		{ x-3, y-6 },
 		{ x+3, y },
 	}
+}
+
+agent_is_selectable :: proc(using _agent: ^Agent) -> bool
+{
+	if (!is_alive) { return false }
+	if (team != .PLAYER) { return false }
+	
+	return true
 }
 
 find_closest_agent :: proc(_position: Vector2, _range: f32) -> ^Agent
