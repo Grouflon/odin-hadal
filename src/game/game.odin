@@ -86,6 +86,7 @@ game_initialize :: proc()
 
 	// Game
 	physics_manager_initialize(&physics_manager)
+	animation_manager_initialize(&animation_manager)
 	entity_manager_initialize(&entity_manager)
 
 	// Setup
@@ -114,7 +115,6 @@ game_initialize :: proc()
 	physics_manager_set_layer_response(&physics_manager, Layer.AllyBullet, Layer.EnemyAgent, .Overlap)
 
 	game_resources_load(&resources)
-	animation_manager_initialize(&animation_manager)
 	level_manager_initialize(&level_manager)
 	player_controller_initialize(&player_controller)
 	time = 0.0
@@ -144,10 +144,10 @@ game_shutdown :: proc()
 
 	player_controller_shutdown(&player_controller)
 	level_manager_shutdown(&level_manager)
-	animation_manager_shutdown(&animation_manager)
 	game_resources_unload(&resources)
 	entity_manager_clear_entities(&entity_manager)
 	entity_manager_shutdown(&entity_manager)
+	animation_manager_shutdown(&animation_manager)
 	physics_manager_shutdown(&physics_manager)
 
 	UnloadRenderTexture(game_render_target)
