@@ -39,7 +39,7 @@ goal_update :: proc(using _goal: ^Goal, dt: f32)
 
 	if (game().mouse.pressed[1] && mouse_hover)
 	{
-		switch_level_to(nextLevel)
+		request_level_change(nextLevel)
 	}
 }
 

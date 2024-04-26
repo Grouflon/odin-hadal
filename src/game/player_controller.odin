@@ -69,6 +69,20 @@ player_controller_update :: proc(using _controller: ^PlayerController, _dt: f32)
 	{
 		game().is_game_paused = !game().is_game_paused
 	}
+
+	if (rl.IsKeyPressed(rl.KeyboardKey.R))
+	{
+		game_request_reset()
+	}
+
+	if (rl.IsKeyPressed(rl.KeyboardKey.ONE))
+	{
+		request_level_change(0)
+	}
+	if (rl.IsKeyPressed(rl.KeyboardKey.TWO))
+	{
+		request_level_change(1)
+	}
 }
 
 player_controller_draw :: proc(using _controller: ^PlayerController)

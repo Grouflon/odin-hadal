@@ -33,6 +33,9 @@ Game :: struct
 	is_game_paused: bool,
 
 	player_controller: PlayerController,
+	player_agents: [dynamic]^Agent,
+
+	should_reset: bool,
 }
 g_game : Game
 
@@ -117,30 +120,16 @@ game_initialize :: proc()
 	game_resources_load(&resources)
 	level_manager_initialize(&level_manager)
 	player_controller_initialize(&player_controller)
-	time = 0.0
 
-	level_manager_start(&level_manager)
-	// switch_level_to(1)
-}
-
-db: = create_dialogue_box("yoyoyooy")
-
-game_reset :: proc()
-{
-	using g_game
-
-	player_controller_reset(&player_controller)
-	entity_manager_clear_entities(&entity_manager)
-	level_manager_clear(&level_manager)
-
-	level_manager_initialize(&level_manager)
-	level_manager_start(&level_manager)
+	game_start()
 }
 
 game_shutdown :: proc()
 {
 	using rl
 	using g_game
+
+	game_stop()
 
 	player_controller_shutdown(&player_controller)
 	level_manager_shutdown(&level_manager)
@@ -157,6 +146,44 @@ game_shutdown :: proc()
 	CloseWindow()
 }
 
+game_start :: proc()
+{
+	using g_game
+
+	time = 0.0
+
+	player_agents = make([dynamic]^Agent)
+	agent_count: i32 = game_settings.agent_number
+	for i: i32 = 0; i < agent_count; i += 1
+	{
+		agent: = create_agent({128, 128}, .PLAYER)
+		// agent.level_index = next_level_index
+		append(&player_agents, agent)
+	}
+
+	request_level_change(0)
+}
+
+game_stop :: proc()
+{
+	using g_game
+
+	player_controller_reset(&player_controller)
+	entity_manager_clear_entities(&entity_manager)
+	level_manager_clear(&level_manager)
+
+	delete(player_agents)
+}
+
+db: = create_dialogue_box("yoyoyooy")
+
+game_request_reset :: proc()
+{
+	using g_game
+
+	should_reset = true
+}
+
 game_update :: proc()
 {
 	using rl
@@ -165,24 +192,7 @@ game_update :: proc()
 	_dt: = rl.GetFrameTime()
 	time += _dt
 
-	if (level_manager.switch_level)
-	{
-		level_manager_start(&level_manager)
-	}
-
-	if (IsKeyPressed(KeyboardKey.R))
-	{
-		game_reset()
-	}
-
-	if (IsKeyPressed(KeyboardKey.ONE))
-	{
-		switch_level_to(0)
-	}
-	if (IsKeyPressed(KeyboardKey.TWO))
-	{
-		switch_level_to(1)
-	}
+	level_manager_update(&level_manager)
 
 	dialogue_box_update(db)
 
@@ -196,6 +206,12 @@ game_update :: proc()
 		animation_manager_update(&animation_manager, _dt)
 
 		physics_manager_update(&physics_manager)
+	}
+
+	if should_reset
+	{
+		game_stop()
+		game_start()
 	}
 }
 
