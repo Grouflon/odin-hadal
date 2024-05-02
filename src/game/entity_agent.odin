@@ -91,7 +91,6 @@ agent_reset :: proc(_agent: ^Agent)
 
 agent_shutdown :: proc(using _agent: ^Agent)
 {
-	free(weapon)
 	action_system_shutdown(&action_system)
 	destroy_collider(collider)
 	destroy_animation_player(animation_player)
@@ -118,10 +117,6 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 			_deceleration_multiplier = 0.1
 			break
 		}
-	}
-	if (is_alive)
-	{
-		weapon_update(weapon, _dt)
 	}
 	
 	// jump
@@ -182,8 +177,6 @@ agent_draw :: proc(using _agent: ^Agent)
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
 	})
 
-
-	weapon_draw(weapon)
 
 	// Draw back UI
 	ordered_draw(-1, _agent, proc(_payload: rawptr)

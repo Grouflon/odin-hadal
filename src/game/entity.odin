@@ -17,5 +17,6 @@ Entity :: struct
 		^Goal,
 		^Swarm,
 		^Ia,
+		^Weapon,
 	}
 }

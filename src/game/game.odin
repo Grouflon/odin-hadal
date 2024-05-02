@@ -104,6 +104,7 @@ game_initialize :: proc()
 	entity_manager_register_type(&entity_manager, Laser, laser_definition)
 	entity_manager_register_type(&entity_manager, Goal, goal_definition)
 	entity_manager_register_type(&entity_manager, Swarm, swarm_definition)
+	entity_manager_register_type(&entity_manager, Weapon, weapon_definition)
 
 	physics_manager_set_layer_response(&physics_manager, Layer.Agent, Layer.Agent, .Collide)
 	physics_manager_set_layer_response(&physics_manager, Layer.Agent, Layer.Wall, .Collide)

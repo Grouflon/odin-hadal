@@ -3,6 +3,8 @@ import rl "vendor:raylib"
 
 Weapon :: struct
 {
+	using entity: Entity,
+
 	is_preview_aim: bool,
 	aim_target: Vector2,
 	can_aim: bool,
@@ -17,13 +19,20 @@ Weapon :: struct
 	is_reloading: bool,
 	reload_cooldown: f32,
 	reload_timer: f32,
-	entity: ^Entity,
+	parent: ^Entity,
 }
 
-create_weapon :: proc(_entity: ^Entity, _aim_timer: f32, _reload_timer: f32) -> ^Weapon
+weapon_definition :: EntityDefinition(Weapon) {
+
+	update = weapon_update,
+	draw = weapon_draw,
+}
+
+create_weapon :: proc(_parent: ^Entity, _aim_timer: f32, _reload_timer: f32) -> ^Weapon
 {
 	using weapon: = new(Weapon)
-	entity = _entity
+	entity.type = weapon
+	parent = _parent
 	can_aim = true
 	aim_timer = _aim_timer
 	aim_cooldown = aim_timer
@@ -31,6 +40,7 @@ create_weapon :: proc(_entity: ^Entity, _aim_timer: f32, _reload_timer: f32) -> 
 	reload_timer = _reload_timer
 	reload_cooldown = reload_timer
 
+	register_entity(weapon)
 	return weapon
 }
 
@@ -42,14 +52,19 @@ weapon_update :: proc(using _weapon: ^Weapon, _dt: f32)
 		can_aim = true
 	}
 
+	if (is_preview_aim)
+	{
+		aim_target = game().mouse.world_position
+	}
+
 	if (is_aiming)
 	{
 		if (cooldown_timer(is_aiming, &aim_cooldown, aim_timer, _dt))
 		{
 			is_aiming = false
 			is_reloading = true
-			direction: = normalize(aim_target - entity.position)
-			create_bullet_fire(entity.position + direction * 10, direction * 50, entity, .AllyBullet)
+			direction: = normalize(aim_target - parent.position)
+			create_bullet_fire(weapon_get_start_position(_weapon), direction * 50, parent, .AllyBullet)
 		}
 	}
 }
@@ -60,14 +75,9 @@ weapon_draw :: proc(_weapon: ^Weapon)
 	{
 		using weapon: = cast(^Weapon)_payload
 
-		if (is_preview_aim)
+		if (is_preview_aim || is_aiming)
 		{
-			aim_target_temp: = game().mouse.world_position
-			weapon_draw_fire_angle(entity.position, aim_target_temp)
-		}
-		if (is_aiming)
-		{
-			weapon_draw_fire_angle(entity.position, aim_target)
+			weapon_draw_fire_angle(weapon_get_start_position(weapon), aim_target)
 		}
 	})
 }
@@ -109,4 +119,10 @@ weapon_stop :: proc(using _weapon: ^Weapon)
 {
 	is_preview_aim = false
 	is_aiming = false
+}
+
+weapon_get_start_position :: proc(using _weapon: ^Weapon) -> Vector2
+{
+	direction: = normalize(aim_target - parent.position)
+	return parent.position + direction * 10
 }
