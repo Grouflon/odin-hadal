@@ -126,7 +126,7 @@ selection_update :: proc(using _selection: ^Selection)
 	{
 		for agent in selected_agents
 		{
-			agent.is_preview_aim = false
+			agent_aim(agent, false)
 		}
 		copy_array(&selected_agents, hovered_agents[:])
 		clear(&hovered_agents)

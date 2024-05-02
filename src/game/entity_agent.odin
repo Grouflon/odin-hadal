@@ -28,23 +28,9 @@ Agent :: struct
 	jump_timer: f32,
 	jump_speed: f32,
 
-	is_preview_aim: bool,
-	aim_target: Vector2,
-	can_aim: bool,
-	is_aiming: bool,
-	aim_cooldown: f32,
-	aim_timer: f32,
-
-	is_firing: bool,
-	fire_cooldown: f32,
-	fire_timer: f32,
-
-	is_reloading: bool,
-	reload_cooldown: f32,
-	reload_timer: f32,
-	
 	animation_player: ^AnimationPlayer,
 	collider: ^Collider,
+	weapon: ^Weapon,
 
 	team: AgentTeam,
 
@@ -68,12 +54,7 @@ create_agent :: proc(_position : Vector2, _team: AgentTeam) -> ^Agent
 	health_max = 8
 	health = health_max
 
-	can_aim = true
-	aim_timer = 3
-	aim_cooldown = aim_timer
-
-	reload_timer = 3
-	reload_cooldown = reload_timer
+	weapon = create_weapon(_agent, 3, 3)
 
 	can_jump = true
 	is_jumping = false
@@ -110,6 +91,7 @@ agent_reset :: proc(_agent: ^Agent)
 
 agent_shutdown :: proc(using _agent: ^Agent)
 {
+	free(weapon)
 	action_system_shutdown(&action_system)
 	destroy_collider(collider)
 	destroy_animation_player(animation_player)
@@ -137,27 +119,11 @@ agent_update :: proc(using _agent: ^Agent, _dt: f32)
 			break
 		}
 	}
-
-	// aim
+	if (is_alive)
 	{
-		if (is_reloading && cooldown_timer(is_reloading, &reload_cooldown, reload_timer, _dt))
-		{
-			is_reloading = false
-			can_aim = true
-		}
-
-		if (is_alive && is_aiming)
-		{
-			if (cooldown_timer(is_aiming, &aim_cooldown, aim_timer, _dt))
-			{
-				is_aiming = false
-				is_reloading = true
-				dir: = normalize(aim_target - _agent.position)
-				create_bullet_fire(_agent.position + dir * 10, dir * 50, _agent, .AllyBullet)
-			}
-		}
+		weapon_update(weapon, _dt)
 	}
-
+	
 	// jump
 	{
 		if (!can_jump)
@@ -216,22 +182,15 @@ agent_draw :: proc(using _agent: ^Agent)
 		animation_player_draw(animation_player, Vector2{f32(x), f32(y)} - Vector2{ 8, 16 })
 	})
 
+
+	weapon_draw(weapon)
+
 	// Draw back UI
 	ordered_draw(-1, _agent, proc(_payload: rawptr)
 	{
 		using agent: = cast(^Agent)_payload
 
 		if (team != .PLAYER) { return }
-
-		if (is_preview_aim)
-		{
-			aim_target_temp: = game().mouse.world_position
-			agent_draw_fire_angle(agent.position, aim_target_temp)
-		}
-		if (is_aiming)
-		{
-			agent_draw_fire_angle(agent.position, aim_target)
-		}
 
 		path_color: = Color{255, 255, 255, 100}
 		pos: = agent.position
@@ -258,17 +217,6 @@ agent_draw :: proc(using _agent: ^Agent)
 }
 
 
-agent_draw_fire_angle :: proc(start: Vector2, target: Vector2)
-{
-	angle: f32 = 10 * rl.DEG2RAD
-	aim_direction: = target - start
-	babord: = rl.Vector2Rotate(aim_direction, -angle/2)
-	tribord: = rl.Vector2Rotate(aim_direction, angle/2)
-
-	rl.DrawLineV(start, start + babord * 500, rl.PINK)
-	rl.DrawLineV(start, start + tribord * 500, rl.PINK)
-}
-
 agent_hit_damage :: proc(_agent: ^Agent, _damage: i32)
 {
 	_agent.health -= _damage
@@ -285,20 +233,18 @@ agent_kill :: proc(using _agent: ^Agent)
 	action_system_clear_actions(&action_system)
 
 	is_alive = false
-	is_preview_aim = false
-	is_aiming = false
+	weapon_stop(weapon)
 }
 
 
-agent_aim ::proc(using _agent: ^Agent, _target: Vector2)
+agent_aim :: proc(using _agent: ^Agent, _aim: bool)
 {
-	if (can_aim)
-	{
-		can_aim = false
-		is_aiming = true
-		is_preview_aim = false
-		aim_target = _target
-	} 
+	weapon_aiming(weapon, _aim)
+}
+
+agent_fire :: proc(using _agent: ^Agent, _target: Vector2)
+{
+	weapon_fire(weapon, _target)
 }
 
 agent_aabb :: proc(using _agent: ^Agent) -> AABB

@@ -40,7 +40,7 @@ player_controller_update :: proc(using _controller: ^PlayerController, _dt: f32)
 			}
 			else if (rl.IsKeyDown(rl.KeyboardKey.A))
 			{
-				agent_aim(agent, mouse().world_position)
+				agent_fire(agent, mouse().world_position)
 			}
 			else
 			{
@@ -52,16 +52,13 @@ player_controller_update :: proc(using _controller: ^PlayerController, _dt: f32)
 	{
 		for agent in selection.selected_agents
 		{
-			if (agent.can_aim)
-			{
-				agent.is_preview_aim = true
-			}
+			agent_aim(agent, true)
 		}
 	} else if (rl.IsKeyReleased(rl.KeyboardKey.A))
 	{
 		for agent in selection.selected_agents
 		{
-			agent.is_preview_aim = false
+			agent_aim(agent, false)
 		}
 	}
 
