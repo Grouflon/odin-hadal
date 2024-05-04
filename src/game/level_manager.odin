@@ -29,7 +29,11 @@ level_manager_initialize:: proc(_level_manager: ^LevelManager)
 
 level_manager_go_to_level :: proc(_level_manager: ^LevelManager, _level_index: i32)
 {
-	if (_level_manager.current_level == _level_index) { return }
+	if (len(_level_manager.levels) == 0)
+	{
+		level_manager_initialize(_level_manager)
+	}
+	
 	if (_level_index < 0 || int(_level_index) >= len(_level_manager.levels)) { return }
 
 	// stop
@@ -52,12 +56,13 @@ level_manager_go_to_level :: proc(_level_manager: ^LevelManager, _level_index: i
 	}
 
 	//start
+	next_level: = _level_manager.levels[_level_index]
+	game().game_camera.target = next_level.position
+
 	if (_level_manager.current_level >= 0)
 	{
 		previews_level: = _level_manager.levels[_level_manager.current_level]
-		next_level: = _level_manager.levels[_level_index]
 		dir: = normalize(next_level.position - previews_level.position)
-		game().game_camera.target = next_level.position
 
 		offset: f32 = 20
 		y: = next_level.position.y + offset * dir.y + next_level.size.y * ((dir.y*dir.y-dir.y)/2)

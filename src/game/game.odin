@@ -168,6 +168,7 @@ game_start :: proc()
 game_stop :: proc()
 {
 	using g_game
+	should_reset = false
 
 	player_controller_reset(&player_controller)
 	entity_manager_clear_entities(&entity_manager)
@@ -181,7 +182,6 @@ db: = create_dialogue_box("yoyoyooy")
 game_request_reset :: proc()
 {
 	using g_game
-
 	should_reset = true
 }
 
