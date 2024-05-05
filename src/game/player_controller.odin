@@ -2,18 +2,31 @@ package game
 
 import rl "vendor:raylib"
 
+PlayerAgentInfo :: struct
+{
+	agent: ^Agent,
+	name: string,
+}
+
 PlayerController :: struct
 {
-	selection : ^Selection,
+	selection: ^Selection,
+	player_agents: [dynamic]PlayerAgentInfo,
 }
 
 player_controller_initialize :: proc(using _controller: ^PlayerController)
 {
 	selection = make_selection()
+	player_agents = make([dynamic]PlayerAgentInfo)
 }
 
 player_controller_shutdown :: proc(using _controller: ^PlayerController)
 {
+	for player_agent in player_agents
+	{
+		delete(player_agent.name)
+	}
+	delete(player_agents)
 	delete_selection(selection)
 }
 

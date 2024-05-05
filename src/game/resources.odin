@@ -8,6 +8,7 @@ GameResources :: struct
 	agent_animations: ^AnimationSet,
 	cursor_texture: rl.Texture2D,
 	swarm_texture: rl.Texture2D,
+	text_font: rl.Font,
 }
 
 game_resources_load :: proc(using _resources: ^GameResources)
@@ -18,10 +19,14 @@ game_resources_load :: proc(using _resources: ^GameResources)
 
 	cursor_texture = rl.LoadTexture("data/sprites/cursor.png")
 	swarm_texture = rl.LoadTexture("data/sprites/swarm.png")
+
+	text_font = rl.LoadFont("data/fonts/pixelify.fnt")
 }
 
 game_resources_unload :: proc(using _resources: ^GameResources)
 {
+	rl.UnloadFont(text_font)
+
 	rl.UnloadTexture(swarm_texture)
 	rl.UnloadTexture(cursor_texture)
 

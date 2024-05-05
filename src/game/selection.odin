@@ -52,6 +52,16 @@ selection_unselect_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
 	}
 }
 
+selection_is_agent_selected :: proc(using _selection: ^Selection, _agent: ^Agent) -> bool
+{
+	return find(&selected_agents, _agent) >= 0
+}
+
+selection_is_agent_hovered :: proc(using _selection: ^Selection, _agent: ^Agent) -> bool
+{
+	return find(&hovered_agents, _agent) >= 0
+}
+
 selection_update :: proc(using _selection: ^Selection)
 {
 	// Clear non selectable agents from selection

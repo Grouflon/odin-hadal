@@ -3,6 +3,7 @@ package game
 import rl "vendor:raylib"
 import "core:fmt"
 import "core:log"
+import "core:strings"
 import "hadal:ldtk"
 
 
@@ -33,7 +34,6 @@ Game :: struct
 	is_game_paused: bool,
 
 	player_controller: PlayerController,
-	player_agents: [dynamic]^Agent,
 
 	should_reset: bool,
 }
@@ -153,13 +153,14 @@ game_start :: proc()
 
 	time = 0.0
 
-	player_agents = make([dynamic]^Agent)
 	agent_count: i32 = game_settings.agent_number
 	for i: i32 = 0; i < agent_count; i += 1
 	{
-		agent: = create_agent({128, 128}, .PLAYER)
-		// agent.level_index = next_level_index
-		append(&player_agents, agent)
+		player_agent: PlayerAgentInfo
+		player_agent.agent = create_agent({128, 128}, .PLAYER)
+		player_agent.name = fmt.aprintf("Agent %d", i + 1)
+
+		append(&player_controller.player_agents, player_agent)
 	}
 
 	request_level_change(0)
@@ -173,8 +174,6 @@ game_stop :: proc()
 	player_controller_reset(&player_controller)
 	entity_manager_clear_entities(&entity_manager)
 	level_manager_clear(&level_manager)
-
-	delete(player_agents)
 }
 
 db: = create_dialogue_box("yoyoyooy")
@@ -216,6 +215,43 @@ game_update :: proc()
 	}
 }
 
+draw_agent_hud :: proc( _position: Vector2, _agent_info: PlayerAgentInfo, _agent_index: i32)
+{
+	// Avatar
+	avatar_size: = Vector2{ 10, 10 }
+	margin: f32 = 1.0 
+	avatar_box_size: = avatar_size + {margin, margin} * 2.0
+	rl.DrawRectangleV(_position, avatar_box_size, rl.WHITE)
+	rl.DrawRectangleLines(
+		i32(_position.x),
+		i32(_position.y), 
+		i32(avatar_size.x + margin * 2.0),
+		i32(avatar_size.y + margin * 2.0),
+		rl.BLACK
+	)
+	rl.DrawTextureRec(
+		resources().agent_animations.texture,
+		{
+			36,0,
+			avatar_size.x, avatar_size.y
+		},
+		_position + { margin, margin },
+		rl.WHITE
+	)
+
+	// Name
+	name_position: = Vector2{ _position.x + avatar_box_size.x + 2.0, _position.y - 1.0 }
+	name: = strings.clone_to_cstring(_agent_info.name, context.temp_allocator)
+	rl.DrawText(name, i32(name_position.x), i32(name_position.y), 10, rl.WHITE)
+
+	// Bars
+	bars_position: = Vector2{ _position.x, _position.y + avatar_box_size.y + 2.0}
+	bar_height: f32 = 3.0
+	health_ratio: f32 = f32(_agent_info.agent.health) / f32(_agent_info.agent.health_max)
+	rl.DrawRectangleV(bars_position, { avatar_box_size.x, bar_height }, rl.BLACK)
+	rl.DrawRectangleV(bars_position, { avatar_box_size.x * health_ratio, bar_height }, rl.GREEN)
+}
+
 game_draw :: proc()
 {
 	using rl
@@ -240,6 +276,16 @@ game_draw :: proc()
 		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
 
 		player_controller_draw(&player_controller)
+
+		hud_column_count: i32 = i32(len(player_controller.player_agents))
+		hud_column_size: = i32(game_width) / hud_column_count
+		for i: i32 = 0; i < hud_column_count; i += 1
+		{
+			draw_agent_hud({f32(5 + hud_column_size * i), f32(game_height - 20)}, player_controller.player_agents[i], 0)
+		}
+
+		// DrawText("Hello World!", 0, 0, 1, rl.BLUE);
+		DrawTextEx(resources.text_font, "AGENT 1", {0,0}, 13, 0.0, rl.BLUE);
 	}
 
 	// Scaled up final rendering
@@ -255,6 +301,7 @@ game_draw :: proc()
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
 		DrawFPS(GetScreenWidth() - 95, 10)
+
 		// dialogue_box_draw(db)
 	}
 
@@ -272,7 +319,7 @@ game_draw :: proc()
 	{
 		BeginDrawing()
 		defer EndDrawing()
-		
+
 		source_rect := Rectangle{ 0.0, 0.0, f32(game_render_target_ui.texture.width), -f32(game_render_target_ui.texture.height) }
 		dest_rect := Rectangle{ 0.0, 0.0, f32(window_width), f32(window_height) }
 		DrawTexturePro(game_render_target_ui.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)

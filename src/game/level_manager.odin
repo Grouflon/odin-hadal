@@ -66,12 +66,12 @@ level_manager_go_to_level :: proc(_level_manager: ^LevelManager, _level_index: i
 
 		offset: f32 = 20
 		y: = next_level.position.y + offset * dir.y + next_level.size.y * ((dir.y*dir.y-dir.y)/2)
-		for agent in game().player_agents
+		for agent_info in game().player_controller.player_agents
 		{
-			if (agent.is_alive)
+			if (agent_info.agent.is_alive)
 			{
-				agent.level_index = _level_index
-				agent.position = Vector2{next_level.position.x + next_level.size.x / 2, y}
+				agent_info.agent.level_index = _level_index
+				agent_info.agent.position = Vector2{next_level.position.x + next_level.size.x / 2, y}
 			}
 		}
 	}
