@@ -35,7 +35,6 @@ mouse_update :: proc(using _mouse:^Mouse, _camera:rl.Camera2D, _pixel_ratio:i32)
 
 mouse_draw :: proc(using _mouse:^Mouse)
 {
-	
 	_x, _y: = i32(math.floor(world_position.x)), i32(math.floor(world_position.y))
 	rl.DrawTexture(resources().cursor_texture, _x, _y, rl.WHITE)
 	// rl.DrawPixel(_x, _y, rl.GREEN)

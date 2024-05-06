@@ -32,23 +32,24 @@ delete_selection :: proc(_selection: ^Selection)
 
 selection_clear :: proc(using _selection: ^Selection)
 {
-	clear(&hovered_agents)
 	clear(&selected_agents)
 	is_selecting = false
 }
 
-selection_unselect_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
+selection_add_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
 {
-	index: = find(&hovered_agents, _agent)
+	if find(&selected_agents, _agent) >= 0 { return }
+	if !agent_is_selectable(_agent) { return }
+
+	append(&selected_agents, _agent)
+}
+
+selection_remove_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
+{
+	index: = find(&selected_agents, _agent)
 	if (index >= 0)
 	{
-		unordered_remove(&hovered_agents, index)
-	}
-	
-	index_select: = find(&selected_agents, _agent)
-	if (index_select >= 0)
-	{
-		unordered_remove(&selected_agents, index_select)
+		unordered_remove(&selected_agents, index)
 	}
 }
 

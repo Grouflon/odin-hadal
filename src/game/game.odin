@@ -120,7 +120,6 @@ game_initialize :: proc()
 
 	game_resources_load(&resources)
 	level_manager_initialize(&level_manager)
-	player_controller_initialize(&player_controller)
 
 	game_start()
 }
@@ -132,7 +131,6 @@ game_shutdown :: proc()
 
 	game_stop()
 
-	player_controller_shutdown(&player_controller)
 	level_manager_shutdown(&level_manager)
 	game_resources_unload(&resources)
 	entity_manager_clear_entities(&entity_manager)
@@ -153,6 +151,8 @@ game_start :: proc()
 
 	time = 0.0
 
+	player_controller_initialize(&player_controller)
+
 	agent_count: i32 = game_settings.agent_number
 	for i: i32 = 0; i < agent_count; i += 1
 	{
@@ -171,7 +171,7 @@ game_stop :: proc()
 	using g_game
 	should_reset = false
 
-	player_controller_reset(&player_controller)
+	player_controller_shutdown(&player_controller)
 	entity_manager_clear_entities(&entity_manager)
 	level_manager_clear(&level_manager)
 }
@@ -207,16 +207,12 @@ game_update :: proc()
 
 		physics_manager_update(&physics_manager)
 	}
-
-	if should_reset
-	{
-		game_stop()
-		game_start()
-	}
 }
 
 draw_agent_hud :: proc( _position: Vector2, _agent_info: PlayerAgentInfo, _agent_index: i32)
 {
+	is_selected: = selection_is_agent_selected(game().player_controller.selection, _agent_info.agent)
+
 	// Avatar
 	avatar_size: = Vector2{ 10, 10 }
 	margin: f32 = 1.0 
@@ -227,7 +223,7 @@ draw_agent_hud :: proc( _position: Vector2, _agent_info: PlayerAgentInfo, _agent
 		i32(_position.y), 
 		i32(avatar_size.x + margin * 2.0),
 		i32(avatar_size.y + margin * 2.0),
-		rl.BLACK
+		is_selected ? rl.YELLOW : rl.BLACK
 	)
 	rl.DrawTextureRec(
 		resources().agent_animations.texture,
@@ -242,7 +238,7 @@ draw_agent_hud :: proc( _position: Vector2, _agent_info: PlayerAgentInfo, _agent
 	// Name
 	name_position: = Vector2{ _position.x + avatar_box_size.x + 2.0, _position.y}
 	name: = strings.clone_to_cstring(_agent_info.name, context.temp_allocator)
-	rl.DrawTextEx(resources().text_font, name, name_position, 6, 0.0, rl.WHITE)
+	rl.DrawTextEx(resources().text_font, name, name_position, 6, 0.0, is_selected ? rl.YELLOW : rl.WHITE)
 
 	// Bars
 	bars_position: = Vector2{ _position.x, _position.y + avatar_box_size.y + 2.0}
@@ -261,31 +257,38 @@ game_draw :: proc()
 	{
 		BeginTextureMode(game_render_target)
 		defer EndTextureMode()
-
-		BeginMode2D(game_camera)
-		defer EndMode2D()
-
 		ClearBackground(GRAY)
 
-		entity_manager_draw(&entity_manager)
-
-		renderer_ordered_draw(&renderer)
-
-		// physics_manager_draw_layer(&physics_manager, .Agent, RED)
-		// physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
-		// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
-
-		player_controller_draw(&player_controller)
-
-		hud_column_count: i32 = i32(len(player_controller.player_agents))
-		hud_column_size: = i32(game_width) / hud_column_count
-		for i: i32 = 0; i < hud_column_count; i += 1
 		{
-			draw_agent_hud({f32(5 + hud_column_size * i), f32(game_height - 20)}, player_controller.player_agents[i], 0)
+			BeginMode2D(game_camera)
+			defer EndMode2D()
+
+			entity_manager_draw(&entity_manager)
+
+			renderer_ordered_draw(&renderer)
+
+			// physics_manager_draw_layer(&physics_manager, .Agent, RED)
+			// physics_manager_draw_layer(&physics_manager, .Wall, BLUE)
+			// physics_manager_draw_layer(&physics_manager, .Swarm, YELLOW)
+
+			player_controller_draw(&player_controller)
 		}
 
-		// DrawText("Hello World!", 0, 0, 1, rl.BLUE);
-		// DrawTextEx(resources.text_font, "AGENT 1", {0,0}, 6, 0.0, rl.BLUE);
+		{
+			ui_camera: = rl.Camera2D{ zoom = 1.0 }
+			BeginMode2D(ui_camera)
+			defer EndMode2D()
+
+			hud_column_count: i32 = i32(len(player_controller.player_agents))
+			hud_column_size: = i32(game_width) / hud_column_count
+			for i: i32 = 0; i < hud_column_count; i += 1
+			{
+				draw_agent_hud({f32(5 + hud_column_size * i), f32(game_height - 20)}, player_controller.player_agents[i], 0)
+			}
+
+			// DrawText("Hello World!", 0, 0, 1, rl.BLUE);
+			// DrawTextEx(resources.text_font, "AGENT 1", {0,0}, 6, 0.0, rl.BLUE);
+		}
 	}
 
 	// Scaled up final rendering
@@ -335,5 +338,11 @@ game_loop :: proc()
 	{
 		game_update()
 		game_draw()
+
+		if should_reset
+		{
+			game_stop()
+			game_start()
+		}
 	}
 }
