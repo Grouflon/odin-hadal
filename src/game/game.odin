@@ -76,6 +76,7 @@ game_initialize :: proc()
 
 	InitWindow(window_width, window_height, "Hadal")
 	SetTargetFPS(60)
+	SetExitKey(.KEY_NULL)
 
 	HideCursor();
 	renderer_init(&renderer)

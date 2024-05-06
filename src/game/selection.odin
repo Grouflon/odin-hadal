@@ -36,6 +36,11 @@ selection_clear :: proc(using _selection: ^Selection)
 	is_selecting = false
 }
 
+selection_stop_selecting :: proc(using _selection: ^Selection)
+{
+	is_selecting = false
+}
+
 selection_add_agent :: proc(using _selection: ^Selection, _agent: ^Agent)
 {
 	if find(&selected_agents, _agent) >= 0 { return }
@@ -63,7 +68,7 @@ selection_is_agent_hovered :: proc(using _selection: ^Selection, _agent: ^Agent)
 	return find(&hovered_agents, _agent) >= 0
 }
 
-selection_update :: proc(using _selection: ^Selection)
+selection_update :: proc(using _selection: ^Selection, _mouse_world_position: Vector2, _pressed: bool, _released: bool)
 {
 	// Clear non selectable agents from selection
 	for i: = len(selected_agents) - 1; i >= 0; i -= 1
@@ -74,16 +79,15 @@ selection_update :: proc(using _selection: ^Selection)
 		}
 	}
 
-	mouse_position : Vector2 = mouse().world_position;
 	aabb = {
-		mouse_position,
-		mouse_position,
+		_mouse_world_position,
+		_mouse_world_position,
 	}
 
-	if (mouse().pressed[0])
+	if _pressed
 	{
 		is_selecting = true
-		start = mouse_position
+		start = _mouse_world_position
 	}
 
 	if (is_selecting)
@@ -114,17 +118,20 @@ selection_update :: proc(using _selection: ^Selection)
 		}
 	}
 
-	sort(&_selectable_agents, proc(_a: ^Agent, _b: ^Agent) -> int
+	mouse_position: = _mouse_world_position
+	sort(&_selectable_agents, proc(_a: ^Agent, _b: ^Agent, _userdata: rawptr) -> int
 	{
-		_mouse_position: = mouse().world_position
+		_mouse_position: Vector2 = (cast(^Vector2)_userdata)^
 		_a_dist: f32 = distance_squared(_mouse_position, _a.position)
 		_b_dist: f32 = distance_squared(_mouse_position, _b.position)
 		return compare(_a_dist, _b_dist)
-	})
+	},
+	&mouse_position
+	)
 
 	if len(_selectable_agents) > 0
 	{
-		if is_selecting && distance_squared(mouse_position, start) >= 1
+		if is_selecting && distance_squared(_mouse_world_position, start) >= 1
 		{
 			copy_array(&hovered_agents, _selectable_agents[:])
 		}
@@ -133,7 +140,7 @@ selection_update :: proc(using _selection: ^Selection)
 			append(&hovered_agents, _selectable_agents[0])
 		}
 	}
-	if mouse().released[0]
+	if is_selecting && _released
 	{
 		for agent in selected_agents
 		{

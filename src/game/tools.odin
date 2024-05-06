@@ -36,7 +36,9 @@ swap :: proc(_array: ^$T/[dynamic]$E, _index_a: int, _index_b: int)
 	_array[_index_b] = temp
 }
 
-sort :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E) -> int)
+sort :: proc { sort_simple, sort_with_userdata }
+
+sort_simple :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E) -> int)
 {
 	array_length := len(_array)
 	for i := 1; i < array_length; i += 1
@@ -44,6 +46,25 @@ sort :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E) -> int)
 		for j := i; i >=1; i -= 1
 		{
 			if (_sort_function(_array[j], _array[j-1]) < 0)
+			{
+				swap(_array, j, j-1)
+			}
+			else
+			{
+				break
+			}
+		}
+	}
+}
+
+sort_with_userdata :: proc(_array: ^$T/[dynamic]$E, _sort_function: proc(_a: E, _b: E, _userdata: rawptr) -> int, _userdata: rawptr)
+{
+	array_length := len(_array)
+	for i := 1; i < array_length; i += 1
+	{
+		for j := i; i >=1; i -= 1
+		{
+			if (_sort_function(_array[j], _array[j-1], _userdata) < 0)
 			{
 				swap(_array, j, j-1)
 			}
