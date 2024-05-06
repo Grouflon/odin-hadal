@@ -20,7 +20,7 @@ game_resources_load :: proc(using _resources: ^GameResources)
 	cursor_texture = rl.LoadTexture("data/sprites/cursor.png")
 	swarm_texture = rl.LoadTexture("data/sprites/swarm.png")
 
-	text_font = rl.LoadFont("data/fonts/pixelify.fnt")
+	text_font = rl.LoadFont("data/fonts/TeenyTinyPixls.fnt")
 }
 
 game_resources_unload :: proc(using _resources: ^GameResources)

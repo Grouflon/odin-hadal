@@ -37,6 +37,8 @@ player_controller_reset :: proc(using _controller: ^PlayerController)
 
 player_controller_update :: proc(using _controller: ^PlayerController, _dt: f32)
 {
+
+	
 	selection_update(selection)
 	if (mouse().pressed[1])
 	{

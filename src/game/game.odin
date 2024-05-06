@@ -158,7 +158,7 @@ game_start :: proc()
 	{
 		player_agent: PlayerAgentInfo
 		player_agent.agent = create_agent({128, 128}, .PLAYER)
-		player_agent.name = fmt.aprintf("Agent %d", i + 1)
+		player_agent.name = fmt.aprintf("AGENT %d", i + 1)
 
 		append(&player_controller.player_agents, player_agent)
 	}
@@ -240,9 +240,9 @@ draw_agent_hud :: proc( _position: Vector2, _agent_info: PlayerAgentInfo, _agent
 	)
 
 	// Name
-	name_position: = Vector2{ _position.x + avatar_box_size.x + 2.0, _position.y - 1.0 }
+	name_position: = Vector2{ _position.x + avatar_box_size.x + 2.0, _position.y}
 	name: = strings.clone_to_cstring(_agent_info.name, context.temp_allocator)
-	rl.DrawText(name, i32(name_position.x), i32(name_position.y), 10, rl.WHITE)
+	rl.DrawTextEx(resources().text_font, name, name_position, 6, 0.0, rl.WHITE)
 
 	// Bars
 	bars_position: = Vector2{ _position.x, _position.y + avatar_box_size.y + 2.0}
@@ -285,7 +285,7 @@ game_draw :: proc()
 		}
 
 		// DrawText("Hello World!", 0, 0, 1, rl.BLUE);
-		DrawTextEx(resources.text_font, "AGENT 1", {0,0}, 13, 0.0, rl.BLUE);
+		// DrawTextEx(resources.text_font, "AGENT 1", {0,0}, 6, 0.0, rl.BLUE);
 	}
 
 	// Scaled up final rendering
