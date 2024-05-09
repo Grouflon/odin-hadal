@@ -36,6 +36,11 @@ Game :: struct
 	player_controller: PlayerController,
 
 	should_reset: bool,
+
+	pause_button: ^Button,
+	dialogue_button: ^Button,
+	is_show_dialogue: bool,
+	can_pause: bool,
 }
 g_game : Game
 
@@ -122,6 +127,11 @@ game_initialize :: proc()
 	game_resources_load(&resources)
 	level_manager_initialize(&level_manager)
 
+	// ui
+	pause_button = create_button("PAUSE", Vector2{100, 10}, Vector2{50,20}, game_pause)
+	dialogue_button = create_button("?", Vector2{150, 10}, Vector2{50,20}, game_dialogue)
+	can_pause = true
+
 	game_start()
 }
 
@@ -177,12 +187,27 @@ game_stop :: proc()
 	level_manager_clear(&level_manager)
 }
 
-db: = create_dialogue_box("yoyoyooy")
-
 game_request_reset :: proc()
 {
 	using g_game
 	should_reset = true
+}
+
+game_dialogue :: proc()
+{
+	using g_game
+	is_game_paused = true
+	can_pause = false
+	is_show_dialogue = !is_show_dialogue
+}
+
+game_pause :: proc()
+{
+	using g_game
+	if (can_pause)
+	{
+		is_game_paused = !is_game_paused
+	}
 }
 
 game_update :: proc()
@@ -195,9 +220,15 @@ game_update :: proc()
 
 	level_manager_update(&level_manager)
 
-	dialogue_box_update(db)
-
 	mouse_update(&mouse, game_camera, pixel_ratio)
+
+	button_update(pause_button)
+	button_update(dialogue_button)
+
+	if (is_show_dialogue && level_manager.levels[level_manager.current_level].dialogue != nil)
+	{
+		dialogue_box_update(level_manager.levels[level_manager.current_level].dialogue)
+	}
 
 	player_controller_update(&player_controller, _dt)
 
@@ -306,7 +337,13 @@ game_draw :: proc()
 		DrawTexturePro(game_render_target.texture, source_rect, dest_rect, {0.0, 0.0}, 0.0, WHITE)
 		DrawFPS(GetScreenWidth() - 95, 10)
 
-		// dialogue_box_draw(db)
+		button_draw(pause_button)
+		button_draw(dialogue_button)
+
+		if (is_show_dialogue && level_manager.levels[level_manager.current_level].dialogue != nil)
+		{
+			dialogue_box_draw(level_manager.levels[level_manager.current_level].dialogue)
+		}
 	}
 
 	{

@@ -11,7 +11,7 @@
 	"iid": "9d7e74b0-d7b0-11ee-907a-5f401f10230b",
 	"jsonVersion": "1.5.3",
 	"appBuildId": 473703,
-	"nextUid": 23,
+	"nextUid": 24,
 	"identifierStyle": "Capitalize",
 	"toc": [],
 	"worldLayout": "GridVania",
@@ -360,7 +360,45 @@
 				}
 			]
 		}
-	], "tilesets": [], "enums": [], "externalEnums": [], "levelFields": [] },
+	], "tilesets": [], "enums": [], "externalEnums": [], "levelFields": [
+		{
+			"identifier": "dialogue",
+			"doc": null,
+			"__type": "String",
+			"uid": 23,
+			"type": "F_Text",
+			"isArray": false,
+			"canBeNull": true,
+			"arrayMinLength": null,
+			"arrayMaxLength": null,
+			"editorDisplayMode": "Hidden",
+			"editorDisplayScale": 1,
+			"editorDisplayPos": "Above",
+			"editorLinkStyle": "StraightArrow",
+			"editorDisplayColor": null,
+			"editorAlwaysShow": false,
+			"editorShowInWorld": true,
+			"editorCutLongValues": true,
+			"editorTextSuffix": null,
+			"editorTextPrefix": null,
+			"useForSmartColor": false,
+			"exportToToc": false,
+			"searchable": false,
+			"min": null,
+			"max": null,
+			"regex": null,
+			"acceptFileTypes": null,
+			"defaultOverride": null,
+			"textLanguageMode": "LangJson",
+			"symmetricalRef": false,
+			"autoChainRef": true,
+			"allowOutOfLevelRef": true,
+			"allowedRefs": "OnlySame",
+			"allowedRefsEntityUid": null,
+			"allowedRefTags": [],
+			"tilesetUid": null
+		}
+	] },
 	"levels": [
 		{
 			"identifier": "Level_0",
@@ -381,7 +419,12 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [],
+			"fieldInstances": [{ "__identifier": "dialogue", "__type": "String", "__value": "[{\n  \"message\": \"Bonjours, a tous\",\n  \"choices\": [{\"message\":\"a\", \"action\": 0}, {\"message\":\"b\", \"action\": 1, \"target\": 1}]\n},{\n  \"message\": \"Mourez vermine !\",\n  \"choices\": []\n}]", "__tile": null, "defUid": 23, "realEditorValues": [{
+				"id": "V_String",
+				"params": [
+					"[{\\n  \"message\": \"Bonjours, a tous\",\\n  \"choices\": [{\"message\":\"a\", \"action\": 0}, {\"message\":\"b\", \"action\": 1, \"target\": 1}]\\n},{\\n  \"message\": \"Mourez vermine !\",\\n  \"choices\": []\\n}]"
+				]
+			}] }],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1311,7 +1354,7 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [],
+			"fieldInstances": [{ "__identifier": "dialogue", "__type": "String", "__value": null, "__tile": null, "defUid": 23, "realEditorValues": [] }],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",
@@ -1489,7 +1532,7 @@
 			"__smartColor": "#ADADB5",
 			"__bgPos": null,
 			"externalRelPath": null,
-			"fieldInstances": [],
+			"fieldInstances": [{ "__identifier": "dialogue", "__type": "String", "__value": null, "__tile": null, "defUid": 23, "realEditorValues": [] }],
 			"layerInstances": [
 				{
 					"__identifier": "Entities",

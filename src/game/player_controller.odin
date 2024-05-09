@@ -173,7 +173,7 @@ player_controller_update :: proc(using _controller: ^PlayerController, _dt: f32)
 
 	if (rl.IsKeyPressed(rl.KeyboardKey.SPACE))
 	{
-		game().is_game_paused = !game().is_game_paused
+		game_pause()
 	}
 
 	if (rl.IsKeyPressed(rl.KeyboardKey.R))

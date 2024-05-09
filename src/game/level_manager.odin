@@ -12,13 +12,14 @@ LevelManager :: struct
 LevelInfo :: struct
 {
 	position: Vector2,
-	size: Vector2
+	size: Vector2,
+	dialogue: ^DialogueBox,
 }
 
 level_manager_initialize:: proc(_level_manager: ^LevelManager)
 {
 	levels_data: = ldtk.load_level("data/levels/map_ldtk.json")
-	defer ldtk.free_level(levels_data)
+	defer ldtk.free_data(levels_data)
 	_level_manager.current_level = -1
 	for level, index in levels_data.levels
 	{
@@ -81,12 +82,17 @@ level_manager_go_to_level :: proc(_level_manager: ^LevelManager, _level_index: i
 
 level_manager_clear:: proc(_level_manager: ^LevelManager)
 {
+	level_manager_shutdown(_level_manager)
 	clear(&_level_manager.levels)
 }
 
 
 level_manager_shutdown :: proc(_level_manager: ^LevelManager)
 {
+	for level in _level_manager.levels
+	{
+		dialogue_box_shutdown(level.dialogue)
+	}
 	delete(_level_manager.levels)
 }
 
@@ -95,6 +101,19 @@ load_level :: proc(level: ^ldtk.LdtkLevel, index: i32) -> LevelInfo
 	level_info: LevelInfo
 	level_info.position = level.position
 	level_info.size = level.size
+	for customVariable in level.customVariables
+	{
+		if (customVariable == "dialogue")
+		{
+			custom_variable: ldtk.LdtkVariable = level.customVariables[customVariable]
+			val: = custom_variable.value
+			width: f32 = 200
+			height: f32 = 200
+			size: = Vector2{200,200}
+			position: = Vector2{width - size.x / 2, height - size.y / 2}
+			level_info.dialogue = create_dialogue_box(val.(string), position, size)
+		}
+	}
 
 	for entity in level.entities
 	{

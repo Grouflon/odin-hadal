@@ -17,7 +17,8 @@ LdtkLevel :: struct
 	identifier: string,
 	position:[2]f32,
 	size:[2]f32,
-	entities: [dynamic]^LdtkEntity
+	entities: [dynamic]^LdtkEntity,
+	customVariables: map[string]LdtkVariable,
 }
 
 LdtkEntity :: struct
@@ -30,9 +31,11 @@ LdtkEntity :: struct
 	customVariables: map[string]LdtkVariable,
 }
 
+LdtkUnion :: union{i32, f32, string, bool}
+
 LdtkVariable :: struct
 {
-	value: union{i32, f32, string, bool}
+	value: LdtkUnion
 }
 
 
@@ -59,6 +62,17 @@ load_level :: proc(path:string) -> ^LdtkData
 		_worldH: = level["pxHei"].(json.Float)
 		ldtk_level.position = {f32(_worldX), f32(_worldY)}
 		ldtk_level.size = {f32(_worldW), f32(_worldH)}
+
+		fieldInstances: = level["fieldInstances"].(json.Array)
+
+		for fieldInstance in fieldInstances
+		{
+			notFound, name, variable: = parse_custom_variable(fieldInstance.(json.Object))
+			if (!notFound)
+			{
+				ldtk_level.customVariables[name] = variable
+			}
+		}
 
 		for layerInstance in layerInstances
 		{
@@ -101,10 +115,17 @@ parse_entity :: proc(_entityInstanceObj: json.Object) -> ^LdtkEntity
 parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, identifier: string, ldtkVariable: LdtkVariable)
 {
 	_ldtkVariable: LdtkVariable
-	_identifier: = strings.clone(_fieldInstance["__identifier"].(json.String))
+	_identifier: = _fieldInstance["__identifier"].(json.String)
 	_type: = _fieldInstance["__type"].(json.String)
 
 	_value: = _fieldInstance["__value"]
+
+	#partial switch _ in _value
+	{
+		case json.Null:
+			return true, _identifier, _ldtkVariable
+	}
+
 	switch _type
 	{
 		case "Int":
@@ -133,19 +154,31 @@ parse_custom_variable :: proc(_fieldInstance: json.Object) -> (notFound: bool, i
 		}
 	}
 
-	return false, _identifier, _ldtkVariable
+	return false, strings.clone(_identifier), _ldtkVariable
 }
 
-free_level :: proc(using _level_data: ^LdtkData)
+free_data :: proc(using _level_data: ^LdtkData)
 {
 	for _i: = len(levels) - 1; _i >= 0; _i -= 1
 	{
-		free_entities(levels[_i].entities)
-		delete(levels[_i].identifier)
-		free(levels[_i])
+		free_level(levels[_i])
 	}
 	delete(levels)
 	free(_level_data)
+}
+
+free_level :: proc(using _level: ^LdtkLevel)
+{
+
+	for customVariable in customVariables {
+		free_custom_variable(customVariables[customVariable])
+		delete(customVariable)
+	}
+	delete(customVariables)
+
+	free_entities(entities)
+	delete(identifier)
+	free(_level)
 }
 
 free_entities :: proc(_entities: [dynamic]^LdtkEntity)
@@ -160,6 +193,7 @@ free_entities :: proc(_entities: [dynamic]^LdtkEntity)
 free_entity :: proc(using _entity: ^LdtkEntity)
 {
 	for customVariable in customVariables {
+		free_custom_variable(customVariables[customVariable])
 		delete(customVariable)
 	}
 
@@ -167,4 +201,16 @@ free_entity :: proc(using _entity: ^LdtkEntity)
 	delete(identifier)
 
 	free(_entity)
+}
+
+free_custom_variable :: proc(variable: LdtkVariable)
+{
+	value: = variable.value
+	#partial switch _ in value
+	{
+		case string:
+		{
+			delete_string(value.(string))
+		}
+	}
 }
